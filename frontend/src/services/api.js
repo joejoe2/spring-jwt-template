@@ -4,7 +4,7 @@ import router from "../router";
 import authHeader from "./auth-header"
 
 const instance = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    baseURL: 'http://localhost:8080/api', //'https://test.joejoe2.com/api',
     headers: { 'Content-Type': 'application/json' },
     timeout: 10000,
 });
