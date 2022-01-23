@@ -13,8 +13,7 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root-password  # please change it
+      POSTGRES_PASSWORD: root_password  # please change it
       POSTGRES_DB: spring
     volumes:
       - ./postgresql/data:/var/lib/postgresql/data
@@ -23,10 +22,12 @@ services:
 
   web:
     build:
-      context: ./iottalk-account-system
+      context: ./
       dockerfile: Dockerfile
     restart: always
     command: "bash ./wait-for-it.sh -t 0 db:5432 -- bash start.sh"
+    env_file:
+      - ./env/application.env
     networks:
       - spring-net
     depends_on:
