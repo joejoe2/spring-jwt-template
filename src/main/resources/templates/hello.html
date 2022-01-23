@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <!-- replace inner text -->
+    <h1 th:text="${msg}"></h1>
+
+    <!-- access obj attr in parent -->
+    <div th:object="${obj}">
+        <p th:text="*{MAX_VALUE}"></p>
+    </div>
+
+</body>
+
+<!-- use var in js -->
+<script th:inline="javascript">
+var v=[[${msg}]];
+</script>
+
+</html>

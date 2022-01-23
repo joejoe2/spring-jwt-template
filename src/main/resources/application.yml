@@ -1,0 +1,12 @@
+#spring:
+  #security:
+  #  oauth2:
+  #    client:
+  #      registration:
+  #        custom:
+  #          client-id: ZSFuxETsDuwJqnvim32rPfkuxw8FjR9TsrS3eAix
+  #          client-secret: b5vYOAdf9OT2Frd2rT3ipKfkpG3CnIp99KNL2gNGGKxFsFLUCC90sPdHY4YlM4U4NDPa9ShlJBd9pANnMlLb0GJxG2jcbLEx8IiV4bCRSOZeTBHU0tTFvR9Z3K5vHt9TAG7ZLuDHjZVZzCOqw29tWXcoKe0A97bi
+  #      provider:
+  #        custom:
+  #          issuer-uri: http://localhost:8000 # will auto discover
+  #          redirect-uri: http://localhost:8080/login/oauth2/code/custom
