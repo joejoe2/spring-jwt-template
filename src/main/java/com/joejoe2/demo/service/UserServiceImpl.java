@@ -2,16 +2,18 @@ package com.joejoe2.demo.service;
 
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.ValidationError;
-import com.joejoe2.demo.model.Role;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.Role;
+import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
-import com.joejoe2.demo.validation.EmailValidator;
-import com.joejoe2.demo.validation.PasswordValidator;
-import com.joejoe2.demo.validation.UserNameValidator;
+import com.joejoe2.demo.validation.servivelayer.EmailValidator;
+import com.joejoe2.demo.validation.servivelayer.PasswordValidator;
+import com.joejoe2.demo.validation.servivelayer.UUIDValidator;
+import com.joejoe2.demo.validation.servivelayer.UserNameValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -35,35 +37,43 @@ public class UserServiceImpl implements UserService{
     UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder passwordEncoder;
+    PasswordEncoder passwordEncoder;
+    @Autowired
+    VerificationService verificationService;
 
     @Override
     public User createUser(String username, String password, String email, Role role) throws ValidationError, AlreadyExist {
-        UserNameValidator userNameValidator=new UserNameValidator(username);
-        userNameValidator.validate();
-        PasswordValidator passwordValidator=new PasswordValidator(password);
-        passwordValidator.validate();
-        EmailValidator emailValidator=new EmailValidator(email);
-        emailValidator.validate();
+        username = new UserNameValidator().validate(username);
+        password = new PasswordValidator().validate(password);
+        email = new EmailValidator().validate(email);
 
-        if (userRepository.getByUserName(userNameValidator.username).isPresent()||userRepository.getByEmail(emailValidator.email).isPresent())
+        if (userRepository.getByUserName(username).isPresent()||userRepository.getByEmail(email).isPresent())
             throw new AlreadyExist("username or email is already taken !");
 
         User user=new User();
-        user.setUserName(userNameValidator.username);
+        user.setUserName(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(emailValidator.email);
+        user.setEmail(email);
         user.setRole(role);
         userRepository.save(user);
 
         return user;
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public User registerUser(String username, String password, String email, VerificationPair verificationPair) throws AlreadyExist, InvalidOperation {
+        verificationService.verify(verificationPair.getKey(), email, verificationPair.getCode());
+        return createUser(username, password, email, Role.NORMAL);
+    }
+
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void changeRoleOf(String userId, Role role) throws InvalidOperation {
-        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        UUID id = new UUIDValidator().validate(userId);
+
+        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
         Role originalRole = user.getRole();
         if (role.equals(originalRole))throw new InvalidOperation("role doesn't change !");
 

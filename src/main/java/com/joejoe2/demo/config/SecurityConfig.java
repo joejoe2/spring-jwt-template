@@ -1,7 +1,7 @@
 package com.joejoe2.demo.config;
 
 import com.joejoe2.demo.filter.JwtAuthenticationFilter;
-import com.joejoe2.demo.model.Role;
+import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.service.UserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -32,7 +32,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // blank will allow any request
         http.csrf().disable().cors().and()
                 .authorizeRequests()
-                .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh").permitAll()
+                .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/issueVerificationCode").permitAll()
                 .antMatchers("/api/admin/**").hasAuthority(Role.ADMIN.toString())
                 .anyRequest().authenticated()
                 .and() //use jwt instead of session

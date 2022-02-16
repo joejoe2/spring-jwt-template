@@ -1,8 +1,7 @@
 package com.joejoe2.demo.repository;
 
-import com.joejoe2.demo.model.AccessToken;
-import com.joejoe2.demo.model.RefreshToken;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.AccessToken;
+import com.joejoe2.demo.model.auth.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;

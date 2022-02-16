@@ -27,7 +27,7 @@ public class UserController {
             response.put("profile", userService.getProfile(AuthUtil.currentUserDetail()));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (InvalidOperation ex){
-            response.put("info", ex.getMessage());
+            response.put("message", ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
     }

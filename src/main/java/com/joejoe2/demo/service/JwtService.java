@@ -4,13 +4,11 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
-import com.joejoe2.demo.model.AccessToken;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.AccessToken;
+import com.joejoe2.demo.model.auth.User;
 
 public interface JwtService {
     public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation;
-
-    public TokenPair issueTokens(User user);
 
     public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException;
 
@@ -18,7 +16,7 @@ public interface JwtService {
 
     public void revokeAccessToken(String token) throws InvalidTokenException;
 
-    void revokeAccessToken(AccessToken accessToken) throws InvalidTokenException;
+    void revokeAccessToken(AccessToken accessToken);
 
     boolean addAccessTokenToBlackList(AccessToken accessToken);
 

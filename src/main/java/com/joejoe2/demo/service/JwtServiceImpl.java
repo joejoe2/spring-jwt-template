@@ -5,10 +5,10 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
-import com.joejoe2.demo.model.AccessToken;
-import com.joejoe2.demo.model.RefreshToken;
-import com.joejoe2.demo.model.Role;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.AccessToken;
+import com.joejoe2.demo.model.auth.RefreshToken;
+import com.joejoe2.demo.model.auth.Role;
+import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.AccessTokenRepository;
 import com.joejoe2.demo.repository.RefreshTokenRepository;
 import com.joejoe2.demo.repository.UserRepository;
@@ -17,6 +17,8 @@ import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +26,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.Map;
-import java.util.UUID;
 
 @Service
 public class JwtServiceImpl implements JwtService{
@@ -74,14 +75,6 @@ public class JwtServiceImpl implements JwtService{
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public TokenPair issueTokens(User user) {
-        AccessToken accessToken = createAccessToken(user);
-        RefreshToken refreshToken = createRefreshToken(accessToken);
-        return new TokenPair(accessToken, refreshToken);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    @Override
     public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException {
         //load refreshToken
         RefreshToken refreshToken = refreshTokenRepository
@@ -93,7 +86,8 @@ public class JwtServiceImpl implements JwtService{
         revokeAccessToken(refreshToken.getAccessToken());
 
         //issue new tokens
-        return issueTokens(user);
+        AccessToken accessToken = createAccessToken(user);
+        return new TokenPair(accessToken, createRefreshToken(accessToken));
     }
 
     private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
@@ -121,22 +115,15 @@ public class JwtServiceImpl implements JwtService{
                 .orElseThrow(()->new InvalidTokenException("invalid token !"));
 
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
-
-        //add to black list
-        if (!addAccessTokenToBlackList(accessToken)){
-            throw new InvalidTokenException("invalid token !");
-        }
+        addAccessTokenToBlackList(accessToken);
     }
 
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void revokeAccessToken(AccessToken accessToken) throws InvalidTokenException {
+    public void revokeAccessToken(AccessToken accessToken) {
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
-        //add to black list
-        if (!addAccessTokenToBlackList(accessToken)){
-            throw new InvalidTokenException("invalid token !");
-        }
+        addAccessTokenToBlackList(accessToken);
     }
 
     @Override

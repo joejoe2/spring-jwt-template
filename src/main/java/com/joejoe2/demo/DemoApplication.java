@@ -1,9 +1,8 @@
 package com.joejoe2.demo;
 
 import com.joejoe2.demo.exception.AlreadyExist;
-import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.ValidationError;
-import com.joejoe2.demo.model.Role;
+import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +11,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.EnableAsync;
+
+import java.util.Locale;
 
 @SpringBootApplication
+@EnableAsync
 public class DemoApplication implements CommandLineRunner {
 	@Autowired
 	private Environment env;
@@ -22,6 +25,7 @@ public class DemoApplication implements CommandLineRunner {
 	private static final Logger logger = LoggerFactory.getLogger(DemoApplication.class);
 
 	public static void main(String[] args) {
+		Locale.setDefault(Locale.ENGLISH);
 		SpringApplication.run(DemoApplication.class, args);
 	}
 

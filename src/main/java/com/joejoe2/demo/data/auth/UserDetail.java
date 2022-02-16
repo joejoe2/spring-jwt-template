@@ -1,7 +1,7 @@
 package com.joejoe2.demo.data.auth;
 
-import com.joejoe2.demo.model.Role;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.Role;
+import com.joejoe2.demo.model.auth.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +15,7 @@ public class UserDetail implements UserDetails {
     private String username;
     private String password;
     private boolean isActive;
+    private Role role;
     private List<GrantedAuthority> authorities;
 
     public UserDetail(User user) {
@@ -22,6 +23,7 @@ public class UserDetail implements UserDetails {
         this.username = user.getUserName();
         this.password = user.getPassword();
         this.isActive = user.isActive();
+        this.role = user.getRole();
         this.authorities = (List<GrantedAuthority>)mapRolesToAuthorities(Collections.singleton(user.getRole()));
     }
 
@@ -30,12 +32,30 @@ public class UserDetail implements UserDetails {
         this.username = username;
         this.isActive = isActive;
         this.currentAccessToken = currentAccessToken;
+        this.role = role;
         this.authorities = (List<GrantedAuthority>)mapRolesToAuthorities(Collections.singleton(role));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof UserDetail)) return false;
+        UserDetail that = (UserDetail) o;
+        return isActive == that.isActive && id.equals(that.id) && username.equals(that.username) && role == that.role && authorities.equals(that.authorities);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, username, isActive, role, authorities);
     }
 
     public String getId(){
         return this.id;
     }
+
+    public boolean isActive(){ return this.isActive; }
+
+    public Role getRole(){ return this.role; }
 
     public String getCurrentAccessToken(){
         return currentAccessToken;

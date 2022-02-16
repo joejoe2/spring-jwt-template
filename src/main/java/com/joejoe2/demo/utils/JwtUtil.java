@@ -1,6 +1,6 @@
 package com.joejoe2.demo.utils;
 
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.JwtParser;
@@ -24,7 +24,6 @@ public class JwtUtil {
         claims.setIssuer(issuer);
 
         Key secretKey = Keys.hmacShaKeyFor(key.getBytes());
-
         return Jwts.builder().setClaims(claims).signWith(secretKey).compact();
     }
 
@@ -37,7 +36,6 @@ public class JwtUtil {
         claims.setIssuer(issuer);
 
         Key secretKey = Keys.hmacShaKeyFor(key.getBytes());
-
         return Jwts.builder().setClaims(claims).signWith(secretKey).compact();
     }
 

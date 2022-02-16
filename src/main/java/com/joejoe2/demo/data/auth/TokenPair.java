@@ -1,7 +1,7 @@
 package com.joejoe2.demo.data.auth;
 
-import com.joejoe2.demo.model.AccessToken;
-import com.joejoe2.demo.model.RefreshToken;
+import com.joejoe2.demo.model.auth.AccessToken;
+import com.joejoe2.demo.model.auth.RefreshToken;
 import lombok.Data;
 
 @Data

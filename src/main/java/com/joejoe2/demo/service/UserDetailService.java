@@ -1,7 +1,7 @@
 package com.joejoe2.demo.service;
 
 import com.joejoe2.demo.data.auth.UserDetail;
-import com.joejoe2.demo.model.User;
+import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
