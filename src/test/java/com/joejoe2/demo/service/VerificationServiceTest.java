@@ -6,7 +6,6 @@ import com.joejoe2.demo.model.auth.VerificationCode;
 import com.joejoe2.demo.repository.VerificationCodeRepository;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -46,7 +45,6 @@ class VerificationServiceTest {
         assertThrows(IllegalArgumentException.class, ()->verificationService.verify(UUID.randomUUID().toString(), "not a email", "1234"));
         assertThrows(IllegalArgumentException.class, ()->verificationService.verify(UUID.randomUUID().toString(), "test@email.com", null));
         //test verification fail with not exist code
-        verificationCodeRepository.deleteAll();
         assertThrows(InvalidOperation.class, ()->verificationService.verify(UUID.randomUUID().toString(), "test@email.com", "1234"));
         //test verification with exist code
         VerificationCode verificationCode = new VerificationCode();

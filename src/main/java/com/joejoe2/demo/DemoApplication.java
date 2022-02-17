@@ -22,6 +22,7 @@ public class DemoApplication implements CommandLineRunner {
 	private Environment env;
 	@Autowired
 	private UserService userService;
+
 	private static final Logger logger = LoggerFactory.getLogger(DemoApplication.class);
 
 	public static void main(String[] args) {
@@ -40,8 +41,8 @@ public class DemoApplication implements CommandLineRunner {
 				userService.createUser(adminName, adminPassword, adminEmail, Role.ADMIN);
 				logger.info("create admin user from env !");
 			}catch (AlreadyExist e){
-				logger.info("default admin already exist, skip creation");
-			}catch (ValidationError e){
+				logger.info("default admin already exist, skip creation !");
+			}catch (Exception e){
 				logger.error("cannot create default admin: "+e.getMessage());
 			}
 		}

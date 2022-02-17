@@ -39,7 +39,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Map<String, String>> handRuntimeException(Exception ex, WebRequest request) {
+    public ResponseEntity<Map<String, String>> handleRuntimeException(Exception ex, WebRequest request) {
         ex.printStackTrace();
         Map<String, String> body = new HashMap<>();
         body.put("message", "unknown error, please try again later !");

@@ -3,6 +3,7 @@ package com.joejoe2.demo.utils;
 import com.joejoe2.demo.data.auth.UserDetail;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -18,10 +19,11 @@ public class AuthUtil {
 
     public static boolean isAuthenticated(){
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return !(authentication instanceof AnonymousAuthenticationToken);
+        return authentication!=null&&!(authentication instanceof AnonymousAuthenticationToken);
     }
 
-    public static UserDetail currentUserDetail(){
+    public static UserDetail currentUserDetail() throws AuthenticationException{
+        if (!isAuthenticated())throw new InternalAuthenticationServiceException("has not been authenticated !");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return (UserDetail)authentication.getPrincipal();
     }
