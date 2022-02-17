@@ -1,6 +1,5 @@
 package com.joejoe2.demo.controller;
 
-import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.service.UserService;
 import com.joejoe2.demo.utils.AuthUtil;

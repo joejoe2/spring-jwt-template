@@ -30,7 +30,6 @@ class AuthUtilTest {
     void setUp() throws Exception {
         user=new User();
         user.setUserName("test");
-        // password encoder not work in test but work in authenticationManager ?
         user.setPassword(new BCryptPasswordEncoder().encode("pa55ward"));
         user.setEmail("test@email.com");
         user.setRole(Role.NORMAL);

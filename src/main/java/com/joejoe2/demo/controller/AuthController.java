@@ -7,10 +7,10 @@ import com.joejoe2.demo.data.auth.request.LoginRequest;
 import com.joejoe2.demo.data.auth.request.RefreshRequest;
 import com.joejoe2.demo.data.auth.request.RegisterRequest;
 import com.joejoe2.demo.data.auth.request.IssueVerificationCodeRequest;
+import com.joejoe2.demo.data.auth.request.ChangePasswordRequest;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
-import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.service.JwtService;
 import com.joejoe2.demo.service.UserService;
@@ -103,5 +103,17 @@ public class AuthController {
         VerificationPair verificationPair = verificationService.issueVerificationCode(request.getEmail());
         response.put("key", verificationPair.getKey());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @RequestMapping(path = "/changePassword", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            userService.changePasswordOf(AuthUtil.currentUserDetail().getId(), request.getOldPassword(), request.getNewPassword());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (InvalidOperation ex){
+            response.put("message", ex.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
     }
 }

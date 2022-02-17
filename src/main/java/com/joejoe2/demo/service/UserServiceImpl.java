@@ -35,7 +35,6 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService{
     @Autowired
     UserRepository userRepository;
-
     @Autowired
     PasswordEncoder passwordEncoder;
     @Autowired
@@ -81,6 +80,28 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
 
         if (Role.ADMIN.equals(originalRole)&&userRepository.getByRole(Role.ADMIN).size()==0)throw new InvalidOperation("cannot change the role of the only ADMIN !");
+    }
+
+    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation {
+        UUID id = new UUIDValidator().validate(userId);
+        PasswordValidator passwordValidator = new PasswordValidator();
+
+        try {
+            oldPassword = passwordValidator.validate(oldPassword);
+        }catch (ValidationError e){
+            throw new InvalidOperation("old password is not correct !");
+        }
+        newPassword = passwordValidator.validate(newPassword);
+
+
+        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword()))throw new InvalidOperation("old password is not correct !");
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     @Override

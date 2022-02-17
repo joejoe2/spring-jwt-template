@@ -2,6 +2,7 @@ package com.joejoe2.demo.data.auth.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.joejoe2.demo.data.auth.VerificationPair;
+import com.joejoe2.demo.validation.constraint.Password;
 import lombok.Data;
 
 import javax.validation.Valid;
@@ -20,6 +21,7 @@ public class RegisterRequest {
 
     @Size(min = 8, message = "password length is at least 8 !")
     @Size(max = 32, message = "password length is at most 32 !")
+    @Password
     @NotEmpty(message = "password cannot be empty !")
     private String password;
 

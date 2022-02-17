@@ -1,5 +1,7 @@
 package com.joejoe2.demo.validation.constraint;
 
+import com.joejoe2.demo.validation.servivelayer.UserNameValidator;
+
 import javax.validation.Constraint;
 import javax.validation.Payload;
 import javax.validation.ReportAsSingleViolation;
@@ -13,10 +15,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(ElementType.FIELD)
 @Constraint(validatedBy={})
 @Retention(RUNTIME)
-@Pattern(regexp="^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$")
+@Pattern(regexp=UserNameValidator.REGEX)
 @ReportAsSingleViolation
-public @interface UUID {
-    String message() default "invalid uuid !";
+public @interface Username {
+    String message() default UserNameValidator.NOT_MATCH_MSG;
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }
