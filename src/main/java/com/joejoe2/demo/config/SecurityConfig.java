@@ -31,15 +31,17 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         // blank will allow any request
         http.csrf().disable().cors().and()
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.NEVER) //use jwt instead of session
+                .and()
                 .authorizeRequests()
                 .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/issueVerificationCode").permitAll()
                 .antMatchers("/api/admin/**").hasAuthority(Role.ADMIN.toString())
                 .anyRequest().authenticated()
-                .and() //use jwt instead of session
+                .and()
+                // use jwt authentication and custom login api
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().formLogin().disable();
+                .formLogin().disable();
     }
 
     @Override

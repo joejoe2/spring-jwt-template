@@ -61,10 +61,6 @@ class UserServiceTest {
     }
 
     @Test
-    void registerUser() {
-    }
-
-    @Test
     @Transactional
     void changeRoleOf() {
         //test IllegalArgument
@@ -111,10 +107,6 @@ class UserServiceTest {
     }
 
     @Test
-    void getAllUserProfiles() {
-    }
-
-    @Test
     @Transactional
     void getAllUserProfilesWithPage() {
         //test IllegalArgument
@@ -128,7 +120,7 @@ class UserServiceTest {
         } catch (Exception e) {
             throw new AssertionError(e);
         }
-        assertEquals(pageList.getCurrentPage(), 5);
-        assertEquals(pageList.getPageSize(), 10);
+        assertEquals(5, pageList.getCurrentPage());
+        assertEquals(10, pageList.getPageSize());
     }
 }

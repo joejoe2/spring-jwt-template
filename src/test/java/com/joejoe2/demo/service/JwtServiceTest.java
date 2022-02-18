@@ -13,11 +13,12 @@ import com.joejoe2.demo.repository.AccessTokenRepository;
 import com.joejoe2.demo.repository.RefreshTokenRepository;
 import com.joejoe2.demo.repository.UserRepository;
 import com.joejoe2.demo.utils.JwtUtil;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import redis.embedded.RedisServer;
 
 import java.time.LocalDateTime;
 import java.util.Calendar;
@@ -38,6 +39,20 @@ class JwtServiceTest {
     private AccessTokenRepository accessTokenRepository;
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+
+    //JwtService need redis for revoke access token
+    private static RedisServer redisServer;
+
+    @BeforeAll
+    static void beforeAll() {
+        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
+        redisServer.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        redisServer.stop();
+    }
 
     @Test
     @Transactional
@@ -66,7 +81,8 @@ class JwtServiceTest {
 
     @Test
     void refreshTokens() {
-
+        //todo ?
+        // = revokeAccessToken + issueTokens
     }
 
     @Test
@@ -111,21 +127,5 @@ class JwtServiceTest {
             jwtService.revokeAccessToken(accessToken.getToken());
             assertTrue(jwtService.isAccessTokenInBlackList(accessToken.getToken()));
         });
-    }
-
-    @Test
-    @Transactional
-    void testRevokeAccessToken() {
-        //same as above
-    }
-
-    @Test
-    void addAccessTokenToBlackList() {
-        //skip this
-    }
-
-    @Test
-    void isAccessTokenInBlackList() {
-        //skip this
     }
 }
