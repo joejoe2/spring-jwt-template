@@ -8,11 +8,14 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
+import redis.embedded.RedisServer;
 
 import java.util.UUID;
 
@@ -27,6 +30,20 @@ class UserServiceTest {
     UserDetailService userDetailService;
     @Autowired
     UserRepository userRepository;
+
+    //UserService need redis for changeRoleOf and changePasswordOf
+    private static RedisServer redisServer;
+
+    @BeforeAll
+    static void beforeAll() {
+        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
+        redisServer.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        redisServer.stop();
+    }
 
     @Test
     @Transactional

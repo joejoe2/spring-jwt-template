@@ -9,7 +9,9 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.repository.AccessTokenRepository;
 import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.validation.servivelayer.EmailValidator;
 import com.joejoe2.demo.validation.servivelayer.PasswordValidator;
 import com.joejoe2.demo.validation.servivelayer.UUIDValidator;
@@ -39,6 +41,10 @@ public class UserServiceImpl implements UserService{
     PasswordEncoder passwordEncoder;
     @Autowired
     VerificationService verificationService;
+    @Autowired
+    JwtService jwtService;
+    @Autowired
+    AccessTokenRepository accessTokenRepository;
 
     @Override
     public User createUser(String username, String password, String email, Role role) throws ValidationError, AlreadyExist {
@@ -73,6 +79,7 @@ public class UserServiceImpl implements UserService{
         UUID id = new UUIDValidator().validate(userId);
 
         User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot change the role of yourself !");
         Role originalRole = user.getRole();
         if (role.equals(originalRole))throw new InvalidOperation("role doesn't change !");
 
@@ -80,6 +87,9 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
 
         if (Role.ADMIN.equals(originalRole)&&userRepository.getByRole(Role.ADMIN).size()==0)throw new InvalidOperation("cannot change the role of the only ADMIN !");
+
+        //need to logout user after role change
+        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
     }
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
@@ -102,6 +112,9 @@ public class UserServiceImpl implements UserService{
 
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+
+        //need to logout user after password change
+        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
     }
 
     @Override
