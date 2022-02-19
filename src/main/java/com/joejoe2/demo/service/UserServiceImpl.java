@@ -12,10 +12,10 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.AccessTokenRepository;
 import com.joejoe2.demo.repository.UserRepository;
 import com.joejoe2.demo.utils.AuthUtil;
-import com.joejoe2.demo.validation.servivelayer.EmailValidator;
-import com.joejoe2.demo.validation.servivelayer.PasswordValidator;
-import com.joejoe2.demo.validation.servivelayer.UUIDValidator;
-import com.joejoe2.demo.validation.servivelayer.UserNameValidator;
+import com.joejoe2.demo.validation.servicelayer.EmailValidator;
+import com.joejoe2.demo.validation.servicelayer.PasswordValidator;
+import com.joejoe2.demo.validation.servicelayer.UUIDValidator;
+import com.joejoe2.demo.validation.servicelayer.UserNameValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
@@ -105,12 +105,13 @@ public class UserServiceImpl implements UserService{
             throw new InvalidOperation("old password is not correct !");
         }
         newPassword = passwordValidator.validate(newPassword);
-
+        newPassword = passwordEncoder.encode(newPassword);
 
         User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
         if (!passwordEncoder.matches(oldPassword, user.getPassword()))throw new InvalidOperation("old password is not correct !");
+        if(passwordEncoder.matches(oldPassword, newPassword))throw new InvalidOperation("new password is same with old password !");
 
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(newPassword);
         userRepository.save(user);
 
         //need to logout user after password change

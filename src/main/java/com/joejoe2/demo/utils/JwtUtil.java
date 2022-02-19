@@ -8,12 +8,16 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
 import java.security.Key;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtUtil {
-    public static String generateAccessToken(String key, String issuer, User user, Calendar exp){
+    public static String generateAccessToken(RSAPrivateKey key, String issuer, User user, Calendar exp){
         Claims claims = Jwts.claims();
         claims.put("type", "access_token");
         claims.put("id", user.getId().toString());
@@ -23,11 +27,10 @@ public class JwtUtil {
         claims.setExpiration(exp.getTime());
         claims.setIssuer(issuer);
 
-        Key secretKey = Keys.hmacShaKeyFor(key.getBytes());
-        return Jwts.builder().setClaims(claims).signWith(secretKey).compact();
+        return Jwts.builder().setClaims(claims).signWith(key).compact();
     }
 
-    public static String generateRefreshToken(String key, String issuer, User user, Calendar exp){
+    public static String generateRefreshToken(RSAPrivateKey key, String issuer, User user, Calendar exp){
         Claims claims = Jwts.claims();
         claims.put("type", "refresh_token");
         claims.put("id", user.getId().toString());
@@ -35,15 +38,12 @@ public class JwtUtil {
         claims.setExpiration(exp.getTime());
         claims.setIssuer(issuer);
 
-        Key secretKey = Keys.hmacShaKeyFor(key.getBytes());
-        return Jwts.builder().setClaims(claims).signWith(secretKey).compact();
+        return Jwts.builder().setClaims(claims).signWith(key).compact();
     }
 
-    public static Map<String, Object> parseToken(String key, String token) throws JwtException {
-        Key secretKey = Keys.hmacShaKeyFor(key.getBytes());
-
+    public static Map<String, Object> parseToken(RSAPublicKey key, String token) throws JwtException {
         JwtParser parser = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+                .setSigningKey(key)
                 .build();
 
         Claims claims = parser

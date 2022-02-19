@@ -17,8 +17,6 @@ import io.jsonwebtoken.JwtException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +43,7 @@ public class JwtServiceImpl implements JwtService{
         exp.add(Calendar.SECOND, jwtConfig.getAccessTokenLifetimeSec());
 
         AccessToken accessToken = new AccessToken();
-        accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getKEY(), jwtConfig.getIssuer(), user, exp));
+        accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), user, exp));
         accessToken.setUser(user);
         accessToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
         accessTokenRepository.save(accessToken);
@@ -57,7 +55,7 @@ public class JwtServiceImpl implements JwtService{
         exp.add(Calendar.SECOND, jwtConfig.getRefreshTokenLifetimeSec());
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getKEY(), jwtConfig.getIssuer(), accessToken.getUser(), exp));
+        refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), accessToken.getUser(), exp));
         refreshToken.setAccessToken(accessToken);
         refreshToken.setUser(accessToken.getUser());
         refreshToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
@@ -95,7 +93,7 @@ public class JwtServiceImpl implements JwtService{
     @Override
     public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {
         try {
-            Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getKEY(), token);
+            Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), token);
             String tokenType = (String) data.get("type");
             if (!tokenType.equals("access_token")){
                 throw new InvalidTokenException("invalid token !");

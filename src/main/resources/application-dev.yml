@@ -1,0 +1,10 @@
+jwt:
+  secret:
+    privateKey: |
+      -----BEGIN PRIVATE KEY-----
+      ... your PRIVATE KEY ...
+      -----END PRIVATE KEY-----
+    publicKey: |
+      -----BEGIN PUBLIC KEY-----
+      ... your PUBLIC KEY ...
+      -----END PUBLIC KEY-----

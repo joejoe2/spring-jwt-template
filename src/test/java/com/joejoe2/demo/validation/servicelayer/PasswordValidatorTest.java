@@ -1,8 +1,7 @@
-package com.joejoe2.demo.validation.servivelayer;
+package com.joejoe2.demo.validation.servicelayer;
 
 import com.joejoe2.demo.exception.ValidationError;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.*;
 

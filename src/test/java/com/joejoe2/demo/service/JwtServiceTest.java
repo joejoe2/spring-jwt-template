@@ -94,7 +94,7 @@ class JwtServiceTest {
         user.setPassword("pa55ward");
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.SECOND, 900);
-        String token = JwtUtil.generateAccessToken(jwtConfig.getKEY(), "iss", user, exp);
+        String token = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "iss", user, exp);
         assertDoesNotThrow(()->{
             UserDetail userDetail = jwtService.getUserDetailFromAccessToken(token);
             assertEquals(user.getId().toString(), userDetail.getId());

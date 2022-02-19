@@ -5,8 +5,8 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.model.auth.VerificationCode;
 import com.joejoe2.demo.repository.VerificationCodeRepository;
-import com.joejoe2.demo.validation.servivelayer.EmailValidator;
-import com.joejoe2.demo.validation.servivelayer.UUIDValidator;
+import com.joejoe2.demo.validation.servicelayer.EmailValidator;
+import com.joejoe2.demo.validation.servicelayer.UUIDValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

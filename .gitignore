@@ -33,3 +33,6 @@ build/
 .vscode/
 
 src/main/resources/application.properties
+*.key
+*.pem
+src/main/resources/application.yml

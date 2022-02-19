@@ -8,18 +8,22 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.validation.constraint.Password;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import redis.embedded.RedisServer;
 
+import java.util.Random;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -30,6 +34,8 @@ class UserServiceTest {
     UserDetailService userDetailService;
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     //UserService need redis for changeRoleOf and changePasswordOf
     private static RedisServer redisServer;
@@ -107,6 +113,27 @@ class UserServiceTest {
 
     @Test
     @Transactional
+    void changePasswordOf(){
+        User user = new User();
+        user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword(passwordEncoder.encode("pa55ward"));
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->userService.changePasswordOf("invalid_uid", "pa55ward", "pa55ward123"));
+        assertThrows(IllegalArgumentException.class, ()->userService.changePasswordOf(user.getId().toString(), "pa55ward", "invalid_password"));
+        //test with incorrect password
+        assertThrows(InvalidOperation.class, ()->userService.changePasswordOf(user.getId().toString(), "incorrect", "pa55ward"));
+        //test if old password==new password
+        assertThrows(InvalidOperation.class, ()->userService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
+        //test success
+        assertDoesNotThrow(()->userService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward123"));
+    }
+
+    @Test
+    @Transactional
     void getProfile() {
         User user = new User();
         user.setUserName("test");
@@ -121,6 +148,22 @@ class UserServiceTest {
             throw new AssertionError(e);
         }
         assertEquals(new UserProfile(user), profile);
+    }
+
+    @Test
+    @Transactional
+    void getAllUserProfiles(){
+        Random random = new Random();
+        long count = userRepository.count();
+        long r = random.nextInt(100);
+        for (int i=0;i<r;i++){
+            User user=new User();
+            user.setUserName("test"+i);
+            user.setPassword("pa55ward");
+            user.setEmail("test"+i+"@email.com");
+            userRepository.save(user);
+        }
+        assertEquals(count+r, userService.getAllUserProfiles().size());
     }
 
     @Test
