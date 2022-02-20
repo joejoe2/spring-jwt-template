@@ -2,8 +2,10 @@ name: workflow
 
 on:
   push:
-    paths-ignore:
-      - README.md
+    branches:
+      - main
+    paths:
+      - 'src/**'
 
 jobs:
   build:

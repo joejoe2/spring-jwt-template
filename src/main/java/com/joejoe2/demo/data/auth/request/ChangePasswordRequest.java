@@ -11,9 +11,6 @@ public class ChangePasswordRequest {
     @NotEmpty(message = "password cannot be empty !")
     String oldPassword;
 
-    @Size(min = 8, message = "password length is at least 8 !")
-    @Size(max = 32, message = "password length is at most 32 !")
     @Password
-    @NotEmpty(message = "password cannot be empty !")
     String newPassword;
 }

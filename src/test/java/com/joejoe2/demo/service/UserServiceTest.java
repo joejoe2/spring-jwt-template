@@ -8,7 +8,6 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
-import com.joejoe2.demo.validation.constraint.Password;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -63,7 +62,7 @@ class UserServiceTest {
         User test1, test2, test3;
         try {
             test1 = userService.createUser("test1", "pa55ward", "test1@email.com", Role.NORMAL);
-            test2 = userService.createUser("test2", "pa55ward", "test2@email.com", Role.MODERATE);
+            test2 = userService.createUser("test2", "pa55ward", "test2@email.com", Role.STAFF);
             test3 = userService.createUser("test3", "pa55ward", "test3@email.com", Role.ADMIN);
         }catch (Exception e){
             throw new AssertionError(e);
@@ -75,7 +74,7 @@ class UserServiceTest {
         assertEquals("test2@email.com", test2.getEmail());
         assertEquals("test3@email.com", test3.getEmail());
         assertEquals(Role.NORMAL, test1.getRole());
-        assertEquals(Role.MODERATE, test2.getRole());
+        assertEquals(Role.STAFF, test2.getRole());
         assertEquals(Role.ADMIN, test3.getRole());
 
         //test with duplicated username or email
@@ -89,7 +88,7 @@ class UserServiceTest {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, () -> userService.changeRoleOf("invalid_uid", Role.ADMIN));
         // test with not exist user
-        assertThrows(InvalidOperation.class, () -> userService.changeRoleOf(UUID.randomUUID().toString(), Role.MODERATE));
+        assertThrows(InvalidOperation.class, () -> userService.changeRoleOf(UUID.randomUUID().toString(), Role.STAFF));
         // test with exist user
         User user = new User();
         user.setUserName("test");
@@ -98,9 +97,9 @@ class UserServiceTest {
         user.setRole(Role.NORMAL);
         userRepository.save(user);
         User finalUser1 = user;
-        assertDoesNotThrow(()->userService.changeRoleOf(finalUser1.getId().toString(), Role.MODERATE));
+        assertDoesNotThrow(()->userService.changeRoleOf(finalUser1.getId().toString(), Role.STAFF));
         user = userRepository.findById(user.getId()).get();
-        assertEquals(user.getRole(), Role.MODERATE);
+        assertEquals(user.getRole(), Role.STAFF);
         User finalUser = user;
         assertDoesNotThrow(()->userService.changeRoleOf(finalUser.getId().toString(), Role.ADMIN));
         user = userRepository.findById(user.getId()).get();

@@ -25,7 +25,7 @@ public class AdminController {
     @Autowired
     UserService userService;
 
-    @RequestMapping(path = "/changeRole", method = RequestMethod.POST)
+    @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest changeUserRoleRequest){
         Map<String, String> response = new HashMap<>();
         try {
