@@ -13,6 +13,7 @@ Including:
 - `register api` with email verification
 - `logout api` revoke access token via redis blacklist
 - `change password api`
+- `forget and reset password api`
 - `admin api` change role and getUserList
 - validation on `@RequestBody`
 - validation on service layer
@@ -82,7 +83,10 @@ we will use open-ssl to generate the private and public key for jwt.
     spring.mail.properties.mail.smtp.auth=true
     spring.mail.properties.mail.smtp.starttls.enable=true
     ```
-
+   - `set reset password url`(redirect user to your reset password page in frontend, we will append token for you to send the password reset request)
+   ```
+   reset.password.url=http://localhost:8888/resetPassword?token=
+   ```
 
 7. copy the contents of `private.key` and `public.key` (generated at project root in step 4.) into `application.yml`
     ```

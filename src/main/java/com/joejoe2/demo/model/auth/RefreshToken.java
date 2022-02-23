@@ -19,10 +19,10 @@ import java.util.UUID;
 @Entity
 public class RefreshToken {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    //@GeneratedValue(generator = "UUID")
+    //@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(unique = true, updatable = false, nullable = false)
-    private UUID id;
+    private UUID id=UUID.randomUUID();
 
     @Column(unique = true, updatable = false, nullable = false, columnDefinition="TEXT")
     private String token;

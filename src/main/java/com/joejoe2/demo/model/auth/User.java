@@ -45,4 +45,7 @@ public class User{
 
     @UpdateTimestamp
     private LocalDateTime updateAt;
+
+    @Column(nullable = true)
+    private LocalDateTime authAt;
 }

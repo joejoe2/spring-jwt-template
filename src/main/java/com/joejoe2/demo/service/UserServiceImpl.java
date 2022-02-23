@@ -9,9 +9,12 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.repository.AccessTokenRepository;
 import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.repository.VerifyTokenRepository;
 import com.joejoe2.demo.utils.AuthUtil;
+import com.joejoe2.demo.utils.Utils;
 import com.joejoe2.demo.validation.servicelayer.EmailValidator;
 import com.joejoe2.demo.validation.servicelayer.PasswordValidator;
 import com.joejoe2.demo.validation.servicelayer.UUIDValidator;
@@ -25,10 +28,13 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -45,6 +51,8 @@ public class UserServiceImpl implements UserService{
     JwtService jwtService;
     @Autowired
     AccessTokenRepository accessTokenRepository;
+    @Autowired
+    VerifyTokenRepository verifyTokenRepository;
 
     @Override
     public User createUser(String username, String password, String email, Role role) throws ValidationError, AlreadyExist {
@@ -113,6 +121,50 @@ public class UserServiceImpl implements UserService{
 
         user.setPassword(newPassword);
         userRepository.save(user);
+
+        //need to logout user after password change
+        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
+    }
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
+    @Override
+    public VerifyToken requestResetPassword(String email) throws InvalidOperation{
+        email=new EmailValidator().validate(email);
+
+        User user=userRepository.getByEmail(email).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        Optional<VerifyToken> token=verifyTokenRepository.getByUser(user);
+        if(token.isPresent()&&token.get().getExpireAt().isAfter(LocalDateTime.now()))
+            throw new InvalidOperation("already request to reset password, please try again later !");
+        if(token.isPresent()&&token.get().getExpireAt().isBefore(LocalDateTime.now()))
+            verifyTokenRepository.delete(token.get());  // REPEATABLE_READ, if deleted by others
+        // , it will cause (ERROR:  could not serialize access due to concurrent delete)
+        // instead of being ignored by postgresql in read-committed
+
+        VerifyToken verifyToken=new VerifyToken();
+        verifyToken.setUser(user);
+        verifyToken.setToken(Utils.randomNumericCode(128));
+        //valid for 10 min
+        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyTokenRepository.save(verifyToken);
+
+        return verifyToken;
+    }
+
+    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
+    @Override
+    public void resetPassword(String verifyToken, String newPassword) throws InvalidOperation{
+        newPassword = new PasswordValidator().validate(newPassword);
+        newPassword = passwordEncoder.encode(newPassword);
+
+        VerifyToken token = verifyTokenRepository.getByTokenAndExpireAtGreaterThan(verifyToken, LocalDateTime.now())
+                .orElseThrow(()->new InvalidOperation("reset password request is invalid or expired, please try to use forget password again later !"));
+        User user=token.getUser();
+        user.setPassword(newPassword);
+        userRepository.save(user);
+        verifyTokenRepository.delete(token);// REPEATABLE_READ, if deleted by others
+        // , it will cause (ERROR:  could not serialize access due to concurrent delete)
+        // instead of being ignored by postgresql in read-committed
 
         //need to logout user after password change
         accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));

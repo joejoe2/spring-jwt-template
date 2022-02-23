@@ -7,7 +7,9 @@ import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.repository.VerifyTokenRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import redis.embedded.RedisServer;
 
+import java.time.LocalDateTime;
 import java.util.Random;
 import java.util.UUID;
 
@@ -35,6 +38,8 @@ class UserServiceTest {
     UserRepository userRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    VerifyTokenRepository verifyTokenRepository;
 
     //UserService need redis for changeRoleOf and changePasswordOf
     private static RedisServer redisServer;
@@ -128,7 +133,10 @@ class UserServiceTest {
         //test if old password==new password
         assertThrows(InvalidOperation.class, ()->userService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
         //test success
-        assertDoesNotThrow(()->userService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward123"));
+        assertDoesNotThrow(()->{
+            userService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward123");
+            assertTrue(passwordEncoder.matches("pa55ward123", userRepository.findById(user.getId()).get().getPassword()));
+        });
     }
 
     @Test
@@ -181,5 +189,49 @@ class UserServiceTest {
         }
         assertEquals(5, pageList.getCurrentPage());
         assertEquals(10, pageList.getPageSize());
+    }
+
+    @Test
+    @Transactional
+    void requestResetPassword() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->userService.requestResetPassword("invalid email"));
+        //test a not exist user email
+        assertThrows(InvalidOperation.class, ()->userService.requestResetPassword("not@email.com"));
+        //test success
+        assertDoesNotThrow(()->{
+            assertEquals(user, userService.requestResetPassword("test@email.com").getUser());
+        });
+    }
+
+    @Test
+    @Transactional
+    void resetPassword() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->userService.resetPassword("", "**-*/"));
+        //test an incorrect token
+        assertThrows(InvalidOperation.class, ()->userService.resetPassword("invalid token", "pa55ward"));
+        //test success
+        VerifyToken token=new VerifyToken();
+        token.setToken("12345678");
+        token.setUser(user);
+        token.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyTokenRepository.save(token);
+        assertDoesNotThrow(()->{
+            userService.resetPassword(token.getToken(), "a12345678");
+            assertTrue(passwordEncoder.matches("a12345678", userRepository.findById(user.getId()).get().getPassword()));
+        });
     }
 }

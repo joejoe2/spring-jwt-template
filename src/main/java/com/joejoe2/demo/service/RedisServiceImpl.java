@@ -13,8 +13,8 @@ public class RedisServiceImpl implements RedisService {
     private StringRedisTemplate redisTemplate;
 
     @Override
-    public boolean set(String key, String value, Duration duration) {
-        return redisTemplate.opsForValue().setIfAbsent(key, value, duration);
+    public void set(String key, String value, Duration duration) {
+        redisTemplate.opsForValue().setIfAbsent(key, value, duration);
     }
 
     @Override

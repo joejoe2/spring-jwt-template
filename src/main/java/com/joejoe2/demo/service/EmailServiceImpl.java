@@ -23,11 +23,6 @@ public class EmailServiceImpl implements EmailService{
         message.setTo(to);
         message.setSubject(subject);
         message.setText(text);
-        try {
-            emailSender.send(message);
-        }catch (Exception e){
-            //this may never occur
-            e.printStackTrace();
-        }
+        emailSender.send(message);
     }
 }

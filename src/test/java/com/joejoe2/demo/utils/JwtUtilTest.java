@@ -34,7 +34,7 @@ class JwtUtilTest {
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.SECOND, 900);
 
-        String accessToken = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), user, exp);
+        String accessToken = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", jwtConfig.getIssuer(), user, exp);
         Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), accessToken);
         assertEquals("access_token", data.get("type"));
         assertEquals(user.getId().toString(), data.get("id"));
@@ -47,18 +47,12 @@ class JwtUtilTest {
 
     @Test
     void generateRefreshToken() {
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setRole(Role.ADMIN);
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.SECOND, 1800);
 
-        String accessToken = JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), user, exp);
+        String accessToken = JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), "jti", jwtConfig.getIssuer(), exp);
         Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), accessToken);
         assertEquals("refresh_token", data.get("type"));
-        assertEquals(user.getId().toString(), data.get("id"));
-        assertEquals(user.getUserName(), data.get("username"));
         assertEquals(jwtConfig.getIssuer(), data.get("iss"));
         assertEquals((int) (exp.getTimeInMillis()/1000), data.get("exp"));
     }

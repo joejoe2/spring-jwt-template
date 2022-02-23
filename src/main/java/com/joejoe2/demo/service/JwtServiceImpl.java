@@ -43,7 +43,7 @@ public class JwtServiceImpl implements JwtService{
         exp.add(Calendar.SECOND, jwtConfig.getAccessTokenLifetimeSec());
 
         AccessToken accessToken = new AccessToken();
-        accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), user, exp));
+        accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), accessToken.getId().toString(), jwtConfig.getIssuer(), user, exp));
         accessToken.setUser(user);
         accessToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
         accessTokenRepository.save(accessToken);
@@ -55,7 +55,7 @@ public class JwtServiceImpl implements JwtService{
         exp.add(Calendar.SECOND, jwtConfig.getRefreshTokenLifetimeSec());
 
         RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), jwtConfig.getIssuer(), accessToken.getUser(), exp));
+        refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), refreshToken.getId().toString(), jwtConfig.getIssuer(), exp));
         refreshToken.setAccessToken(accessToken);
         refreshToken.setUser(accessToken.getUser());
         refreshToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
@@ -66,26 +66,44 @@ public class JwtServiceImpl implements JwtService{
     @Transactional(rollbackFor = Exception.class)
     @Override
     public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation {
-        AccessToken accessToken = createAccessToken(userRepository.getByUserName(userDetail.getUsername()).orElseThrow(()->new InvalidOperation("user is not exist !")));
+        User user=userRepository.getByUserName(userDetail.getUsername()).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        AccessToken accessToken = createAccessToken(user);
         RefreshToken refreshToken = createRefreshToken(accessToken);
+
+        //prevent concurrent user role/password/active change
+        user.setAuthAt(LocalDateTime.now());
+        userRepository.save(user);
+
         return new TokenPair(accessToken, refreshToken);
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException {
-        //load refreshToken
+        //parse refresh token
+        try {
+            JwtUtil.parseToken(jwtConfig.getPublicKey(), refreshPlainToken);
+        }catch (JwtException e){
+            throw new InvalidTokenException("invalid refresh token !");
+        }
+        //load refresh token
         RefreshToken refreshToken = refreshTokenRepository
                 .getByTokenAndExpireAtGreaterThan(refreshPlainToken, LocalDateTime.now())
-                .orElseThrow(()->new InvalidTokenException("invalid token !"));
+                .orElseThrow(()->new InvalidTokenException("invalid refresh token !"));
         User user = refreshToken.getUser();
 
-        // refreshToken will be cascade deleted
+        // refresh token will be cascade deleted
         revokeAccessToken(refreshToken.getAccessToken());
 
         //issue new tokens
         AccessToken accessToken = createAccessToken(user);
-        return new TokenPair(accessToken, createRefreshToken(accessToken));
+        RefreshToken newRefreshToken = createRefreshToken(accessToken);
+
+        //prevent concurrent user role/password/active change
+        user.setAuthAt(LocalDateTime.now());
+        userRepository.save(user);
+
+        return new TokenPair(accessToken, newRefreshToken);
     }
 
     private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
@@ -125,8 +143,8 @@ public class JwtServiceImpl implements JwtService{
     }
 
     @Override
-    public boolean addAccessTokenToBlackList(AccessToken accessToken){
-        return redisService.set("access_token:"+accessToken.getToken(), "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
+    public void addAccessTokenToBlackList(AccessToken accessToken){
+        redisService.set("access_token:"+accessToken.getToken(), "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
     }
 
     @Override

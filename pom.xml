@@ -139,6 +139,7 @@
 						<exclude>**/data/**/*</exclude>
 						<exclude>**/model/**/*</exclude>
 						<exclude>**/config/**/*</exclude>
+						<exclude>**/filter/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

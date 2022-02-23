@@ -12,7 +12,6 @@ class UtilsTest {
     void randomNumericCode() {
         assertThrows(IllegalArgumentException.class, ()->Utils.randomNumericCode(-1));
         assertThrows(IllegalArgumentException.class, ()->Utils.randomNumericCode(0));
-        assertThrows(IllegalArgumentException.class, ()->Utils.randomNumericCode(11));
 
         Pattern pattern = Pattern.compile("[0-9]+");
         for (int i=1;i<=10;i++){

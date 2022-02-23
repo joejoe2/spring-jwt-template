@@ -7,6 +7,7 @@ import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.PublicKey;
@@ -17,7 +18,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtUtil {
-    public static String generateAccessToken(RSAPrivateKey key, String issuer, User user, Calendar exp){
+    public static String generateAccessToken(RSAPrivateKey key, String jti, String issuer, User user, Calendar exp){
         Claims claims = Jwts.claims();
         claims.put("type", "access_token");
         claims.put("id", user.getId().toString());
@@ -26,17 +27,17 @@ public class JwtUtil {
         claims.put("isActive", user.isActive());
         claims.setExpiration(exp.getTime());
         claims.setIssuer(issuer);
+        claims.setId(jti);
 
         return Jwts.builder().setClaims(claims).signWith(key).compact();
     }
 
-    public static String generateRefreshToken(RSAPrivateKey key, String issuer, User user, Calendar exp){
+    public static String generateRefreshToken(RSAPrivateKey key, String jti, String issuer, Calendar exp){
         Claims claims = Jwts.claims();
         claims.put("type", "refresh_token");
-        claims.put("id", user.getId().toString());
-        claims.put("username", user.getUserName());
         claims.setExpiration(exp.getTime());
         claims.setIssuer(issuer);
+        claims.setId(jti);
 
         return Jwts.builder().setClaims(claims).signWith(key).compact();
     }

@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @ControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -29,9 +26,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
         Map<String, Object> body = new HashMap<>();
-        Map<String, List<String>> errors =new HashMap<>();
+        Map<String, TreeSet<String>> errors =new HashMap<>();
         for (FieldError error:ex.getFieldErrors()){
-            List<String> messages = errors.getOrDefault(error.getField(), new ArrayList<String>());
+            TreeSet<String> messages = errors.getOrDefault(error.getField(), new TreeSet<String>());
             messages.add(error.getDefaultMessage());
             errors.put(error.getField(), messages);
         }

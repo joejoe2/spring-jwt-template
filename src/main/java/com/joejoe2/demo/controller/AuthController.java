@@ -1,17 +1,16 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.config.ResetPasswordURL;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
-import com.joejoe2.demo.data.auth.request.LoginRequest;
-import com.joejoe2.demo.data.auth.request.RefreshRequest;
-import com.joejoe2.demo.data.auth.request.RegisterRequest;
-import com.joejoe2.demo.data.auth.request.IssueVerificationCodeRequest;
-import com.joejoe2.demo.data.auth.request.ChangePasswordRequest;
+import com.joejoe2.demo.data.auth.request.*;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.model.auth.VerifyToken;
+import com.joejoe2.demo.service.EmailService;
 import com.joejoe2.demo.service.JwtService;
 import com.joejoe2.demo.service.UserService;
 import com.joejoe2.demo.service.VerificationService;
@@ -41,6 +40,10 @@ public class AuthController {
     UserService userService;
     @Autowired
     VerificationService verificationService;
+    @Autowired
+    EmailService emailService;
+    @Autowired
+    ResetPasswordURL resetPasswordURL;
 
     @RequestMapping(path = "/login", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request){
@@ -51,7 +54,10 @@ public class AuthController {
             response.put("access_token", tokenPair.getAccessToken().getToken());
             response.put("refresh_token", tokenPair.getRefreshToken().getToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (AuthenticationException | InvalidOperation e){
+        } catch (AuthenticationException e){
+            response.put("message", e.getMessage()+" !");
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (InvalidOperation e){
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
@@ -110,6 +116,34 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         try{
             userService.changePasswordOf(AuthUtil.currentUserDetail().getId(), request.getOldPassword(), request.getNewPassword());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (InvalidOperation ex){
+            response.put("message", ex.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+    @RequestMapping(path = "/forgetPassword", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> forgetPassword(@Valid @RequestBody ForgetPasswordRequest request){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            VerifyToken verifyToken=userService.requestResetPassword(request.getEmail());
+            //send reset password link to user
+            emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
+                    "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }catch (InvalidOperation ex){
+            response.put("message", ex.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(path = "/resetPassword", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
+        Map<String, Object> response = new HashMap<>();
+        try{
+            userService.resetPassword(request.getToken(), request.getNewPassword());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (InvalidOperation ex){
             response.put("message", ex.getMessage());

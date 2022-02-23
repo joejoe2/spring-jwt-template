@@ -10,6 +10,7 @@ public class UserProfile {
     private String username;
     private String email;
     private Role role;
+    private Boolean isActive;
     private String registeredAt;
 
     public UserProfile(User user) {
@@ -17,6 +18,7 @@ public class UserProfile {
         this.username = user.getUserName();
         this.email = user.getEmail();
         this.role = user.getRole();
+        this.isActive = user.isActive();
         this.registeredAt = user.getCreateAt().toString();
     }
 }

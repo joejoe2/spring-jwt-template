@@ -5,22 +5,18 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @Entity
-public class AccessToken {
+public class VerifyToken {
     @Id
-    //@GeneratedValue(generator = "UUID")
-    //@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
+    @GeneratedValue(generator = "UUID")
+    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(unique = true, updatable = false, nullable = false)
-    private UUID id=UUID.randomUUID();
+    private UUID id;
 
     @Column(unique = true, updatable = false, nullable = false, columnDefinition="TEXT")
     private String token;
@@ -28,7 +24,8 @@ public class AccessToken {
     @Column(updatable = false, nullable = false)
     private LocalDateTime expireAt;
 
-    @ManyToOne
+    @OneToOne
+    @JoinColumn(unique=true) //unidirectional one to noe
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

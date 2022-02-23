@@ -35,7 +35,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER) //use jwt instead of session
                 .and()
                 .authorizeRequests()
-                .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/issueVerificationCode").permitAll()
+                .antMatchers("/api/auth/login", "/api/auth/register", "/api/auth/refresh",
+                        "/api/auth/issueVerificationCode", "/api/auth/forgetPassword",
+                        "/api/auth/resetPassword").permitAll()
                 .antMatchers("/api/admin/**").hasAuthority(Role.ADMIN.toString())
                 .anyRequest().authenticated()
                 .and()
