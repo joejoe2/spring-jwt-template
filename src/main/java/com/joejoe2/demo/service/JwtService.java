@@ -6,6 +6,8 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.model.auth.AccessToken;
 
+import java.util.List;
+
 public interface JwtService {
     public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation;
 
@@ -16,6 +18,8 @@ public interface JwtService {
     public void revokeAccessToken(String token) throws InvalidTokenException;
 
     void revokeAccessToken(AccessToken accessToken);
+
+    void revokeAccessToken(List<AccessToken> accessToken);
 
     void addAccessTokenToBlackList(AccessToken accessToken);
 

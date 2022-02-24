@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService{
         if (Role.ADMIN.equals(originalRole)&&userRepository.getByRole(Role.ADMIN).size()==0)throw new InvalidOperation("cannot change the role of the only ADMIN !");
 
         //need to logout user after role change
-        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
+        jwtService.revokeAccessToken(accessTokenRepository.getByUser(user));
     }
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
@@ -123,7 +123,7 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
 
         //need to logout user after password change
-        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
+        jwtService.revokeAccessToken(accessTokenRepository.getByUser(user));
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
@@ -132,6 +132,8 @@ public class UserServiceImpl implements UserService{
         email=new EmailValidator().validate(email);
 
         User user=userRepository.getByEmail(email).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        if (!user.isActive())throw new InvalidOperation("User is disabled !");
+
         Optional<VerifyToken> token=verifyTokenRepository.getByUser(user);
         if(token.isPresent()&&token.get().getExpireAt().isAfter(LocalDateTime.now()))
             throw new InvalidOperation("already request to reset password, please try again later !");
@@ -150,7 +152,6 @@ public class UserServiceImpl implements UserService{
         return verifyToken;
     }
 
-    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     @Override
     public void resetPassword(String verifyToken, String newPassword) throws InvalidOperation{
@@ -159,7 +160,10 @@ public class UserServiceImpl implements UserService{
 
         VerifyToken token = verifyTokenRepository.getByTokenAndExpireAtGreaterThan(verifyToken, LocalDateTime.now())
                 .orElseThrow(()->new InvalidOperation("reset password request is invalid or expired, please try to use forget password again later !"));
+
         User user=token.getUser();
+        if (!user.isActive())throw new InvalidOperation("User is disabled !");
+
         user.setPassword(newPassword);
         userRepository.save(user);
         verifyTokenRepository.delete(token);// REPEATABLE_READ, if deleted by others
@@ -167,7 +171,7 @@ public class UserServiceImpl implements UserService{
         // instead of being ignored by postgresql in read-committed
 
         //need to logout user after password change
-        accessTokenRepository.getByUser(user).forEach(accessToken -> jwtService.revokeAccessToken(accessToken));
+        jwtService.revokeAccessToken(accessTokenRepository.getByUser(user));
     }
 
     @Override

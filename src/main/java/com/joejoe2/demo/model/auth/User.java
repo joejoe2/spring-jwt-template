@@ -1,11 +1,11 @@
 package com.joejoe2.demo.model.auth;
 
 import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.*;
 
 import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -16,6 +16,7 @@ import java.util.UUID;
 public class User{
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
+    @Source(value = SourceType.DB) // allow more precision from db
     private Timestamp version;
 
     @Id

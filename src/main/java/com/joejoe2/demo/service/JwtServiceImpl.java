@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -140,6 +141,13 @@ public class JwtServiceImpl implements JwtService{
     public void revokeAccessToken(AccessToken accessToken) {
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
         addAccessTokenToBlackList(accessToken);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void revokeAccessToken(List<AccessToken> accessTokens) {
+        accessTokenRepository.deleteAll(accessTokens); // refreshToken will be cascade deleted
+        accessTokens.forEach((a)->addAccessTokenToBlackList(a));
     }
 
     @Override
