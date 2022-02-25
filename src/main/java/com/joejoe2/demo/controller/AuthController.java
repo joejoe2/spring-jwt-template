@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
@@ -21,21 +22,22 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 
 @Controller
-@RequestMapping(path = "/api/auth") //path prefix
 public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
     JwtService jwtService;
+    @Autowired
+    JwtConfig jwtConfig;
     @Autowired
     UserService userService;
     @Autowired
@@ -45,7 +47,7 @@ public class AuthController {
     @Autowired
     ResetPasswordURL resetPasswordURL;
 
-    @RequestMapping(path = "/login", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/login", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request){
         Map<String, String> response = new HashMap<>();
         try {
@@ -63,7 +65,30 @@ public class AuthController {
         }
     }
 
-    @RequestMapping(path = "/refresh", method = RequestMethod.POST)
+    @RequestMapping(path = "/web/api/auth/login", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, String>> webLogin(@Valid @RequestBody LoginRequest request, HttpServletResponse response){
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            UserDetail userDetail = AuthUtil.authenticate(authenticationManager, request.getUsername(), request.getPassword());
+            TokenPair tokenPair = jwtService.issueTokens(userDetail);
+            responseBody.put("access_token", tokenPair.getAccessToken().getToken());
+            //place refresh_token in http only cookie
+            Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());
+            cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
+
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } catch (AuthenticationException e){
+            responseBody.put("message", e.getMessage()+" !");
+            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        }catch (InvalidOperation e){
+            responseBody.put("message", e.getMessage());
+            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(path = "/api/auth/refresh", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody RefreshRequest request){
         Map<String, String> response = new HashMap<>();
         try {
@@ -77,8 +102,26 @@ public class AuthController {
         }
     }
 
+    @RequestMapping(path = "/web/api/auth/refresh", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, String>> webRefresh(@CookieValue(name = "refresh_token", defaultValue = "") String refreshToken, HttpServletResponse response){
+        Map<String, String> responseBody = new HashMap<>();
+        try {
+            TokenPair tokenPair = jwtService.refreshTokens(refreshToken);
+            responseBody.put("access_token", tokenPair.getAccessToken().getToken());
+            //place refresh_token in http only cookie
+            Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());
+            cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
+            cookie.setHttpOnly(true);
+            response.addCookie(cookie);
 
-    @RequestMapping(path = "/logout", method = RequestMethod.POST)
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } catch (InvalidTokenException e) {
+            responseBody.put("message", e.getMessage());
+            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> logout(){
         Map<String, String> response = new HashMap<>();
         try {
@@ -90,7 +133,7 @@ public class AuthController {
         }
     }
 
-    @RequestMapping(path = "/register", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/register", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request){
         Map<String, String> response = new HashMap<>();
         try {
@@ -103,7 +146,7 @@ public class AuthController {
         }
     }
 
-    @RequestMapping(path = "/issueVerificationCode", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/issueVerificationCode", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> issueVerificationCode(@Valid @RequestBody IssueVerificationCodeRequest request){
         Map<String, String> response = new HashMap<>();
         VerificationPair verificationPair = verificationService.issueVerificationCode(request.getEmail());
@@ -111,7 +154,7 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @RequestMapping(path = "/changePassword", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/changePassword", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{
@@ -124,7 +167,7 @@ public class AuthController {
     }
 
 
-    @RequestMapping(path = "/forgetPassword", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/forgetPassword", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> forgetPassword(@Valid @RequestBody ForgetPasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{
@@ -139,7 +182,7 @@ public class AuthController {
         }
     }
 
-    @RequestMapping(path = "/resetPassword", method = RequestMethod.POST)
+    @RequestMapping(path = "/api/auth/resetPassword", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{

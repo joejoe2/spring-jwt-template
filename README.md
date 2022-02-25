@@ -9,7 +9,9 @@ This is a template to help you to get started with jwt-based spring boot backend
 Including:
 - `basic models` for user, access token, and refresh token
 - `login api` issue access token and refresh token
+- `web login api` issue access token and set refresh token in http only cookie
 - `refresh api` exchange new tokens via refresh token
+- `web refresh api` exchange new tokens via the refresh token in http only cookie
 - `register api` with email verification
 - `logout api` revoke access token via redis blacklist
 - `change password api`
@@ -31,7 +33,7 @@ we will use open-ssl to generate the private and public key for jwt.
 3. set up a redis server on localhost:6379
 
 
-4. install open-ssl and run ./jwtRSA256.sh 
+4. install open-ssl and run `./jwtRSA256.sh` 
 
 
 5. cd to `./src/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
@@ -85,7 +87,15 @@ we will use open-ssl to generate the private and public key for jwt.
     ```
    - `set reset password url`(redirect user to your reset password page in frontend, we will append token for you to send the password reset request)
    ```
+   # set reset password url
    reset.password.url=http://localhost:8888/resetPassword?token=
+   ```
+   - `set allow host`(this is used for web login/refresh api
+   , because we will set refresh token in http only cookie, 
+   you should set this to the hostname of your frontend)
+   ```
+   # set allow host (frontend)
+   allow.host=http://localhost:8888
    ```
 
 7. copy the contents of `private.key` and `public.key` (generated at project root in step 4.) into `application.yml`
@@ -112,17 +122,18 @@ this application as an AuthService).
 
 ## Testing
 
-`mvn test` or `./mvnw test`
+run `mvn test` or `./mvnw test`
 
 ## Deploy
 
-1. install docker and docker-compose
-2. edit `./env/application.env` (just like application.properties) but you need to set `jwt.secret.privateKey`
+1. install maven, docker and docker-compose
+2. run `mvn package -Dmaven.test.skip=true`
+3. edit `./env/application.env` (just like application.properties) but you need to set `jwt.secret.privateKey`
    and `jwt.secret.publicKey` like application.yml
-3. edit `./nginx/nginx-certbot.env` (just set value at first line)
-4. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
-5. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
-6. `docker-compose up` or `docker-compose up -d`
+4. edit `./nginx/nginx-certbot.env` (just set value at first line)
+5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
+6. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
+7. `docker-compose up` or `docker-compose up -d`
 
 ## ToDo
 

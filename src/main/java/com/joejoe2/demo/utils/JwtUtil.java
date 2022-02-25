@@ -43,15 +43,19 @@ public class JwtUtil {
     }
 
     public static Map<String, Object> parseToken(RSAPublicKey key, String token) throws JwtException {
-        JwtParser parser = Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build();
+        try {
+            JwtParser parser = Jwts.parserBuilder()
+                    .setSigningKey(key)
+                    .build();
 
-        Claims claims = parser
-                .parseClaimsJws(token)
-                .getBody();
+            Claims claims = parser
+                    .parseClaimsJws(token)
+                    .getBody();
 
-        return claims.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return claims.entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        }catch (Exception e){
+            throw new JwtException(e.getMessage());
+        }
     }
 }
