@@ -9,13 +9,13 @@ import com.joejoe2.demo.model.auth.AccessToken;
 import java.util.List;
 
 public interface JwtService {
-    public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation;
+    TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation;
 
-    public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException;
+    TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException;
 
-    public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException;
+    UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException;
 
-    public void revokeAccessToken(String token) throws InvalidTokenException;
+    void revokeAccessToken(String token) throws InvalidTokenException;
 
     void revokeAccessToken(AccessToken accessToken);
 

@@ -234,4 +234,45 @@ class UserServiceTest {
             assertTrue(passwordEncoder.matches("a12345678", userRepository.findById(user.getId()).get().getPassword()));
         });
     }
+
+    @Test
+    @Transactional
+    void activateUser() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->userService.activateUser("invalid uid"));
+        //test if target is already active
+        assertThrows(InvalidOperation.class, ()->userService.activateUser(user.getId().toString()));
+        //test success
+        user.setActive(false);
+        userRepository.save(user);
+        assertDoesNotThrow(()->userService.activateUser(user.getId().toString()));
+        assertTrue(user.isActive());
+    }
+
+    @Test
+    @Transactional
+    void deactivateUser() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        user.setActive(false);
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->userService.activateUser("invalid uid"));
+        //test if target is already inactive
+        assertThrows(InvalidOperation.class, ()->userService.deactivateUser(user.getId().toString()));
+        //test success
+        user.setActive(true);
+        userRepository.save(user);
+        assertDoesNotThrow(()->userService.deactivateUser(user.getId().toString()));
+        assertFalse(user.isActive());
+    }
 }

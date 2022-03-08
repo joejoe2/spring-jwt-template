@@ -81,6 +81,36 @@ public class UserServiceImpl implements UserService{
     }
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+    @Override
+    public void activateUser(String userId) throws InvalidOperation {
+        UUID id = new UUIDValidator().validate(userId);
+
+        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot activate yourself !");
+        if (user.isActive())throw new InvalidOperation("target user is already active !");
+
+        user.setActive(true);
+        userRepository.save(user);
+    }
+
+    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void deactivateUser(String userId) throws InvalidOperation {
+        UUID id = new UUIDValidator().validate(userId);
+
+        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot deactivate yourself !");
+        if (!user.isActive())throw new InvalidOperation("target user is already inactive !");
+
+        user.setActive(false);
+        userRepository.save(user);
+
+        //need to logout user after deactivate
+        jwtService.revokeAccessToken(accessTokenRepository.getByUser(user));
+    }
+
+    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void changeRoleOf(String userId, Role role) throws InvalidOperation {

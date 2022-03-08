@@ -124,7 +124,6 @@ public class JwtServiceImpl implements JwtService{
         }
     }
 
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void revokeAccessToken(String accessPlainToken) throws InvalidTokenException {
         AccessToken accessToken = accessTokenRepository
@@ -135,8 +134,6 @@ public class JwtServiceImpl implements JwtService{
         addAccessTokenToBlackList(accessToken);
     }
 
-
-    @Transactional(rollbackFor = Exception.class)
     @Override
     public void revokeAccessToken(AccessToken accessToken) {
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted

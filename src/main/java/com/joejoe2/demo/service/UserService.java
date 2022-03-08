@@ -22,6 +22,10 @@ public interface UserService {
 
     User registerUser(String username, String password, String email, VerificationPair verification) throws AlreadyExist, InvalidOperation;
 
+    void activateUser(String userId) throws InvalidOperation;
+
+    void deactivateUser(String userId) throws InvalidOperation;
+
     void changeRoleOf(String userId, Role role) throws InvalidOperation;
 
     void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation;

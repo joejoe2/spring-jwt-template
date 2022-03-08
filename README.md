@@ -16,7 +16,7 @@ Including:
 - `logout api` revoke access token via redis blacklist
 - `change password api`
 - `forget and reset password api`
-- `admin api` change role and getUserList
+- `admin api` user activate/deactivate, change role, and getUserList
 - validation on `@RequestBody`
 - validation on service layer
 

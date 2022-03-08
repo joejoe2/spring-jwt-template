@@ -3,6 +3,7 @@ package com.joejoe2.demo.controller;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.PageRequest;
+import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
@@ -26,10 +27,10 @@ public class AdminController {
     UserService userService;
 
     @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest changeUserRoleRequest){
+    public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            userService.changeRoleOf(changeUserRoleRequest.getId(), Role.valueOf(changeUserRoleRequest.getRole()));
+            userService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (InvalidOperation e){
             response.put("message", e.getMessage());
@@ -40,14 +41,38 @@ public class AdminController {
         }
     }
 
+    @RequestMapping(path = "/activateUser", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, String>> activateUser(@Valid @RequestBody UserIdRequest request){
+        Map<String, String> response = new HashMap<>();
+        try {
+            userService.activateUser(request.getId());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (InvalidOperation e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @RequestMapping(path = "/deactivateUser", method = RequestMethod.POST)
+    public ResponseEntity<Map<String, String>> deactivateUser(@Valid @RequestBody UserIdRequest request){
+        Map<String, String> response = new HashMap<>();
+        try {
+            userService.deactivateUser(request.getId());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (InvalidOperation e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }
+    }
+
     @RequestMapping(path = "/getUserList", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest pageRequest){
+    public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest request){
         Map<String, Object> response = new HashMap<>();
-        if (pageRequest==null)
+        if (request==null)
             response.put("profiles", userService.getAllUserProfiles());
         else {
             try {
-                PageList<UserProfile> pageList = userService.getAllUserProfilesWithPage(pageRequest.getPage(), pageRequest.getSize());
+                PageList<UserProfile> pageList = userService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
                 response.put("profiles", pageList.getList());
                 response.put("totalItems", pageList.getTotalItems());
                 response.put("currentPage", pageList.getCurrentPage());
