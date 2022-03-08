@@ -30,12 +30,8 @@ class EmailServiceTest {
         message.setSubject("subject");
         message.setText("content");
 
-        Mockito.doNothing().when(emailSender).send(message);
-        try {
-            emailService.sendSimpleEmail("to", "subject", "content");
-        }catch (Exception e){
-            System.out.println("we do not care send out or not !");
-        }
-        Mockito.verify(emailSender).send(message);
+        Mockito.doNothing().when(emailSender).send(Mockito.any(SimpleMailMessage.class));
+        emailService.sendSimpleEmail("to", "subject", "content");
+        Mockito.verify(emailSender).send(Mockito.any(SimpleMailMessage.class));
     }
 }
