@@ -22,6 +22,15 @@ Including:
 
 we will use open-ssl to generate the private and public key for jwt.
 
+## Example frontend
+
+We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend) to 
+work with this project.
+
+![image](demo_login.png)
+
+![image](demo_admin.png)
+
 ## Get started
 
 1. clone the repo and run `mvn install` or `./mvnw install`
@@ -128,7 +137,7 @@ run `mvn test` or `./mvnw test`
 
 1. install maven, docker and docker-compose
 2. run `mvn package -Dmaven.test.skip=true`
-3. edit `./env/application.env` (just like application.properties) but you need to set `jwt.secret.privateKey`
+3. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), but you need to set `jwt.secret.privateKey`
    and `jwt.secret.publicKey` like application.yml
 4. edit `./nginx/nginx-certbot.env` (just set value at first line)
 5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
@@ -138,4 +147,4 @@ run `mvn test` or `./mvnw test`
 ## ToDo
 
 1. add test for controllers
-2. add example frontend
+2. write documentation for api
