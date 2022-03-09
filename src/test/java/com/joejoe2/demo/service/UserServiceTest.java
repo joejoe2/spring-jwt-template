@@ -267,7 +267,13 @@ class UserServiceTest {
 
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->userService.activateUser("invalid uid"));
+        //test deactivate an admin
+        user.setRole(Role.ADMIN);
+        userRepository.save(user);
+        assertThrows(InvalidOperation.class, ()->userService.deactivateUser(user.getId().toString()));
         //test if target is already inactive
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
         assertThrows(InvalidOperation.class, ()->userService.deactivateUser(user.getId().toString()));
         //test success
         user.setActive(true);
