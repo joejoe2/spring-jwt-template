@@ -55,7 +55,7 @@ public class UserServiceImpl implements UserService{
     VerifyTokenRepository verifyTokenRepository;
 
     @Override
-    public User createUser(String username, String password, String email, Role role) throws ValidationError, AlreadyExist {
+    public User createUser(String username, String password, String email, Role role) throws AlreadyExist {
         username = new UserNameValidator().validate(username);
         password = new PasswordValidator().validate(password);
         email = new EmailValidator().validate(email);
@@ -159,7 +159,7 @@ public class UserServiceImpl implements UserService{
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     @Override
-    public VerifyToken requestResetPassword(String email) throws InvalidOperation{
+    public VerifyToken requestResetPasswordToken(String email) throws InvalidOperation{
         email=new EmailValidator().validate(email);
 
         User user=userRepository.getByEmail(email).orElseThrow(()->new InvalidOperation("user is not exist !"));
@@ -217,10 +217,10 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public PageList<UserProfile> getAllUserProfilesWithPage(int page, int size) throws InvalidOperation{
-        if (page<0||size<=0)throw new InvalidOperation("invalid page or size !");
+    public PageList<UserProfile> getAllUserProfilesWithPage(int page, int size){
+        if (page<0||size<=0)throw new IllegalArgumentException("invalid page or size !");
         Page<User> paging =  userRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createAt")));
         List<UserProfile> profiles = paging.getContent().stream().map((user -> new UserProfile(user))).collect(Collectors.toList());
-        return new PageList<UserProfile>(paging.getTotalElements(), paging.getNumber(), paging.getTotalPages(), paging.getSize(), profiles);
+        return new PageList<>(paging.getTotalElements(), paging.getNumber(), paging.getTotalPages(), paging.getSize(), profiles);
     }
 }

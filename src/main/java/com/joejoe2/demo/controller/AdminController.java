@@ -26,6 +26,31 @@ public class AdminController {
     @Autowired
     UserService userService;
 
+    /**
+     * change the role of target user, this is only allowed to ADMIN <br><br>
+     * 1. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
+     *    <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     * 2. a {@link ChangeUserRoleRequest} will return code 400 and {"message": "xxx"} if <br>
+     *    <ul>
+     *        <li>target user is not exist</li>
+     *        <li>target user==request user</li>
+     *        <li>target role is not exist</li>
+     *        <li>target role==original role</li>
+     *        <li>target user is the only ADMIN</li>
+     *    </ul>
+     * 3. side effects if the {@link ChangeUserRoleRequest} success
+     *    <ul>
+     *        <li>target user will be logged out by revoke all access and refresh tokens</li>
+     *    <ul>
+     * @param request
+     * @return status code, json
+     * <ul>
+     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     *     <li>400, <code>{"message": "xxx"}</code></li>
+     * </ul>
+     */
     @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest request){
         Map<String, String> response = new HashMap<>();
@@ -41,6 +66,24 @@ public class AdminController {
         }
     }
 
+    /**
+     * activate target user, this is only allowed to ADMIN <br><br>
+     * 1. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     * 2. a {@linkplain UserIdRequest ActivateUserRequest} will return code 400 and {"message": "xxx"} if
+     *    <ul>
+     *        <li>target user is not exist</li>
+     *        <li>target user==request user</li>
+     *        <li>target user is already active</li>
+     *    </ul>
+     * @param request
+     * @return status code, json
+     * <ul>
+     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     *     <li>400, <code>{"message": "xxx"}</code></li>
+     * </ul>
+     */
     @RequestMapping(path = "/activateUser", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> activateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
@@ -53,6 +96,28 @@ public class AdminController {
         }
     }
 
+    /**
+     * deactivate target user, this is only allowed to ADMIN <br><br>
+     * 1. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     * 2. a {@linkplain UserIdRequest DeActivateUserRequest} will return code 400 and {"message": "xxx"} if
+     *    <ul>
+     *        <li>target user is not exist</li>
+     *        <li>target user==request user</li>
+     *        <li>target user is already inactive</li>
+     *    </ul>
+     * 3. side effect if this method success
+     *    <ul>
+     *        <li>target user will be logged out by revoke all access and refresh tokens</li>
+     *    </ul>
+     * @param request
+     * @return status code, json
+     * <ul>
+     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     *     <li>400, <code>{"message": "xxx"}</code></li>
+     * </ul>
+     */
     @RequestMapping(path = "/deactivateUser", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> deactivateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
@@ -65,23 +130,30 @@ public class AdminController {
         }
     }
 
+    /**
+     * get all user profiles or user profiles with page param, this is only allowed to ADMIN <br><br>
+     * 1. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     * 2. if no given {@linkplain PageRequest request body}, this will return all user profiles, otherwise will be a page request
+     * @param request
+     * @return status code, json
+     * <ul>
+     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     * </ul>
+     */
     @RequestMapping(path = "/getUserList", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest request){
         Map<String, Object> response = new HashMap<>();
         if (request==null)
             response.put("profiles", userService.getAllUserProfiles());
         else {
-            try {
-                PageList<UserProfile> pageList = userService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
-                response.put("profiles", pageList.getList());
-                response.put("totalItems", pageList.getTotalItems());
-                response.put("currentPage", pageList.getCurrentPage());
-                response.put("totalPages", pageList.getTotalPages());
-                response.put("pageSize", pageList.getPageSize());
-            }catch (InvalidOperation e){
-                response.put("message", e.getMessage());
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
+            PageList<UserProfile> pageList = userService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
+            response.put("profiles", pageList.getList());
+            response.put("totalItems", pageList.getTotalItems());
+            response.put("currentPage", pageList.getCurrentPage());
+            response.put("totalPages", pageList.getTotalPages());
+            response.put("pageSize", pageList.getPageSize());
         }
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

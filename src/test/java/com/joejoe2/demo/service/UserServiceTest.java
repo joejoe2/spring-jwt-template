@@ -177,9 +177,9 @@ class UserServiceTest {
     @Transactional
     void getAllUserProfilesWithPage() {
         //test IllegalArgument
-        assertThrows(InvalidOperation.class, () -> userService.getAllUserProfilesWithPage(-1, 1));
-        assertThrows(InvalidOperation.class, () -> userService.getAllUserProfilesWithPage(0, -1));
-        assertThrows(InvalidOperation.class, () -> userService.getAllUserProfilesWithPage(0, 0));
+        assertThrows(IllegalArgumentException.class, () -> userService.getAllUserProfilesWithPage(-1, 1));
+        assertThrows(IllegalArgumentException.class, () -> userService.getAllUserProfilesWithPage(0, -1));
+        assertThrows(IllegalArgumentException.class, () -> userService.getAllUserProfilesWithPage(0, 0));
         //test success
         PageList<UserProfile> pageList;
         try {
@@ -201,12 +201,12 @@ class UserServiceTest {
         userRepository.save(user);
 
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->userService.requestResetPassword("invalid email"));
+        assertThrows(IllegalArgumentException.class, ()->userService.requestResetPasswordToken("invalid email"));
         //test a not exist user email
-        assertThrows(InvalidOperation.class, ()->userService.requestResetPassword("not@email.com"));
+        assertThrows(InvalidOperation.class, ()->userService.requestResetPasswordToken("not@email.com"));
         //test success
         assertDoesNotThrow(()->{
-            assertEquals(user, userService.requestResetPassword("test@email.com").getUser());
+            assertEquals(user, userService.requestResetPasswordToken("test@email.com").getUser());
         });
     }
 

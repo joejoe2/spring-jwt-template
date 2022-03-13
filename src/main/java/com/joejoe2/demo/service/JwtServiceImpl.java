@@ -64,6 +64,7 @@ public class JwtServiceImpl implements JwtService{
         return refreshToken;
     }
 
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation {
