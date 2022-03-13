@@ -6,6 +6,7 @@ import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
@@ -82,10 +83,10 @@ public class UserServiceImpl implements UserService{
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Override
-    public void activateUser(String userId) throws InvalidOperation {
+    public void activateUser(String userId) throws InvalidOperation, UserDoesNotExist {
         UUID id = new UUIDValidator().validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot activate yourself !");
         if (user.isActive())throw new InvalidOperation("target user is already active !");
 
@@ -96,10 +97,10 @@ public class UserServiceImpl implements UserService{
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void deactivateUser(String userId) throws InvalidOperation {
+    public void deactivateUser(String userId) throws InvalidOperation, UserDoesNotExist {
         UUID id = new UUIDValidator().validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot deactivate yourself !");
         if (user.getRole()==Role.ADMIN)throw new InvalidOperation("cannot deactivate an admin !");
         if (!user.isActive())throw new InvalidOperation("target user is already inactive !");
@@ -114,10 +115,10 @@ public class UserServiceImpl implements UserService{
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void changeRoleOf(String userId, Role role) throws InvalidOperation {
+    public void changeRoleOf(String userId, Role role) throws InvalidOperation, UserDoesNotExist {
         UUID id = new UUIDValidator().validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot change the role of yourself !");
         Role originalRole = user.getRole();
         if (role.equals(originalRole))throw new InvalidOperation("role doesn't change !");
@@ -134,7 +135,7 @@ public class UserServiceImpl implements UserService{
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation {
+    public void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation, UserDoesNotExist {
         UUID id = new UUIDValidator().validate(userId);
         PasswordValidator passwordValidator = new PasswordValidator();
 
@@ -146,7 +147,7 @@ public class UserServiceImpl implements UserService{
         newPassword = passwordValidator.validate(newPassword);
         newPassword = passwordEncoder.encode(newPassword);
 
-        User user = userRepository.findById(id).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (!passwordEncoder.matches(oldPassword, user.getPassword()))throw new InvalidOperation("old password is not correct !");
         if(passwordEncoder.matches(oldPassword, newPassword))throw new InvalidOperation("new password is same with old password !");
 
@@ -159,10 +160,10 @@ public class UserServiceImpl implements UserService{
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     @Override
-    public VerifyToken requestResetPasswordToken(String email) throws InvalidOperation{
+    public VerifyToken requestResetPasswordToken(String email) throws InvalidOperation, UserDoesNotExist{
         email=new EmailValidator().validate(email);
 
-        User user=userRepository.getByEmail(email).orElseThrow(()->new InvalidOperation("user is not exist !"));
+        User user=userRepository.getByEmail(email).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (!user.isActive())throw new InvalidOperation("User is disabled !");
 
         Optional<VerifyToken> token=verifyTokenRepository.getByUser(user);
@@ -206,8 +207,8 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public UserProfile getProfile(UserDetail userDetail) throws InvalidOperation{
-        User user = userRepository.findById(UUID.fromString(userDetail.getId())).orElseThrow(()->new InvalidOperation("user is not exist !"));
+    public UserProfile getProfile(String userId) throws UserDoesNotExist{
+        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         return new UserProfile(user);
     }
 

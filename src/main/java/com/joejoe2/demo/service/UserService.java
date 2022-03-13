@@ -6,6 +6,7 @@ import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.VerifyToken;
@@ -40,10 +41,11 @@ public interface UserService {
     /**
      * activate user with userId
      * @param userId target user id
-     * @throws InvalidOperation if target user is not exist, already active,
+     * @throws InvalidOperation if target user is already active,
      * or you are trying to activate yourself
+     * @throws UserDoesNotExist if target user is not exist
      */
-    void activateUser(String userId) throws InvalidOperation;
+    void activateUser(String userId) throws InvalidOperation, UserDoesNotExist;
 
     /**
      * deactivate user with userId
@@ -51,18 +53,20 @@ public interface UserService {
      * to the user(in order to logout user)
      * @throws InvalidOperation if target user is not exist, already inactive,
      * or you are trying to deactivate yourself
+     * @throws UserDoesNotExist if target user is not exist
      */
-    void deactivateUser(String userId) throws InvalidOperation;
+    void deactivateUser(String userId) throws InvalidOperation, UserDoesNotExist;
 
     /**
      * change the role of user with userId, this will also revoke all access tokens related
      * to the user(in order to logout user)
      * @param userId target user id
      * @param role target role you want to change to
-     * @throws InvalidOperation if target user is not exist, already in that role,
+     * @throws InvalidOperation if target user is already in that role,
      * you are trying to change the role of yourself, or the target user is the only admin in db
+     * @throws UserDoesNotExist if target user is not exist
      */
-    void changeRoleOf(String userId, Role role) throws InvalidOperation;
+    void changeRoleOf(String userId, Role role) throws InvalidOperation, UserDoesNotExist;
 
     /**
      * change the password of user with userId, this will also revoke all access tokens related
@@ -70,20 +74,22 @@ public interface UserService {
      * @param userId
      * @param oldPassword
      * @param newPassword
-     * @throws InvalidOperation if target user is not exist, old password is not correct, old password
+     * @throws InvalidOperation if target user is old password is not correct, old password
      * equals to new password
+     * @throws UserDoesNotExist if target user is not exist
      */
-    void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation;
+    void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation, UserDoesNotExist;
 
     /**
      * generate VerifyToken related to the email (VerifyToken has an expiration time).
      * this will provide verification of resetPassword
      * @param email
      * @return VerifyToken, is used for verification of resetPassword
-     * @throws InvalidOperation if target user(email) is not exist, target user is inactive,
+     * @throws InvalidOperation if target user is inactive,
      * or there is a non-expired VerifyToken already in db
+     * @throws UserDoesNotExist if target user is not exist
      */
-    VerifyToken requestResetPasswordToken(String email) throws InvalidOperation;
+    VerifyToken requestResetPasswordToken(String email) throws InvalidOperation, UserDoesNotExist;
 
     /**
      * reset password of the related user to a non-expired verifyToken in db, this will also revoke all access tokens related
@@ -95,12 +101,12 @@ public interface UserService {
     void resetPassword(String verifyToken, String newPassword) throws InvalidOperation;
 
     /**
-     * load UserProfile from db with given id in userDetail
-     * @param userDetail
+     * load UserProfile from db with given userId
+     * @param userId
      * @return
-     * @throws InvalidOperation if user id in userDetail is not exist in db
+     * @throws UserDoesNotExist if target user is not exist
      */
-    UserProfile getProfile(UserDetail userDetail) throws InvalidOperation;
+    UserProfile getProfile(String userId) throws UserDoesNotExist;
 
     /**
      * get all user profiles from db

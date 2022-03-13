@@ -10,6 +10,7 @@ import com.joejoe2.demo.data.auth.request.*;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.service.EmailService;
@@ -78,7 +79,7 @@ public class AuthController {
         } catch (AuthenticationException e){
             response.put("message", e.getMessage()+" !");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (InvalidOperation e){
+        }catch (UserDoesNotExist e){
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
@@ -121,7 +122,7 @@ public class AuthController {
         } catch (AuthenticationException e){
             responseBody.put("message", e.getMessage()+" !");
             return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
-        }catch (InvalidOperation e){
+        }catch (UserDoesNotExist e){
             responseBody.put("message", e.getMessage());
             return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
         }
@@ -283,7 +284,6 @@ public class AuthController {
      *    to specify the fields failing to pass the validation with errors messages <br><br>
      * 2. a {@link ChangePasswordRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
-     *        <li>target user is not exist</li>
      *        <li>old password is incorrect</li>
      *        <li>old password==new password</li>
      *    </ul>
@@ -313,6 +313,11 @@ public class AuthController {
         }catch (InvalidOperation ex){
             response.put("message", ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (UserDoesNotExist ex){
+            //will occur if user is not in db but the userDetail is loaded before this method
+            //with JwtAuthenticationFilter, so only the db corrupt will cause this
+            response.put("message", "unknown error, please try again later !");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -343,7 +348,7 @@ public class AuthController {
             emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
                     "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation ex){
+        }catch (InvalidOperation|UserDoesNotExist ex){
             response.put("message", ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }

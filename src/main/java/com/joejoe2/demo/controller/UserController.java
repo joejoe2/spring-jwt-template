@@ -2,6 +2,7 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.data.auth.request.ChangePasswordRequest;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.service.UserService;
 import com.joejoe2.demo.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,15 +23,11 @@ public class UserController {
 
     /**
      * change your password to new password, this is allowed to any authenticated user(with access token) <br><br>
-     * 1. a request will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user is not exist</li>
-     *    </ul>
-     * 2. will return code 401 if
+     * 1. will return code 401 if
      *    <ul>
      *        <li>the access token is invalid (could be expired or revoked)</li>
      *    </ul>
-     * 3. will return code 403 if
+     * 2. will return code 403 if
      *    <ul>
      *        <li>you are not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
      *    </ul>
@@ -42,7 +39,6 @@ public class UserController {
      *     "role": "xxx",
      *     "isActive": true or false,
      *     "registeredAt": "time in utc"}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>401</li>
      *     <li>403</li>
      * </ul>
@@ -51,11 +47,13 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> profile(){
         Map<String, Object> response = new HashMap<>();
         try{
-            response.put("profile", userService.getProfile(AuthUtil.currentUserDetail()));
+            response.put("profile", userService.getProfile(AuthUtil.currentUserDetail().getId()));
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation ex){
-            response.put("message", ex.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (UserDoesNotExist ex){
+            //will occur if user is not in db but the userDetail is loaded before this method
+            //with JwtAuthenticationFilter, so only the db corrupt will cause this
+            response.put("message", "unknown error, please try again later !");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

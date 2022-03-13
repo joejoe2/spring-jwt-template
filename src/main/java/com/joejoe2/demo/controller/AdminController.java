@@ -6,6 +6,7 @@ import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +58,7 @@ public class AdminController {
         try {
             userService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
+        } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (IllegalArgumentException e){
@@ -90,7 +91,7 @@ public class AdminController {
         try {
             userService.activateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
+        } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
@@ -124,7 +125,7 @@ public class AdminController {
         try {
             userService.deactivateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
+        } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }

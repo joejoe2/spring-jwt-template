@@ -5,6 +5,7 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
 import com.joejoe2.demo.model.auth.RefreshToken;
 import com.joejoe2.demo.model.auth.Role;
@@ -66,7 +67,7 @@ class JwtServiceTest {
         user.setPassword("pa55ward");
         user.setRole(Role.NORMAL);
         //test not exist user
-        assertThrows(InvalidOperation.class, ()-> jwtService.issueTokens(new UserDetail(user)));
+        assertThrows(UserDoesNotExist.class, ()-> jwtService.issueTokens(new UserDetail(user)));
         //test exist user
         userRepository.save(user);
         assertDoesNotThrow(()->{

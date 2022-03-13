@@ -5,6 +5,7 @@ import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
@@ -93,7 +94,7 @@ class UserServiceTest {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, () -> userService.changeRoleOf("invalid_uid", Role.ADMIN));
         // test with not exist user
-        assertThrows(InvalidOperation.class, () -> userService.changeRoleOf(UUID.randomUUID().toString(), Role.STAFF));
+        assertThrows(UserDoesNotExist.class, () -> userService.changeRoleOf(UUID.randomUUID().toString(), Role.STAFF));
         // test with exist user
         User user = new User();
         user.setUserName("test");
@@ -148,9 +149,10 @@ class UserServiceTest {
         user.setPassword("pa55ward");
         user.setRole(Role.NORMAL);
         userRepository.save(user);
+        userRepository.flush();
         UserProfile profile;
         try {
-            profile = userService.getProfile((UserDetail) userDetailService.loadUserByUsername(user.getUserName()));
+            profile = userService.getProfile(user.getId().toString());
         } catch (Exception e) {
             throw new AssertionError(e);
         }
@@ -203,7 +205,7 @@ class UserServiceTest {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->userService.requestResetPasswordToken("invalid email"));
         //test a not exist user email
-        assertThrows(InvalidOperation.class, ()->userService.requestResetPasswordToken("not@email.com"));
+        assertThrows(UserDoesNotExist.class, ()->userService.requestResetPasswordToken("not@email.com"));
         //test success
         assertDoesNotThrow(()->{
             assertEquals(user, userService.requestResetPasswordToken("test@email.com").getUser());

@@ -5,6 +5,7 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
 import com.joejoe2.demo.model.auth.RefreshToken;
 import com.joejoe2.demo.model.auth.Role;
@@ -67,8 +68,8 @@ public class JwtServiceImpl implements JwtService{
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation {
-        User user=userRepository.getByUserName(userDetail.getUsername()).orElseThrow(()->new InvalidOperation("user is not exist !"));
+    public TokenPair issueTokens(UserDetail userDetail) throws UserDoesNotExist {
+        User user=userRepository.getByUserName(userDetail.getUsername()).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         AccessToken accessToken = createAccessToken(user);
         RefreshToken refreshToken = createRefreshToken(accessToken);
 

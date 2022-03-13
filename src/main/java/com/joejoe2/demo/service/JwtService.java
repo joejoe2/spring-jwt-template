@@ -4,6 +4,7 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
 
 import java.util.List;
@@ -13,9 +14,9 @@ public interface JwtService {
      * issue access and refresh token with userDetail
      * @param userDetail
      * @return generated access and refresh tokens
-     * @throws InvalidOperation if user of userDetail does not exist
+     * @throws UserDoesNotExist if user of userDetail does not exist
      */
-    TokenPair issueTokens(UserDetail userDetail) throws InvalidOperation;
+    TokenPair issueTokens(UserDetail userDetail) throws UserDoesNotExist;
 
     /**
      * use refresh token(in plaintext) to exchange new access and refresh token, then
