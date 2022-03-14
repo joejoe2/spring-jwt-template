@@ -2,16 +2,20 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.UserDoesNotExist;
+import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.repository.UserRepository;
 import com.joejoe2.demo.service.UserService;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -23,15 +27,36 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@WithUserDetails("admin")
+@ActiveProfiles("test")
 class UserControllerTest {
     @MockBean
     UserService userService;
 
     @Autowired
+    UserRepository userRepository;
+
+    User user;
+
+    @Autowired
     MockMvc mockMvc;
 
+    @BeforeEach
+    void createUser(){
+        user=new User();
+        user.setUserName("testUser");
+        user.setRole(Role.NORMAL);
+        user.setEmail("testAdmin@email.com");
+        user.setPassword("pa55ward");
+        userRepository.save(user);
+    }
+
+    @AfterEach
+    void deleteUser(){
+        userRepository.delete(user);
+    }
+
     @Test
+    @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void profile() throws Exception{
         User user=new User();
         user.setId(UUID.randomUUID());

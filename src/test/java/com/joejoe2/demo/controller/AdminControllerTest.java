@@ -7,7 +7,10 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.repository.UserRepository;
 import com.joejoe2.demo.service.UserService;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +18,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.TestExecutionEvent;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,17 +37,38 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@WithUserDetails("admin")
+@ActiveProfiles("test")
 class AdminControllerTest {
     @MockBean
     UserService userService;
 
     @Autowired
+    UserRepository userRepository;
+
+    User user;
+
+    @Autowired
     MockMvc mockMvc;
+
+    @BeforeEach
+    void createUser(){
+        user=new User();
+        user.setUserName("testAdmin");
+        user.setRole(Role.ADMIN);
+        user.setEmail("testAdmin@email.com");
+        user.setPassword("pa55ward");
+        userRepository.save(user);
+    }
+
+    @AfterEach
+    void deleteUser(){
+        userRepository.delete(user);
+    }
 
     ObjectMapper objectMapper=new ObjectMapper();
 
     @Test
+    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void changeRole() throws Exception{
         //test success
         Mockito.doNothing().when(userService).changeRoleOf(Mockito.any(), Mockito.any());
@@ -88,6 +113,7 @@ class AdminControllerTest {
     }
 
     @Test
+    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void activateUser() throws Exception{
         String id = UUID.randomUUID().toString();
         //test success
@@ -124,6 +150,7 @@ class AdminControllerTest {
     }
 
     @Test
+    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void deactivateUser() throws Exception{
         String id = UUID.randomUUID().toString();
         //test success
@@ -168,6 +195,7 @@ class AdminControllerTest {
     }
 
     @Test
+    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void getAllUserProfiles() throws Exception{
         List<UserProfile> profiles=new ArrayList<>();
         for (int i=0;i<50;i++){
