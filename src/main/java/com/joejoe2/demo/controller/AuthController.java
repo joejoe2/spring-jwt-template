@@ -2,7 +2,6 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
-import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
@@ -24,7 +23,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
@@ -298,7 +300,7 @@ public class AuthController {
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"key", "xxx"}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>401</li>
      *     <li>403</li>
@@ -335,7 +337,7 @@ public class AuthController {
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"key", "xxx"}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      * </ul>
      */
@@ -367,7 +369,7 @@ public class AuthController {
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"key", "xxx"}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      * </ul>
      */

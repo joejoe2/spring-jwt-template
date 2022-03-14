@@ -29,10 +29,18 @@ public class AdminController {
 
     /**
      * change the role of target user, this is only allowed to ADMIN <br><br>
-     * 1. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
+     * 1. will return code 401 if
+     *    <ul>
+     *        <li>the access token is invalid (could be expired or revoked)</li>
+     *    </ul>
+     * 2. will return code 403 if
+     *    <ul>
+     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
+     *    </ul>
+     * 3. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
      *    <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@link ChangeUserRoleRequest} will return code 400 and {"message": "xxx"} if <br>
+     * 4. a {@link ChangeUserRoleRequest} will return code 400 and {"message": "xxx"} if <br>
      *    <ul>
      *        <li>target user is not exist</li>
      *        <li>target user==request user</li>
@@ -40,16 +48,18 @@ public class AdminController {
      *        <li>target role==original role</li>
      *        <li>target user is the only ADMIN</li>
      *    </ul>
-     * 3. side effects if the {@link ChangeUserRoleRequest} success
+     * 5. side effects if the {@link ChangeUserRoleRequest} success
      *    <ul>
      *        <li>target user will be logged out by revoke all access and refresh tokens</li>
      *    <ul>
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>400, <code>{"message": "xxx"}</code></li>
+     *     <li>401</li>
+     *     <li>403</li>
      * </ul>
      */
     @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
@@ -69,9 +79,17 @@ public class AdminController {
 
     /**
      * activate target user, this is only allowed to ADMIN <br><br>
-     * 1. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     * 1. will return code 401 if
+     *    <ul>
+     *        <li>the access token is invalid (could be expired or revoked)</li>
+     *    </ul>
+     * 2. will return code 403 if
+     *    <ul>
+     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
+     *    </ul>
+     * 3. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@linkplain UserIdRequest ActivateUserRequest} will return code 400 and {"message": "xxx"} if
+     * 4. a {@linkplain UserIdRequest ActivateUserRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>target user is not exist</li>
      *        <li>target user==request user</li>
@@ -80,9 +98,11 @@ public class AdminController {
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>400, <code>{"message": "xxx"}</code></li>
+     *     <li>401</li>
+     *     <li>403</li>
      * </ul>
      */
     @RequestMapping(path = "/activateUser", method = RequestMethod.POST)
@@ -99,24 +119,34 @@ public class AdminController {
 
     /**
      * deactivate target user, this is only allowed to ADMIN <br><br>
-     * 1. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     * 1. will return code 401 if
+     *    <ul>
+     *        <li>the access token is invalid (could be expired or revoked)</li>
+     *    </ul>
+     * 2. will return code 403 if
+     *    <ul>
+     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
+     *    </ul>
+     * 3. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@linkplain UserIdRequest DeActivateUserRequest} will return code 400 and {"message": "xxx"} if
+     * 4. a {@linkplain UserIdRequest DeActivateUserRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>target user is not exist</li>
      *        <li>target user==request user</li>
      *        <li>target user is already inactive</li>
      *    </ul>
-     * 3. side effect if this method success
+     * 5. side effect if this method success
      *    <ul>
      *        <li>target user will be logged out by revoke all access and refresh tokens</li>
      *    </ul>
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>400, <code>{"message": "xxx"}</code></li>
+     *     <li>401</li>
+     *     <li>403</li>
      * </ul>
      */
     @RequestMapping(path = "/deactivateUser", method = RequestMethod.POST)
@@ -133,14 +163,26 @@ public class AdminController {
 
     /**
      * get all user profiles or user profiles with page param, this is only allowed to ADMIN <br><br>
-     * 1. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     * 1. will return code 401 if
+     *    <ul>
+     *        <li>the access token is invalid (could be expired or revoked)</li>
+     *    </ul>
+     * 2. will return code 403 if
+     *    <ul>
+     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
+     *    </ul>
+     * 3. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. if no given {@linkplain PageRequest request body}, this will return all user profiles, otherwise will be a page request
+     * 4. if no given {@linkplain PageRequest request body}, this will return all user profiles, otherwise will be a page request
      * @param request
      * @return status code, json
      * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx}</code></li>
+     *     <li>200, <code>{"profiles": [{"id":"xxx","username":"xxx","email":"xxx","role":"xxx","isActive":true or false,"registeredAt":"time in utc"}, ...]}</code></li>
+     *     <li>200, <code>{"profiles": [{"id":"xxx","username":"xxx","email":"xxx","role":"xxx","isActive":true or false,"registeredAt":"time in utc"}, ...]
+     *     , "totalItems": int, "currentPage": int,"totalPages": int, "pageSize": int}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     *     <li>401</li>
+     *     <li>403</li>
      * </ul>
      */
     @RequestMapping(path = "/getUserList", method = RequestMethod.POST)
