@@ -5,12 +5,18 @@ import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.validation.constraint.Email;
 import com.joejoe2.demo.validation.constraint.Password;
 import com.joejoe2.demo.validation.constraint.Username;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RegisterRequest {
     @Username
     private String username;

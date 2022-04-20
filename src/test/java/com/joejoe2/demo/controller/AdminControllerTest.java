@@ -2,12 +2,16 @@ package com.joejoe2.demo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.demo.data.PageList;
+import com.joejoe2.demo.data.PageRequest;
+import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
+import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.service.JwtService;
 import com.joejoe2.demo.service.UserService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +32,9 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -71,42 +74,62 @@ class AdminControllerTest {
     @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void changeRole() throws Exception{
         //test success
+        ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Role.ADMIN.toString())
+                .build();
         Mockito.doNothing().when(userService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+UUID.randomUUID()+"\", \"role\": \"ADMIN\"}")
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         //test 400
         //0. validation
+        ChangeUserRoleRequest badRequest=ChangeUserRoleRequest.builder()
+                .id("invalid id")
+                .role("")
+                .build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"invalid id\", \"role\": \"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                         .andExpect(jsonPath("$.errors.id").exists())
                         .andExpect(jsonPath("$.errors.role").exists())
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
+        badRequest=ChangeUserRoleRequest.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Role.ADMIN.toString())
+                .build();
         Mockito.doThrow(new InvalidOperation("")).when(userService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+UUID.randomUUID()+"\", \"role\": \"ADMIN\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //2. UserDoesNotExist
+        badRequest=ChangeUserRoleRequest.builder()
+                .id(UUID.randomUUID().toString())
+                .role(Role.ADMIN.toString())
+                .build();
         Mockito.doThrow(new UserDoesNotExist("")).when(userService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+UUID.randomUUID()+"\", \"role\": \"ADMIN\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //3. role is not exist
+        badRequest=ChangeUserRoleRequest.builder()
+                .id(UUID.randomUUID().toString())
+                .role("not exist role")
+                .build();
         Mockito.doNothing().when(userService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+UUID.randomUUID()+"\", \"role\": \"xxx\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("role is not exist !"));
@@ -115,35 +138,37 @@ class AdminControllerTest {
     @Test
     @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void activateUser() throws Exception{
-        String id = UUID.randomUUID().toString();
         //test success
-        Mockito.doNothing().when(userService).activateUser(id);
+        UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doNothing().when(userService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         //test 400
         //0. validation
+        UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"invalid id\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
-        Mockito.doThrow(new InvalidOperation("")).when(userService).activateUser(id);
+        badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doThrow(new InvalidOperation("")).when(userService).activateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(userService).activateUser(id);
+        Mockito.doThrow(new UserDoesNotExist("")).when(userService).activateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
@@ -152,35 +177,37 @@ class AdminControllerTest {
     @Test
     @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void deactivateUser() throws Exception{
-        String id = UUID.randomUUID().toString();
         //test success
-        Mockito.doNothing().when(userService).deactivateUser(id);
+        UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doNothing().when(userService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
         //test 400
         //0. validation
+        UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\"invalid id\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
-        Mockito.doThrow(new InvalidOperation("")).when(userService).deactivateUser(id);
+        badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doThrow(new InvalidOperation("")).when(userService).deactivateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(userService).deactivateUser(id);
+        Mockito.doThrow(new UserDoesNotExist("")).when(userService).deactivateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"id\":\""+id+"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
@@ -216,11 +243,12 @@ class AdminControllerTest {
                 .andExpect(status().isOk()).andReturn();
         assertEquals(objectMapper.writeValueAsString(new CustomResponse(profiles)), result.getResponse().getContentAsString());
         //test success with page request
-        int page=2, size=10;
-        Mockito.doReturn(new PageList<>(10, 2, 5, 10, profiles.subList(20, 30))).when(userService).getAllUserProfilesWithPage(page, size);
+        PageRequest request=PageRequest.builder().page(2).size(10).build();
+        Mockito.doReturn(new PageList<>(10, 2, 5, 10, profiles.subList(20, 30)))
+                .when(userService).getAllUserProfilesWithPage(2, 10);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"page\":\""+page+"\", \"size\":\""+size+"\"}")
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.profiles").isArray())
                 .andExpect(jsonPath("$.totalItems").value(10))
@@ -230,9 +258,10 @@ class AdminControllerTest {
                 .andExpect(status().isOk()).andReturn();
         //test 400
         //0. validation
+        PageRequest badRequest=PageRequest.builder().page(-1).size(0).build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"page\":\""+-1+"\", \"size\":\""+0+"\"}")
+                        .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.page").exists())
                 .andExpect(jsonPath("$.errors.size").exists())

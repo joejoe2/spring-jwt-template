@@ -45,7 +45,7 @@ class UserControllerTest {
         user=new User();
         user.setUserName("testUser");
         user.setRole(Role.NORMAL);
-        user.setEmail("testAdmin@email.com");
+        user.setEmail("testUser@email.com");
         user.setPassword("pa55ward");
         userRepository.save(user);
     }
@@ -58,11 +58,6 @@ class UserControllerTest {
     @Test
     @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void profile() throws Exception{
-        User user=new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setCreateAt(LocalDateTime.now());
-        user.setEmail("test@email.com");
         //test success
         Mockito.when(userService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")

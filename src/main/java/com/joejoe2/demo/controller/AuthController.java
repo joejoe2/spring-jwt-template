@@ -37,7 +37,7 @@ import java.util.Map;
 @Controller
 public class AuthController {
     @Autowired
-    private AuthenticationManager authenticationManager;
+    AuthenticationManager authenticationManager;
     @Autowired
     JwtService jwtService;
     @Autowired
@@ -125,8 +125,10 @@ public class AuthController {
             responseBody.put("message", e.getMessage()+" !");
             return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
         }catch (UserDoesNotExist e){
-            responseBody.put("message", e.getMessage());
-            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+            // if user is deleted after AuthUtil.authenticate and before jwtService.issueTokens
+            // this is considered to be an accident
+            responseBody.put("message", "unknown error, please try again later !");
+            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -316,8 +318,9 @@ public class AuthController {
             response.put("message", ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }catch (UserDoesNotExist ex){
-            //will occur if user is not in db but the userDetail is loaded before this method
-            //with JwtAuthenticationFilter, so only the db corrupt will cause this
+            // will occur if user is not in db but the userDetail is loaded before this method
+            // with JwtAuthenticationFilter
+            // this is considered to be an accident
             response.put("message", "unknown error, please try again later !");
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -350,7 +353,7 @@ public class AuthController {
             emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
                     "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation|UserDoesNotExist ex){
+        }catch (InvalidOperation | UserDoesNotExist ex){
             response.put("message", ex.getMessage());
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
