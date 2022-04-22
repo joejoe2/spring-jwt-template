@@ -15,5 +15,5 @@ import javax.validation.constraints.NotEmpty;
 public class RefreshRequest {
     @NotEmpty(message = "refresh token cannot be empty !")
     @JsonProperty("token")
-    private String refreshToken;
+    private String refresh_token;
 }

@@ -10,9 +10,10 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
-import com.joejoe2.demo.repository.UserRepository;
-import com.joejoe2.demo.service.JwtService;
-import com.joejoe2.demo.service.UserService;
+import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.service.user.auth.ActivationService;
+import com.joejoe2.demo.service.user.auth.RoleService;
+import com.joejoe2.demo.service.user.profile.ProfileService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class AdminControllerTest {
     @MockBean
-    UserService userService;
+    RoleService roleService;
+    @MockBean
+    ActivationService activationService;
+    @MockBean
+    ProfileService profileService;
 
     @Autowired
     UserRepository userRepository;
@@ -78,7 +83,7 @@ class AdminControllerTest {
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
-        Mockito.doNothing().when(userService).changeRoleOf(Mockito.any(), Mockito.any());
+        Mockito.doNothing().when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -102,7 +107,7 @@ class AdminControllerTest {
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
-        Mockito.doThrow(new InvalidOperation("")).when(userService).changeRoleOf(Mockito.any(), Mockito.any());
+        Mockito.doThrow(new InvalidOperation("")).when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -114,7 +119,7 @@ class AdminControllerTest {
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
-        Mockito.doThrow(new UserDoesNotExist("")).when(userService).changeRoleOf(Mockito.any(), Mockito.any());
+        Mockito.doThrow(new UserDoesNotExist("")).when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -126,7 +131,7 @@ class AdminControllerTest {
                 .id(UUID.randomUUID().toString())
                 .role("not exist role")
                 .build();
-        Mockito.doNothing().when(userService).changeRoleOf(Mockito.any(), Mockito.any());
+        Mockito.doNothing().when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -140,7 +145,7 @@ class AdminControllerTest {
     void activateUser() throws Exception{
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doNothing().when(userService).activateUser(request.getId());
+        Mockito.doNothing().when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -157,7 +162,7 @@ class AdminControllerTest {
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
         badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doThrow(new InvalidOperation("")).when(userService).activateUser(badRequest.getId());
+        Mockito.doThrow(new InvalidOperation("")).when(activationService).activateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -165,7 +170,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(userService).activateUser(badRequest.getId());
+        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).activateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -179,7 +184,7 @@ class AdminControllerTest {
     void deactivateUser() throws Exception{
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doNothing().when(userService).deactivateUser(request.getId());
+        Mockito.doNothing().when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -196,7 +201,7 @@ class AdminControllerTest {
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
         badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doThrow(new InvalidOperation("")).when(userService).deactivateUser(badRequest.getId());
+        Mockito.doThrow(new InvalidOperation("")).when(activationService).deactivateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -204,7 +209,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
         //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(userService).deactivateUser(badRequest.getId());
+        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).deactivateUser(badRequest.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
@@ -236,7 +241,7 @@ class AdminControllerTest {
             profiles.add(new UserProfile(user));
         }
         //test success
-        Mockito.doReturn(profiles).when(userService).getAllUserProfiles();
+        Mockito.doReturn(profiles).when(profileService).getAllUserProfiles();
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.profiles").isArray())
@@ -245,7 +250,7 @@ class AdminControllerTest {
         //test success with page request
         PageRequest request=PageRequest.builder().page(2).size(10).build();
         Mockito.doReturn(new PageList<>(10, 2, 5, 10, profiles.subList(20, 30)))
-                .when(userService).getAllUserProfilesWithPage(2, 10);
+                .when(profileService).getAllUserProfilesWithPage(2, 10);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))

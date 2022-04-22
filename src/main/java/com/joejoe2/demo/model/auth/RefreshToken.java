@@ -5,13 +5,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,7 +24,7 @@ public class RefreshToken {
     @Column(updatable = false, nullable = false)
     private LocalDateTime expireAt;
 
-    @OneToOne(/*cascade = CascadeType.REMOVE,*/ fetch = FetchType.LAZY) //if delete this => also delete accessToken
+    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY) //if delete this => also delete accessToken
     @OnDelete(action = OnDeleteAction.CASCADE) //if delete accessToken => also delete this
     private AccessToken accessToken;
 

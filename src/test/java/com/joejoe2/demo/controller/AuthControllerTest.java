@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.request.LoginRequest;
+import com.joejoe2.demo.data.auth.request.RefreshRequest;
+import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.model.auth.AccessToken;
 import com.joejoe2.demo.model.auth.RefreshToken;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
-import com.joejoe2.demo.repository.UserRepository;
-import com.joejoe2.demo.service.JwtService;
+import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,16 +154,82 @@ class AuthControllerTest {
     }
 
     @Test
-    void refresh() {
+    void refresh() throws Exception{
+        //test success
+        RefreshRequest request=RefreshRequest.builder().refresh_token("refresh_token").build();
+        Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.access_token").hasJsonPath())
+                .andExpect(jsonPath("$.refresh_token").hasJsonPath())
+                .andExpect(status().isOk());
+        //test 400
+        //0. validation
+        RefreshRequest badRequest=RefreshRequest.builder().refresh_token("").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(badRequest))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.refresh_token").exists())
+                .andExpect(status().isBadRequest());
+        //1. InvalidTokenException
+        badRequest=RefreshRequest.builder().refresh_token("invalid_token").build();
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(badRequest))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
     }
 
     @Test
-    void webRefresh() {
+    void webRefresh() throws Exception{
+        //test success
+        Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
+        Cookie cookie=mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
+                .cookie(new Cookie("refresh_token", "refresh_token")))
+                .andExpect(jsonPath("$.access_token").hasJsonPath())
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getCookie("refresh_token");
+        assertNotNull(cookie);
+        //test 400
+        //1. InvalidTokenException
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
+                        .cookie(new Cookie("refresh_token", "invalid_token")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    void logout() {
+    void logout() throws Exception{
+        //test success
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user.getId().toString(),
+                                user.getUserName(),
+                                user.isActive(),
+                                user.getRole(),
+                                "access_token"));
+        Mockito.doNothing().when(jwtService).revokeAccessToken("access_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout"))
+                .andExpect(status().isOk());
+        //test 401
+        //1. InvalidTokenException
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user.getId().toString(),
+                        user.getUserName(),
+                        user.isActive(),
+                        user.getRole(),
+                        "invalid_token"));
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).revokeAccessToken("invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout"))
+                .andExpect(status().isUnauthorized());
+        mockedStatic.close();
     }
 
     @Test

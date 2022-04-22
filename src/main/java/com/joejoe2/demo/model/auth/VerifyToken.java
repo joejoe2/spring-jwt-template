@@ -25,7 +25,7 @@ public class VerifyToken {
     private LocalDateTime expireAt;
 
     @OneToOne
-    @JoinColumn(unique=true) //unidirectional one to noe
+    @JoinColumn(unique=true) //unidirectional one to one
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

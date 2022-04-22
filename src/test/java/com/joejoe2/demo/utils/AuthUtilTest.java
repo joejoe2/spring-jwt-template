@@ -2,7 +2,7 @@ package com.joejoe2.demo.utils;
 
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
-import com.joejoe2.demo.repository.UserRepository;
+import com.joejoe2.demo.repository.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

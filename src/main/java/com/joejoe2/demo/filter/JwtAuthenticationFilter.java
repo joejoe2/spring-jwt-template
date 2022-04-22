@@ -2,7 +2,7 @@ package com.joejoe2.demo.filter;
 
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidTokenException;
-import com.joejoe2.demo.service.JwtService;
+import com.joejoe2.demo.service.jwt.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

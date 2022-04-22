@@ -8,7 +8,9 @@ import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
-import com.joejoe2.demo.service.UserService;
+import com.joejoe2.demo.service.user.auth.ActivationService;
+import com.joejoe2.demo.service.user.auth.RoleService;
+import com.joejoe2.demo.service.user.profile.ProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +27,11 @@ import java.util.Map;
 @RequestMapping(path = "/api/admin") //path prefix
 public class AdminController {
     @Autowired
-    UserService userService;
+    RoleService roleService;
+    @Autowired
+    ActivationService activationService;
+    @Autowired
+    ProfileService profileService;
 
     /**
      * change the role of target user, this is only allowed to ADMIN <br><br>
@@ -66,7 +72,7 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            userService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
+            roleService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
@@ -109,7 +115,7 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> activateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            userService.activateUser(request.getId());
+            activationService.activateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
@@ -153,7 +159,7 @@ public class AdminController {
     public ResponseEntity<Map<String, String>> deactivateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            userService.deactivateUser(request.getId());
+            activationService.deactivateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (InvalidOperation|UserDoesNotExist e){
             response.put("message", e.getMessage());
@@ -189,9 +195,9 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest request){
         Map<String, Object> response = new HashMap<>();
         if (request==null)
-            response.put("profiles", userService.getAllUserProfiles());
+            response.put("profiles", profileService.getAllUserProfiles());
         else {
-            PageList<UserProfile> pageList = userService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
+            PageList<UserProfile> pageList = profileService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
             response.put("profiles", pageList.getList());
             response.put("totalItems", pageList.getTotalItems());
             response.put("currentPage", pageList.getCurrentPage());

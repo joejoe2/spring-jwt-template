@@ -12,10 +12,11 @@ import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
-import com.joejoe2.demo.service.EmailService;
-import com.joejoe2.demo.service.JwtService;
-import com.joejoe2.demo.service.UserService;
-import com.joejoe2.demo.service.VerificationService;
+import com.joejoe2.demo.service.email.EmailService;
+import com.joejoe2.demo.service.jwt.JwtService;
+import com.joejoe2.demo.service.user.auth.PasswordService;
+import com.joejoe2.demo.service.user.auth.RegistrationService;
+import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,10 @@ public class AuthController {
     @Autowired
     JwtConfig jwtConfig;
     @Autowired
-    UserService userService;
+    RegistrationService registrationService;
+    @Autowired
+    PasswordService passwordService;
+
     @Autowired
     VerificationService verificationService;
     @Autowired
@@ -152,7 +156,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody RefreshRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            TokenPair tokenPair = jwtService.refreshTokens(request.getRefreshToken());
+            TokenPair tokenPair = jwtService.refreshTokens(request.getRefresh_token());
             response.put("access_token", tokenPair.getAccessToken().getToken());
             response.put("refresh_token",  tokenPair.getRefreshToken().getToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
@@ -200,22 +204,17 @@ public class AuthController {
     /**
      * use access token to logout related user, this is allowed to any authenticated user(with access token),
      * notice that the access token and related refresh token will both be revoked after logout <br><br>
-     * 1. will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>the access token is not exist for revocation</li>
-     *    </ul>
-     * 2. will return code 401 if
+     * 1. will return code 401 if
      *    <ul>
      *        <li>the access token is invalid (could be expired or revoked)</li>
      *    </ul>
-     * 3. will return code 403 if
+     * 2. will return code 403 if
      *    <ul>
      *        <li>you are not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
      *    </ul>
      * @return status code, json
      * <ul>
      *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
      *     <li>401</li>
      *     <li>403</li>
      * </ul>
@@ -227,8 +226,11 @@ public class AuthController {
             jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (InvalidTokenException e) {
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            //because the access token has been checked by JwtAuthenticationFilter,
+            //this will happen if the access token is deleted/revoked by another request,
+            //or even the access token go expired between JwtAuthenticationFilter and jwtService,
+            //so we just return 401 to represent that the access token is invalid
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
     }
 
@@ -253,7 +255,7 @@ public class AuthController {
     public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request){
         Map<String, String> response = new HashMap<>();
         try {
-            User user = userService.registerUser(request.getUsername(), request.getPassword(), request.getEmail(), request.getVerification());
+            User user = registrationService.registerUser(request.getUsername(), request.getPassword(), request.getEmail(), request.getVerification());
             response.put("id", user.getId().toString());
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (AlreadyExist | InvalidOperation e) {
@@ -312,7 +314,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{
-            userService.changePasswordOf(AuthUtil.currentUserDetail().getId(), request.getOldPassword(), request.getNewPassword());
+            passwordService.changePasswordOf(AuthUtil.currentUserDetail().getId(), request.getOldPassword(), request.getNewPassword());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (InvalidOperation ex){
             response.put("message", ex.getMessage());
@@ -348,7 +350,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> forgetPassword(@Valid @RequestBody ForgetPasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{
-            VerifyToken verifyToken=userService.requestResetPasswordToken(request.getEmail());
+            VerifyToken verifyToken=passwordService.requestResetPasswordToken(request.getEmail());
             //send reset password link to user
             emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
                     "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
@@ -380,7 +382,7 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
         Map<String, Object> response = new HashMap<>();
         try{
-            userService.resetPassword(request.getToken(), request.getNewPassword());
+            passwordService.resetPassword(request.getToken(), request.getNewPassword());
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (InvalidOperation ex){
             response.put("message", ex.getMessage());

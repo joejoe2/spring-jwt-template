@@ -4,8 +4,8 @@ import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
-import com.joejoe2.demo.repository.UserRepository;
-import com.joejoe2.demo.service.UserService;
+import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.service.user.profile.ProfileService;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +18,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -30,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class UserControllerTest {
     @MockBean
-    UserService userService;
+    ProfileService profileService;
 
     @Autowired
     UserRepository userRepository;
@@ -59,7 +55,7 @@ class UserControllerTest {
     @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void profile() throws Exception{
         //test success
-        Mockito.when(userService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
+        Mockito.when(profileService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -70,7 +66,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.profile.isActive").value(user.isActive()))
                 .andExpect(jsonPath("$.profile.registeredAt").value(user.getCreateAt().toString()));
         //test 500
-        Mockito.when(userService.getProfile(Mockito.any())).thenThrow(new UserDoesNotExist(""));
+        Mockito.when(profileService.getProfile(Mockito.any())).thenThrow(new UserDoesNotExist(""));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());

@@ -74,6 +74,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.jobrunr</groupId>
+			<artifactId>jobrunr-spring-boot-starter</artifactId>
+			<version>5.0.1</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -146,6 +151,7 @@
 						<exclude>**/model/**/*</exclude>
 						<exclude>**/config/**/*</exclude>
 						<exclude>**/filter/**/*</exclude>
+						<exclude>**/init/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

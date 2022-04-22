@@ -1,7 +1,7 @@
 package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.exception.UserDoesNotExist;
-import com.joejoe2.demo.service.UserService;
+import com.joejoe2.demo.service.user.profile.ProfileService;
 import com.joejoe2.demo.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,7 +17,7 @@ import java.util.Map;
 @RequestMapping(path = "/api/user") //path prefix
 public class UserController {
     @Autowired
-    UserService userService;
+    ProfileService profileService;
 
     /**
      * change your password to new password, this is allowed to any authenticated user(with access token) <br><br>
@@ -45,7 +45,7 @@ public class UserController {
     public ResponseEntity<Map<String, Object>> profile(){
         Map<String, Object> response = new HashMap<>();
         try{
-            response.put("profile", userService.getProfile(AuthUtil.currentUserDetail().getId()));
+            response.put("profile", profileService.getProfile(AuthUtil.currentUserDetail().getId()));
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (UserDoesNotExist ex){
             //will occur if user is not in db but the userDetail is loaded before this method
