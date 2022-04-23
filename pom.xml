@@ -14,7 +14,7 @@
 	<name>demo</name>
 	<description>Demo project for Spring Boot</description>
 	<properties>
-		<java.version>1.8</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -43,6 +43,11 @@
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+			<version>2.6.6</version>
 		</dependency>
 
 		<dependency>
@@ -152,6 +157,7 @@
 						<exclude>**/config/**/*</exclude>
 						<exclude>**/filter/**/*</exclude>
 						<exclude>**/init/**/*</exclude>
+						<exclude>**/constraint/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>

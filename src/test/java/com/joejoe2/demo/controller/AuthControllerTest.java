@@ -209,6 +209,7 @@ class AuthControllerTest {
     void logout() throws Exception{
         //test success
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         mockedStatic.when(AuthUtil::currentUserDetail)
                 .thenReturn(new UserDetail(user.getId().toString(),
                                 user.getUserName(),

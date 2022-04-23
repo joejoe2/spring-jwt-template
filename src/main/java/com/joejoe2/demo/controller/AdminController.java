@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.controller.constraint.ApiAllowsTo;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.PageRequest;
@@ -68,6 +69,7 @@ public class AdminController {
      *     <li>403</li>
      * </ul>
      */
+    @ApiAllowsTo(roles = Role.ADMIN)
     @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest request){
         Map<String, String> response = new HashMap<>();
@@ -111,6 +113,7 @@ public class AdminController {
      *     <li>403</li>
      * </ul>
      */
+    @ApiAllowsTo(roles = Role.ADMIN)
     @RequestMapping(path = "/activateUser", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> activateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
@@ -155,6 +158,7 @@ public class AdminController {
      *     <li>403</li>
      * </ul>
      */
+    @ApiAllowsTo(roles = Role.ADMIN)
     @RequestMapping(path = "/deactivateUser", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> deactivateUser(@Valid @RequestBody UserIdRequest request){
         Map<String, String> response = new HashMap<>();
@@ -191,6 +195,7 @@ public class AdminController {
      *     <li>403</li>
      * </ul>
      */
+    @ApiAllowsTo(roles = Role.ADMIN)
     @RequestMapping(path = "/getUserList", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest request){
         Map<String, Object> response = new HashMap<>();

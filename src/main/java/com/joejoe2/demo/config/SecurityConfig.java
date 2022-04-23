@@ -39,14 +39,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.NEVER) //use jwt instead of session
                 .and()
-                .authorizeRequests()
-                .antMatchers("/api/auth/login", "/web/api/auth/login", "/api/auth/register", "/api/auth/refresh",
-                        "/web/api/auth/refresh", "/api/auth/issueVerificationCode", "/api/auth/forgetPassword",
-                        "/api/auth/resetPassword").permitAll()
-                .antMatchers("/api/admin/**").hasAuthority(Role.ADMIN.toString())
-                .anyRequest().authenticated()
-                .and()
-                // use jwt authentication and custom login api
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .formLogin().disable();
     }
@@ -65,19 +57,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("*");
-        configuration.addAllowedHeader("*");
-        configuration.addAllowedMethod("*");
+        CorsConfiguration apiConfiguration = new CorsConfiguration();
+        apiConfiguration.addAllowedOrigin("*");
+        apiConfiguration.addAllowedHeader("*");
+        apiConfiguration.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", configuration);
+        source.registerCorsConfiguration("/api/**", apiConfiguration);
 
-        CorsConfiguration configuration2 = new CorsConfiguration();
-        configuration2.addAllowedOrigin(corsConfig.getAllowOrigin());
-        configuration2.setAllowCredentials(true);
-        configuration2.addAllowedHeader("*");
-        configuration2.addAllowedMethod("*");
-        source.registerCorsConfiguration("/web/api/**", configuration2);
+        CorsConfiguration webConfiguration2 = new CorsConfiguration();
+        webConfiguration2.addAllowedOrigin(corsConfig.getAllowOrigin());
+        webConfiguration2.setAllowCredentials(true);
+        webConfiguration2.addAllowedHeader("*");
+        webConfiguration2.addAllowedMethod("*");
+        source.registerCorsConfiguration("/web/api/**", webConfiguration2);
 
         return source;
     }

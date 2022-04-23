@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.controller.constraint.AuthenticatedApi;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.service.user.profile.ProfileService;
 import com.joejoe2.demo.utils.AuthUtil;
@@ -41,6 +42,7 @@ public class UserController {
      *     <li>403</li>
      * </ul>
      */
+    @AuthenticatedApi
     @RequestMapping(path = "/profile", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> profile(){
         Map<String, Object> response = new HashMap<>();

@@ -1,12 +1,15 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.user.profile.ProfileService;
+import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -55,6 +58,10 @@ class UserControllerTest {
     @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void profile() throws Exception{
         //test success
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         Mockito.when(profileService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                 .accept(MediaType.APPLICATION_JSON))
@@ -70,5 +77,6 @@ class UserControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());
+        mockedStatic.close();
     }
 }

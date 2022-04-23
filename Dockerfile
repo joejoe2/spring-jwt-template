@@ -1,4 +1,4 @@
-FROM java:8
+FROM openjdk:17
 EXPOSE 8080
 COPY ./target/demo-0.0.1-SNAPSHOT.jar web.jar
 COPY start.sh wait-for-it.sh .

@@ -21,9 +21,7 @@ services:
       - spring-net
 
   web:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    image: joejoe2/spring-jwt-template:latest
     restart: always
     command: "bash ./wait-for-it.sh -t 0 db:5432 -- bash start.sh"
     env_file:

@@ -2,6 +2,7 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
+import com.joejoe2.demo.controller.constraint.AuthenticatedApi;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
@@ -219,6 +220,7 @@ public class AuthController {
      *     <li>403</li>
      * </ul>
      */
+    @AuthenticatedApi
     @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
     public ResponseEntity<Map<String, String>> logout(){
         Map<String, String> response = new HashMap<>();
@@ -310,6 +312,7 @@ public class AuthController {
      *     <li>403</li>
      * </ul>
      */
+    @AuthenticatedApi
     @RequestMapping(path = "/api/auth/changePassword", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
         Map<String, Object> response = new HashMap<>();
