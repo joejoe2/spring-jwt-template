@@ -2,6 +2,7 @@ package com.joejoe2.demo.service.user.profile;
 
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.user.UserProfile;
+import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
@@ -25,6 +26,27 @@ class ProfileServiceTest {
 
     @Test
     @Transactional
+    void getProfileWithIllegalArgumentException() {
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()->profileService.getProfile("invalid uid"));
+    }
+
+    @Test
+    @Transactional
+    void getProfileWith() {
+        User user = new User();
+        user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword("pa55ward");
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
+        userRepository.delete(user);
+        //test with a not exist user
+        assertThrows(UserDoesNotExist.class, ()->profileService.getProfile(user.getId().toString()));
+    }
+
+    @Test
+    @Transactional
     void getProfile() {
         User user = new User();
         user.setUserName("test");
@@ -34,6 +56,7 @@ class ProfileServiceTest {
         userRepository.save(user);
         userRepository.flush();
         UserProfile profile;
+        //test success
         try {
             profile = profileService.getProfile(user.getId().toString());
         } catch (Exception e) {
@@ -60,11 +83,16 @@ class ProfileServiceTest {
 
     @Test
     @Transactional
-    void getAllUserProfilesWithPage() {
+    void getAllUserProfilesWithIllegalPage() {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, () -> profileService.getAllUserProfilesWithPage(-1, 1));
         assertThrows(IllegalArgumentException.class, () -> profileService.getAllUserProfilesWithPage(0, -1));
         assertThrows(IllegalArgumentException.class, () -> profileService.getAllUserProfilesWithPage(0, 0));
+    }
+
+    @Test
+    @Transactional
+    void getAllUserProfilesWithPage() {
         //test success
         PageList<UserProfile> pageList;
         try {

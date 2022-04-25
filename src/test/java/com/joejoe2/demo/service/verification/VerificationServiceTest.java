@@ -27,26 +27,36 @@ class VerificationServiceTest {
     VerificationCodeRepository verificationCodeRepository;
 
     @Test
-    @Order(1)
-    @Transactional
-    void issueVerificationCode() {
+    void issueVerificationCodeWithIllegalArgument() {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->verificationService.issueVerificationCode("not a email"));
+    }
+
+    @Test
+    @Transactional
+    void issueVerificationCode() {
         //test whether verification code is created
         VerificationPair verificationPair = verificationService.issueVerificationCode("test@email.com");
         assertEquals(verificationPair.getCode(), verificationCodeRepository.findById(UUID.fromString(verificationPair.getKey())).get().getCode());
     }
 
     @Test
-    @Order(2)
-    @Transactional
-    void verify() {
+    void verifyWithIllegalArgument() {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->verificationService.verify("invalid key", "test@email.com", "1234"));
         assertThrows(IllegalArgumentException.class, ()->verificationService.verify(UUID.randomUUID().toString(), "not a email", "1234"));
         assertThrows(IllegalArgumentException.class, ()->verificationService.verify(UUID.randomUUID().toString(), "test@email.com", null));
+    }
+
+    @Test
+    void verifyWithInvalidOperation() {
         //test verification fail with not exist code
         assertThrows(InvalidOperation.class, ()->verificationService.verify(UUID.randomUUID().toString(), "test@email.com", "1234"));
+    }
+
+    @Test
+    @Transactional
+    void verify() {
         //test verification with exist code
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setEmail("test@email.com");

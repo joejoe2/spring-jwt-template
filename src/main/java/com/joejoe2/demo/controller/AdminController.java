@@ -1,6 +1,6 @@
 package com.joejoe2.demo.controller;
 
-import com.joejoe2.demo.controller.constraint.ApiAllowsTo;
+import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.PageRequest;

@@ -1,6 +1,4 @@
-package com.joejoe2.demo.controller.constraint;
-
-import com.joejoe2.demo.model.auth.Role;
+package com.joejoe2.demo.controller.constraint.auth;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -8,11 +6,9 @@ import java.lang.annotation.Target;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Retention(RUNTIME)
-@AuthenticatedApi
-public @interface ApiRejectTo {
-    Role[] roles() default {};
+public @interface AuthenticatedApi {
     String rejectMessage() default "";
-    int rejectStatus() default 403;
+    int rejectStatus() default 401;
 }

@@ -22,7 +22,7 @@ class ActivationServiceTest {
 
     @Test
     @Transactional
-    void activateUser() {
+    void activateUserWithIllegalArgument() {
         User user=new User();
         user.setUserName("test");
         user.setPassword("pa55ward");
@@ -31,13 +31,66 @@ class ActivationServiceTest {
 
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()-> activationService.activateUser("invalid uid"));
+    }
+
+    @Test
+    @Transactional
+    void activateUserWithInvalidOperation() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
         //test if target is already active
         assertThrows(InvalidOperation.class, ()-> activationService.activateUser(user.getId().toString()));
-        //test success
+    }
+
+    @Test
+    @Transactional
+    void activateUser(){
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
         user.setActive(false);
         userRepository.save(user);
+        //test success
         assertDoesNotThrow(()-> activationService.activateUser(user.getId().toString()));
         assertTrue(user.isActive());
+    }
+
+    @Test
+    @Transactional
+    void deactivateUserWithIllegalArgument() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
+        //test IllegalArgument
+        assertThrows(IllegalArgumentException.class, ()-> activationService.activateUser("invalid uid"));
+    }
+
+    @Test
+    @Transactional
+    void deactivateUserWithInvalidOperation() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
+        //test deactivate an admin
+        user.setRole(Role.ADMIN);
+        userRepository.save(user);
+        assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
+        //test if target is already inactive
+        user.setRole(Role.NORMAL);
+        user.setActive(false);
+        userRepository.save(user);
+        assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
     }
 
     @Test
@@ -47,22 +100,9 @@ class ActivationServiceTest {
         user.setUserName("test");
         user.setPassword("pa55ward");
         user.setEmail("test@email.com");
-        user.setActive(false);
         userRepository.save(user);
 
-        //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()-> activationService.activateUser("invalid uid"));
-        //test deactivate an admin
-        user.setRole(Role.ADMIN);
-        userRepository.save(user);
-        assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
-        //test if target is already inactive
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-        assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
         //test success
-        user.setActive(true);
-        userRepository.save(user);
         assertDoesNotThrow(()-> activationService.deactivateUser(user.getId().toString()));
         assertFalse(user.isActive());
     }

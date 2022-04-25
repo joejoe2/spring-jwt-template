@@ -52,6 +52,21 @@ class RoleServiceTest {
     }
 
     @Test
+    @Transactional
+    void changeRoleOfWithDoesNotExist() {
+        // test with not exist user
+        assertThrows(UserDoesNotExist.class, () -> roleService.changeRoleOf(UUID.randomUUID().toString(), Role.STAFF));
+    }
+
+    @Test
+    @Transactional
+    void changeRoleOfWithInvalidOperation() {
+        // test the only(default) admin
+        UUID id = userRepository.getByRole(Role.ADMIN).get(0).getId();
+        assertThrows(InvalidOperation.class, () -> roleService.changeRoleOf(id.toString(), Role.NORMAL));
+    }
+
+    @Test
     @Transactional void changeRoleOf(){
         // test with exist user
         User user = new User();

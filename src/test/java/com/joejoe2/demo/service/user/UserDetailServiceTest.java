@@ -25,14 +25,13 @@ class UserDetailServiceTest {
 
     @Test
     @Transactional
-    void loadUserByUsername() {
-        assertThrows(UsernameNotFoundException.class, new Executable() {
-            @Override
-            public void execute() throws Throwable {
-                userDetailService.loadUserByUsername("not exist name");
-            }
-        });
+    void loadUserByNotFoundUsername() {
+        assertThrows(UsernameNotFoundException.class, () -> userDetailService.loadUserByUsername("not exist name"));
+    }
 
+    @Test
+    @Transactional
+    void loadUserByUsername() {
         User user = new User();
         user.setUserName("test");
         user.setEmail("test@email.com");

@@ -2,7 +2,7 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
-import com.joejoe2.demo.controller.constraint.AuthenticatedApi;
+import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;

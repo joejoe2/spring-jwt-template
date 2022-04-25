@@ -58,7 +58,7 @@ class JwtServiceTest {
 
     @Test
     @Transactional
-    void issueTokens() {
+    void issueTokensWithUserDoesNotExist() {
         User user = new User();
         user.setId(UUID.randomUUID());
         user.setUserName("test");
@@ -67,6 +67,17 @@ class JwtServiceTest {
         user.setRole(Role.NORMAL);
         //test not exist user
         assertThrows(UserDoesNotExist.class, ()-> jwtService.issueTokens(new UserDetail(user)));
+    }
+
+    @Test
+    @Transactional
+    void issueTokens() {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword("pa55ward");
+        user.setRole(Role.NORMAL);
         //test exist user
         userRepository.save(user);
         assertDoesNotThrow(()->{
@@ -85,11 +96,14 @@ class JwtServiceTest {
     JwtService spyService;
 
     @Test
-    @Transactional
-    void refreshTokens() {
+    void refreshTokensWithInvalidToken() {
         //test invalid token
         assertThrows(InvalidTokenException.class, ()->jwtService.refreshTokens("invalid_token"));
+    }
 
+    @Test
+    @Transactional
+    void refreshTokens() {
         // = revokeAccessToken + issueTokens
         User user = new User();
         user.setId(UUID.randomUUID());
@@ -108,7 +122,7 @@ class JwtServiceTest {
     }
 
     @Test
-    void getUserDetailFromAccessToken() {
+    void getUserDetailFromAccessTokenWithInvalidToken() {
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.SECOND, 900);
 
@@ -117,6 +131,12 @@ class JwtServiceTest {
         assertThrows(InvalidTokenException.class, ()->jwtService.getUserDetailFromAccessToken(JwtUtil.generateRefreshToken(
                 jwtConfig.getPrivateKey(), "jti", "iss", exp
         )));
+    }
+
+    @Test
+    void getUserDetailFromAccessToken() {
+        Calendar exp = Calendar.getInstance();
+        exp.add(Calendar.SECOND, 900);
 
         //test normal token
         User user = new User();
@@ -136,10 +156,14 @@ class JwtServiceTest {
     }
 
     @Test
-    @Transactional
-    void revokeAccessToken() {
+    void revokeAccessTokenWithInvalidToken() {
         //test invalid token
         assertThrows(InvalidTokenException.class, ()-> jwtService.revokeAccessToken("invalid_token"));
+    }
+
+    @Test
+    @Transactional
+    void revokeAccessToken() {
         //test valid token
         User user = new User();
         user.setId(UUID.randomUUID());

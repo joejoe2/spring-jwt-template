@@ -55,14 +55,38 @@ class PasswordServiceTest {
         user.setPassword(passwordEncoder.encode("pa55ward"));
         user.setRole(Role.NORMAL);
         userRepository.save(user);
-
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf("invalid_uid", "pa55ward", "pa55ward123"));
         assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "invalid_password"));
+    }
+
+    @Test
+    @Transactional
+    void changePasswordOfWithInvalidOperation(){
+        User user = new User();
+        user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword(passwordEncoder.encode("pa55ward"));
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
+
         //test with incorrect password
         assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "incorrect", "pa55ward"));
         //test if old password==new password
         assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
+    }
+    @Test
+    @Transactional
+    void changePasswordOfWithDoesNotExist(){
+        User user = new User();
+        user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword(passwordEncoder.encode("pa55ward"));
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
+        userRepository.delete(user);
+        //test with a not exist user
+        assertThrows(UserDoesNotExist.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
     }
 
     @Test
@@ -93,6 +117,11 @@ class PasswordServiceTest {
 
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->passwordService.requestResetPasswordToken("invalid email"));
+    }
+
+    @Test
+    @Transactional
+    void requestResetPasswordWithDoesNotExist(){
         //test a not exist user email
         assertThrows(UserDoesNotExist.class, ()->passwordService.requestResetPasswordToken("not@email.com"));
     }
@@ -122,6 +151,17 @@ class PasswordServiceTest {
 
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->passwordService.resetPassword("", "**-*/"));
+    }
+
+    @Test
+    @Transactional
+    void resetPasswordWithInvalidOperation() {
+        User user=new User();
+        user.setUserName("test");
+        user.setPassword("pa55ward");
+        user.setEmail("test@email.com");
+        userRepository.save(user);
+
         //test an incorrect token
         assertThrows(InvalidOperation.class, ()->passwordService.resetPassword("invalid token", "pa55ward"));
     }

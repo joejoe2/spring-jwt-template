@@ -158,6 +158,7 @@
 						<exclude>**/filter/**/*</exclude>
 						<exclude>**/init/**/*</exclude>
 						<exclude>**/constraint/**/*</exclude>
+						<exclude>**/interceptor/**/*</exclude>
 					</excludes>
 				</configuration>
 				<executions>
