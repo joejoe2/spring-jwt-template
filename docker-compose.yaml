@@ -2,7 +2,7 @@ version: '3'
 
 services:
   redis:
-    image: redis:5.0.4-alpine
+    image: redis:6.2.7-alpine
     restart: always
     volumes:
       - ./redis/data:/data
