@@ -55,13 +55,20 @@ class UserControllerTest {
     }
 
     @Test
-    @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    void profileWithUnauthorized() throws Exception{
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void profile() throws Exception{
-        //test success
+        //mock login
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         mockedStatic.when(AuthUtil::currentUserDetail)
                 .thenReturn(new UserDetail(user));
+        //test success
         Mockito.when(profileService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                 .accept(MediaType.APPLICATION_JSON))
@@ -72,11 +79,23 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.profile.role").value(user.getRole().toString()))
                 .andExpect(jsonPath("$.profile.isActive").value(user.isActive()))
                 .andExpect(jsonPath("$.profile.registeredAt").value(user.getCreateAt().toString()));
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    void profileWithInternalServerError() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test 500
         Mockito.when(profileService.getProfile(Mockito.any())).thenThrow(new UserDoesNotExist(""));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());
+        //clear mock login
         mockedStatic.close();
     }
 }

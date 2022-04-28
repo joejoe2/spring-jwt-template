@@ -1,10 +1,10 @@
 package com.joejoe2.demo.exception;
 
-public class ControllerAuthConstraintViolation extends Exception{
+public class ControllerConstraintViolation extends Exception{
     private final int rejectStatus;
     private final String rejectMessage;
 
-    public ControllerAuthConstraintViolation(int rejectStatus, String rejectMessage) {
+    public ControllerConstraintViolation(int rejectStatus, String rejectMessage) {
         this.rejectStatus = rejectStatus;
         this.rejectMessage = rejectMessage;
     }

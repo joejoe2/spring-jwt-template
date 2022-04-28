@@ -3,6 +3,8 @@ package com.joejoe2.demo.controller;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
 import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
+import com.joejoe2.demo.controller.constraint.rate.LimitTarget;
+import com.joejoe2.demo.controller.constraint.rate.RateLimit;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
@@ -313,6 +315,7 @@ public class AuthController {
      * </ul>
      */
     @AuthenticatedApi
+    @RateLimit(target = LimitTarget.USER, key = "/api/auth/changePassword", limit = 10, period = 3600)
     @RequestMapping(path = "/api/auth/changePassword", method = RequestMethod.POST)
     public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
         Map<String, Object> response = new HashMap<>();

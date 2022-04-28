@@ -1,6 +1,8 @@
 package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
+import com.joejoe2.demo.controller.constraint.rate.LimitTarget;
+import com.joejoe2.demo.controller.constraint.rate.RateLimit;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.service.user.profile.ProfileService;
 import com.joejoe2.demo.utils.AuthUtil;
