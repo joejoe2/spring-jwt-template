@@ -18,7 +18,7 @@ Including:
 - `forget and reset password api`
 - `admin api` user activate/deactivate, change role, and getUserList
 - validation on `@RequestBody`
-- validation on service layer
+- `@RateLimit on user or ip` based on bucket token algorithm and redis
 
 we will use open-ssl to generate the private and public key for jwt.
 
