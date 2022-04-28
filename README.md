@@ -137,8 +137,19 @@ run `mvn test` or `./mvnw test`
 
 1. install maven, docker and docker-compose
 2. run `mvn package -Dmaven.test.skip=true`
-3. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), but you need to set `jwt.secret.privateKey`
-   and `jwt.secret.publicKey` like application.yml
+3. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), 
+   but you need to set `jwt.secret.privateKey` and `jwt.secret.publicKey` like this format
+   ```
+   jwt.secret.publicKey="-----BEGIN PUBLIC KEY-----
+   MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzFVaIiZtFKJgIrrXa9ZQ
+   fHeGu3o/CFGAhybGXXcU6XWZpyIHNTUdx7ah1z+pMecXWqOIkmKVN92ktgV+TAEB
+   mB91TMr23dMU95JC5wz7H1sxUmO+0HuA5XkGUTXf6GqpIAYLvKnNNhd8eCFm/YAE
+   S9LMsRBVZqgAb7GDJDb+B4NTzUGtWn71/2rSnDsXg1+aV271MM7n20AcvRruXDWx
+   bz5Wx5kKnTbwrOSvQ1chCo/gg+t+xCUdZ78SyT2bRuUIe+d0qHyqdY6i4lvbiXzC
+   noZRygIMYfRyxh0y52Mw6NXLvowOZ2DDYtQMeJglyocOFeYqSgqiRsaELvoQ/5Y8
+   1wIDAQAB
+   -----END PUBLIC KEY-----"
+   ```
 4. edit `./nginx/nginx-certbot.env` (just set value at first line)
 5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
 6. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
