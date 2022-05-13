@@ -164,6 +164,15 @@ class PasswordServiceTest {
 
         //test an incorrect token
         assertThrows(InvalidOperation.class, ()->passwordService.resetPassword("invalid token", "pa55ward"));
+        //test a disabled user
+        VerifyToken token=new VerifyToken();
+        token.setToken("12345678");
+        token.setUser(user);
+        token.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyTokenRepository.save(token);
+        user.setActive(false);
+        userRepository.save(user);
+        assertThrows(InvalidOperation.class, ()->passwordService.resetPassword(token.getToken(), "newPa55ward"));
     }
 
     @Test

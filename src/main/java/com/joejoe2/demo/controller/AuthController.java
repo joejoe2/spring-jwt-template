@@ -89,8 +89,10 @@ public class AuthController {
             response.put("message", e.getMessage()+" !");
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }catch (UserDoesNotExist e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            // if user is deleted after AuthUtil.authenticate and before jwtService.issueTokens
+            // this is considered to be an accident
+            response.put("message", "unknown error, please try again later !");
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

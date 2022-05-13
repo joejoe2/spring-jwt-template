@@ -3,19 +3,16 @@ package com.joejoe2.demo.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
-import com.joejoe2.demo.data.auth.request.LoginRequest;
-import com.joejoe2.demo.data.auth.request.RefreshRequest;
+import com.joejoe2.demo.data.auth.VerificationPair;
+import com.joejoe2.demo.data.auth.request.*;
 import com.joejoe2.demo.exception.InvalidTokenException;
-import com.joejoe2.demo.model.auth.AccessToken;
-import com.joejoe2.demo.model.auth.RefreshToken;
-import com.joejoe2.demo.model.auth.Role;
-import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.model.auth.*;
 import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
 import com.joejoe2.demo.service.jwt.JwtService;
+import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +23,18 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.test.context.support.TestExecutionEvent;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.transaction.annotation.Transactional;
+import redis.embedded.RedisServer;
 
 import javax.servlet.http.Cookie;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,6 +53,12 @@ class AuthControllerTest {
 
     @MockBean
     JwtService jwtService;
+
+    @MockBean
+    VerificationService verificationService;
+
+    @Autowired
+    VerifyTokenRepository verifyTokenRepository;
 
     @Autowired
     MockMvc mockMvc;
@@ -74,9 +80,23 @@ class AuthControllerTest {
         userRepository.delete(user);
     }
 
+    private static RedisServer redisServer;
+
+    @BeforeAll
+    static void beforeAll() {
+        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
+        redisServer.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        redisServer.stop();
+    }
+
     ObjectMapper objectMapper=new ObjectMapper();
 
     @Test
+    @Transactional
     void login() throws Exception{
         //test success
         LoginRequest request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
@@ -91,6 +111,12 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.access_token").hasJsonPath())
                 .andExpect(jsonPath("$.refresh_token").hasJsonPath())
                 .andExpect(status().isOk());
+        mockedStatic.close();
+    }
+
+    @Test
+    void loginWithBadRequest() throws Exception{
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test 400
         //0. validation
         LoginRequest badRequest=LoginRequest.builder().username("").password("").build();
@@ -115,6 +141,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @Transactional
     void webLogin() throws Exception{
         //test success
         LoginRequest request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
@@ -130,6 +157,12 @@ class AuthControllerTest {
                 .andExpect(status().isOk()).andReturn().getResponse().getCookie("refresh_token");
         assertNotNull(cookie);
         assertTrue(cookie.isHttpOnly());
+        mockedStatic.close();
+    }
+
+    @Test
+    void webLoginWithBadRequest() throws Exception{
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test 400
         //0. validation
         LoginRequest badRequest=LoginRequest.builder().username("").password("").build();
@@ -154,6 +187,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @Transactional
     void refresh() throws Exception{
         //test success
         RefreshRequest request=RefreshRequest.builder().refresh_token("refresh_token").build();
@@ -186,6 +220,29 @@ class AuthControllerTest {
     }
 
     @Test
+    void refreshWithBadRequest() throws Exception{
+        //test 400
+        //0. validation
+        RefreshRequest badRequest=RefreshRequest.builder().refresh_token("").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(badRequest))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.refresh_token").exists())
+                .andExpect(status().isBadRequest());
+        //1. InvalidTokenException
+        badRequest=RefreshRequest.builder().refresh_token("invalid_token").build();
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(badRequest))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Transactional
     void webRefresh() throws Exception{
         //test success
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
@@ -205,20 +262,40 @@ class AuthControllerTest {
     }
 
     @Test
-    @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
+    void webRefreshWithBadRequest() throws Exception{
+        //test 400
+        //1. InvalidTokenException
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
+                        .cookie(new Cookie("refresh_token", "invalid_token")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void logout() throws Exception{
-        //test success
+        //mock login
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         mockedStatic.when(AuthUtil::currentUserDetail)
                 .thenReturn(new UserDetail(user.getId().toString(),
-                                user.getUserName(),
-                                user.isActive(),
-                                user.getRole(),
-                                "access_token"));
+                        user.getUserName(),
+                        user.isActive(),
+                        user.getRole(),
+                        "access_token"));
         Mockito.doNothing().when(jwtService).revokeAccessToken("access_token");
+        //test success
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout"))
                 .andExpect(status().isOk());
+        //clear login
+        mockedStatic.close();
+    }
+
+    @Test
+    void logoutWithInvalidToken() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         //test 401
         //1. InvalidTokenException
         mockedStatic.when(AuthUtil::currentUserDetail)
@@ -230,6 +307,7 @@ class AuthControllerTest {
         Mockito.doThrow(new InvalidTokenException("")).when(jwtService).revokeAccessToken("invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout"))
                 .andExpect(status().isUnauthorized());
+        //clear login
         mockedStatic.close();
     }
 
@@ -238,12 +316,83 @@ class AuthControllerTest {
     }
 
     @Test
-    void issueVerificationCode() {
+    void issueVerificationCode() throws Exception{
+        //test success
+        IssueVerificationCodeRequest request =
+                IssueVerificationCodeRequest.builder().email(user.getEmail()).build();
+        String key = UUID.randomUUID().toString();
+        Mockito.when(verificationService.issueVerificationCode(Mockito.any()))
+                .thenReturn(new VerificationPair(key, "1234"));
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/issueVerificationCode")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.key").value(key))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @WithUserDetails(value = "testUser", setupBefore = TestExecutionEvent.TEST_EXECUTION)
-    void changePassword() {
+    void issueVerificationCodeWithBadRequest() throws Exception{
+        //test with invalid email format
+        IssueVerificationCodeRequest request =
+                IssueVerificationCodeRequest.builder().email("invalid email").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/issueVerificationCode")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.email").exists())
+                .andExpect(status().isBadRequest());
+    }
+
+
+    @Test
+    @Transactional
+    void changePassword() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
+        //test success
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .oldPassword("pa55ward").newPassword("password").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    @Transactional
+    void changePasswordWithBadRequest() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
+        //test with incorrect old password
+        ChangePasswordRequest request = ChangePasswordRequest.builder()
+                .oldPassword("incorrectolfpassword").newPassword("password").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
+        //test with invalid new password
+        request = ChangePasswordRequest.builder()
+                .oldPassword("pa55ward").newPassword("").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/changePassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.newPassword").exists())
+                .andExpect(status().isBadRequest());
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test
@@ -251,6 +400,50 @@ class AuthControllerTest {
     }
 
     @Test
-    void resetPassword() {
+    @Transactional
+    void resetPassword() throws Exception{
+        VerifyToken verifyToken=new VerifyToken();
+        verifyToken.setUser(user);
+        verifyToken.setToken("12345678");
+        //valid for 10 min
+        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyTokenRepository.save(verifyToken);
+
+        ResetPasswordRequest request = ResetPasswordRequest.builder()
+                .token(verifyToken.getToken()).newPassword("newPassword").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/resetPassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void resetPasswordWithBadRequest() throws Exception{
+        //0. validation
+        ResetPasswordRequest request = ResetPasswordRequest.builder()
+                .token("").newPassword("invalid-password").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/resetPassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.token").exists())
+                .andExpect(jsonPath("$.errors.newPassword").exists())
+                .andExpect(status().isBadRequest());
+        //1. InvalidOperation, with incorrect verifyToken
+        VerifyToken verifyToken=new VerifyToken();
+        verifyToken.setUser(user);
+        verifyToken.setToken("12345678");
+        //valid for 10 min
+        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyTokenRepository.save(verifyToken);
+        request = ResetPasswordRequest.builder()
+                .token("87654321").newPassword("newPassword").build();
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/resetPassword")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isBadRequest());
     }
 }

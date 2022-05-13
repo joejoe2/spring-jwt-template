@@ -3,9 +3,11 @@ package com.joejoe2.demo.service.user.auth;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
+import com.joejoe2.demo.service.verification.VerificationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ActiveProfiles("test")
 class RegistrationServiceTest {
+    @MockBean
+    VerificationService verificationService;
     @Autowired
     RegistrationService registrationService;
 
@@ -53,5 +57,11 @@ class RegistrationServiceTest {
         assertEquals(Role.NORMAL, test1.getRole());
         assertEquals(Role.STAFF, test2.getRole());
         assertEquals(Role.ADMIN, test3.getRole());
+    }
+
+
+    @Test
+    void registerUser() {
+
     }
 }

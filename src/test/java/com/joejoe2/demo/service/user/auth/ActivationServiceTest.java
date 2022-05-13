@@ -1,10 +1,14 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -44,6 +48,14 @@ class ActivationServiceTest {
 
         //test if target is already active
         assertThrows(InvalidOperation.class, ()-> activationService.activateUser(user.getId().toString()));
+        //test if user try to activate himself
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
+        assertThrows(InvalidOperation.class, ()-> activationService.activateUser(user.getId().toString()));
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test
@@ -91,6 +103,14 @@ class ActivationServiceTest {
         user.setActive(false);
         userRepository.save(user);
         assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
+        //test if user try to activate himself
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
+        assertThrows(InvalidOperation.class, ()-> activationService.deactivateUser(user.getId().toString()));
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test

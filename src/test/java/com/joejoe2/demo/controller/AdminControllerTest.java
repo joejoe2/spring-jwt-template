@@ -5,6 +5,7 @@ import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.admin.request.UserIdRequest;
+import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -14,17 +15,17 @@ import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.user.auth.ActivationService;
 import com.joejoe2.demo.service.user.auth.RoleService;
 import com.joejoe2.demo.service.user.profile.ProfileService;
+import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.TestExecutionEvent;
-import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -76,8 +77,12 @@ class AdminControllerTest {
     ObjectMapper objectMapper=new ObjectMapper();
 
     @Test
-    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void changeRole() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test success
         ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
@@ -89,6 +94,17 @@ class AdminControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    void changeRoleWithBadRequest() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test 400
         //0. validation
         ChangeUserRoleRequest badRequest=ChangeUserRoleRequest.builder()
@@ -99,8 +115,8 @@ class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(badRequest))
                         .accept(MediaType.APPLICATION_JSON))
-                        .andExpect(jsonPath("$.errors.id").exists())
-                        .andExpect(jsonPath("$.errors.role").exists())
+                .andExpect(jsonPath("$.errors.id").exists())
+                .andExpect(jsonPath("$.errors.role").exists())
                 .andExpect(status().isBadRequest());
         //1. InvalidOperation
         badRequest=ChangeUserRoleRequest.builder()
@@ -138,11 +154,17 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("role is not exist !"));
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test
-    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void activateUser() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).activateUser(request.getId());
@@ -151,6 +173,17 @@ class AdminControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    void activateUserWithBadRequest() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test 400
         //0. validation
         UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
@@ -177,11 +210,17 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test
-    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void deactivateUser() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).deactivateUser(request.getId());
@@ -190,6 +229,17 @@ class AdminControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    void deactivateUserWithBadRequest() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test 400
         //0. validation
         UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
@@ -216,6 +266,8 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isBadRequest());
+        //clear mock login
+        mockedStatic.close();
     }
 
     static class CustomResponse{
@@ -227,8 +279,13 @@ class AdminControllerTest {
     }
 
     @Test
-    @WithUserDetails(value = "testAdmin", setupBefore = TestExecutionEvent.TEST_EXECUTION)
     void getAllUserProfiles() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
+        // prepare data
         List<UserProfile> profiles=new ArrayList<>();
         for (int i=0;i<50;i++){
             User user=new User();
@@ -261,6 +318,17 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.totalPages").value(5))
                 .andExpect(jsonPath("$.pageSize").value(10))
                 .andExpect(status().isOk()).andReturn();
+        //clear mock login
+        mockedStatic.close();
+    }
+
+    @Test
+    void getAllUserProfilesWithBadRequest() throws Exception{
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail)
+                .thenReturn(new UserDetail(user));
         //test 400
         //0. validation
         PageRequest badRequest=PageRequest.builder().page(-1).size(0).build();
@@ -271,5 +339,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.errors.page").exists())
                 .andExpect(jsonPath("$.errors.size").exists())
                 .andExpect(status().isBadRequest());
+        //clear mock login
+        mockedStatic.close();
     }
 }

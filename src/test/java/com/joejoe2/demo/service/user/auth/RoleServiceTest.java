@@ -1,13 +1,17 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -59,11 +63,20 @@ class RoleServiceTest {
     }
 
     @Test
-    @Transactional
     void changeRoleOfWithInvalidOperation() {
         // test the only(default) admin
-        UUID id = userRepository.getByRole(Role.ADMIN).get(0).getId();
-        assertThrows(InvalidOperation.class, () -> roleService.changeRoleOf(id.toString(), Role.NORMAL));
+        User user = userRepository.getByRole(Role.ADMIN).get(0);
+        assertThrows(InvalidOperation.class, () -> roleService.changeRoleOf(user.getId().toString(), Role.NORMAL));
+        //test if role does not change
+        assertThrows(InvalidOperation.class, () -> roleService.changeRoleOf(user.getId().toString(), Role.ADMIN));
+        //test if user try to change himself
+        //mock login
+        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
+        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
+        mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
+        assertThrows(InvalidOperation.class, ()-> roleService.changeRoleOf(user.getId().toString(), Role.NORMAL));
+        //clear mock login
+        mockedStatic.close();
     }
 
     @Test
