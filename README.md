@@ -22,6 +22,11 @@ Including:
 
 we will use open-ssl to generate the private and public key for jwt.
 
+
+## Architecture
+
+![image](architecture.png)
+
 ## Example frontend
 
 We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend) to 
