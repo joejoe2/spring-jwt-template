@@ -7,6 +7,7 @@ import javax.persistence.*;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -42,11 +43,11 @@ public class User{
     private boolean isActive=true; //code level default
 
     @CreationTimestamp
-    private LocalDateTime createAt;
+    private Instant createAt;
 
     @UpdateTimestamp
-    private LocalDateTime updateAt;
+    private Instant updateAt;
 
     @Column(nullable = true)
-    private LocalDateTime authAt;
+    private Instant authAt;
 }

@@ -150,7 +150,7 @@ run `mvn test` or `./mvnw test`
    1wIDAQAB
    -----END PUBLIC KEY-----"
    ```
-4. edit `./nginx/nginx-certbot.env` (just set value at first line)
+4. copy `./nginx/nginx-certbot.env.example` to `./nginx/nginx-certbot.env` (just set `CERTBOT_EMAIL` at first line)
 5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
 6. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
 7. `docker-compose up` or `docker-compose up -d`

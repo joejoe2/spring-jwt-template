@@ -8,6 +8,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -27,5 +28,5 @@ public class VerificationCode {
     private String code = Utils.randomNumericCode(5);
 
     @Column(updatable = false, nullable = false)
-    private LocalDateTime expireAt;
+    private Instant expireAt;
 }

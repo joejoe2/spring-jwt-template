@@ -12,6 +12,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -61,7 +62,7 @@ class VerificationServiceTest {
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setEmail("test@email.com");
         verificationCode.setCode("1234");
-        verificationCode.setExpireAt(LocalDateTime.now().plusHours(1));
+        verificationCode.setExpireAt(Instant.now().plusSeconds(3600));
         verificationCodeRepository.save(verificationCode);
         assertDoesNotThrow(()->verificationService.verify(verificationCode.getId().toString(), verificationCode.getEmail(), verificationCode.getCode()));
     }

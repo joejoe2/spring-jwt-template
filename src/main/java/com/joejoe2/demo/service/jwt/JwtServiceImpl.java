@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.List;
@@ -48,7 +49,7 @@ public class JwtServiceImpl implements JwtService{
         AccessToken accessToken = new AccessToken();
         accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), accessToken.getId().toString(), jwtConfig.getIssuer(), user, exp));
         accessToken.setUser(user);
-        accessToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
+        accessToken.setExpireAt(exp.toInstant());
         accessTokenRepository.save(accessToken);
         return accessToken;
     }
@@ -61,7 +62,7 @@ public class JwtServiceImpl implements JwtService{
         refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), refreshToken.getId().toString(), jwtConfig.getIssuer(), exp));
         refreshToken.setAccessToken(accessToken);
         refreshToken.setUser(accessToken.getUser());
-        refreshToken.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
+        refreshToken.setExpireAt(exp.toInstant());
         refreshTokenRepository.save(refreshToken);
         return refreshToken;
     }
@@ -75,7 +76,7 @@ public class JwtServiceImpl implements JwtService{
         RefreshToken refreshToken = createRefreshToken(accessToken);
 
         //prevent concurrent user role/password/active change
-        user.setAuthAt(LocalDateTime.now());
+        user.setAuthAt(Instant.now());
         userRepository.save(user);
 
         return new TokenPair(accessToken, refreshToken);
@@ -92,7 +93,7 @@ public class JwtServiceImpl implements JwtService{
         }
         //load refresh token
         RefreshToken refreshToken = refreshTokenRepository
-                .getByTokenAndExpireAtGreaterThan(refreshPlainToken, LocalDateTime.now())
+                .getByTokenAndExpireAtGreaterThan(refreshPlainToken, Instant.now())
                 .orElseThrow(()->new InvalidTokenException("invalid refresh token !"));
         User user = refreshToken.getUser();
 
@@ -104,7 +105,7 @@ public class JwtServiceImpl implements JwtService{
         RefreshToken newRefreshToken = createRefreshToken(accessToken);
 
         //prevent concurrent user role/password/active change
-        user.setAuthAt(LocalDateTime.now());
+        user.setAuthAt(Instant.now());
         userRepository.save(user);
 
         return new TokenPair(accessToken, newRefreshToken);
@@ -130,7 +131,7 @@ public class JwtServiceImpl implements JwtService{
     @Override
     public void revokeAccessToken(String accessPlainToken) throws InvalidTokenException {
         AccessToken accessToken = accessTokenRepository
-                .getByTokenAndExpireAtGreaterThan(accessPlainToken, LocalDateTime.now())
+                .getByTokenAndExpireAtGreaterThan(accessPlainToken, Instant.now())
                 .orElseThrow(()->new InvalidTokenException("invalid token !"));
 
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
@@ -164,6 +165,6 @@ public class JwtServiceImpl implements JwtService{
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredTokens() {
-        refreshTokenRepository.deleteByExpireAtLessThan(LocalDateTime.now());
+        refreshTokenRepository.deleteByExpireAtLessThan(Instant.now());
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
@@ -35,7 +36,7 @@ public class VerificationServiceImpl implements VerificationService {
         exp.add(Calendar.SECOND, 300);
         VerificationCode emailVerification = new VerificationCode();
         emailVerification.setEmail(email);
-        emailVerification.setExpireAt(exp.toInstant().atZone(exp.getTimeZone().toZoneId()).toLocalDateTime());
+        emailVerification.setExpireAt(exp.toInstant());
         verificationRepository.save(emailVerification);
 
         emailService.sendSimpleEmail(emailVerification.getEmail(), "Verification", "your verification code is "+emailVerification.getCode());
@@ -48,7 +49,7 @@ public class VerificationServiceImpl implements VerificationService {
         email = new EmailValidator().validate(email);
         if (code==null)throw new ValidationError("code cannot be null !");
 
-        if(verificationRepository.deleteByIdAndEmailAndCodeAndExpireAtGreaterThan(keyId, email, code, LocalDateTime.now())==0){
+        if(verificationRepository.deleteByIdAndEmailAndCodeAndExpireAtGreaterThan(keyId, email, code, Instant.now())==0){
             throw new InvalidOperation("verification fail !");
         }
     }
@@ -57,13 +58,13 @@ public class VerificationServiceImpl implements VerificationService {
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredVerificationCodes() {
-        verificationRepository.deleteByExpireAtLessThan(LocalDateTime.now());
+        verificationRepository.deleteByExpireAtLessThan(Instant.now());
     }
 
     @Job(name = "delete all expired verify tokens")
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredVerifyTokens() {
-        verifyTokenRepository.deleteByExpireAtLessThan(LocalDateTime.now());
+        verifyTokenRepository.deleteByExpireAtLessThan(Instant.now());
     }
 }

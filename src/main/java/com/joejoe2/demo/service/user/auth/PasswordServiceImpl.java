@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,9 +79,9 @@ public class PasswordServiceImpl implements PasswordService {
         if (!user.isActive())throw new InvalidOperation("User is disabled !");
 
         Optional<VerifyToken> token=verifyTokenRepository.getByUser(user);
-        if(token.isPresent()&&token.get().getExpireAt().isAfter(LocalDateTime.now()))
+        if(token.isPresent()&&token.get().getExpireAt().isAfter(Instant.now()))
             throw new InvalidOperation("already request to reset password, please try again later !");
-        if(token.isPresent()&&token.get().getExpireAt().isBefore(LocalDateTime.now()))
+        if(token.isPresent()&&token.get().getExpireAt().isBefore(Instant.now()))
             verifyTokenRepository.delete(token.get());  // REPEATABLE_READ, if deleted by others
         // , it will cause (ERROR:  could not serialize access due to concurrent delete)
         // instead of being ignored by postgresql in read-committed
@@ -89,7 +90,7 @@ public class PasswordServiceImpl implements PasswordService {
         verifyToken.setUser(user);
         verifyToken.setToken(Utils.randomNumericCode(128));
         //valid for 10 min
-        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyToken.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(verifyToken);
 
         return verifyToken;
@@ -101,7 +102,7 @@ public class PasswordServiceImpl implements PasswordService {
         newPassword = new PasswordValidator().validate(newPassword);
         newPassword = passwordEncoder.encode(newPassword);
 
-        VerifyToken token = verifyTokenRepository.getByTokenAndExpireAtGreaterThan(verifyToken, LocalDateTime.now())
+        VerifyToken token = verifyTokenRepository.getByTokenAndExpireAtGreaterThan(verifyToken, Instant.now())
                 .orElseThrow(()->new InvalidOperation("reset password request is invalid or expired, please try to use forget password again later !"));
 
         User user=token.getUser();

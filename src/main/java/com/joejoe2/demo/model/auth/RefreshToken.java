@@ -6,6 +6,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class RefreshToken {
     private String token;
 
     @Column(updatable = false, nullable = false)
-    private LocalDateTime expireAt;
+    private Instant expireAt;
 
     @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY) //if delete this => also delete accessToken
     @OnDelete(action = OnDeleteAction.CASCADE) //if delete accessToken => also delete this

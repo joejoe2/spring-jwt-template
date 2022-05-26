@@ -31,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -294,7 +295,7 @@ class AdminControllerTest {
             user.setEmail("test"+i+"@email.com");
             user.setRole(i%3==0? Role.ADMIN:i%3==1?Role.STAFF:Role.NORMAL);
             user.setActive(i % 2 == 0);
-            user.setCreateAt(LocalDateTime.now());
+            user.setCreateAt(Instant.now());
             profiles.add(new UserProfile(user));
         }
         //test success

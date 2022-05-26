@@ -10,6 +10,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -26,7 +27,7 @@ public class AccessToken {
     private String token;
 
     @Column(updatable = false, nullable = false)
-    private LocalDateTime expireAt;
+    private Instant expireAt;
 
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)

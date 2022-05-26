@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import redis.embedded.RedisServer;
 
 import javax.servlet.http.Cookie;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -406,7 +407,7 @@ class AuthControllerTest {
         verifyToken.setUser(user);
         verifyToken.setToken("12345678");
         //valid for 10 min
-        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyToken.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(verifyToken);
 
         ResetPasswordRequest request = ResetPasswordRequest.builder()
@@ -435,7 +436,7 @@ class AuthControllerTest {
         verifyToken.setUser(user);
         verifyToken.setToken("12345678");
         //valid for 10 min
-        verifyToken.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        verifyToken.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(verifyToken);
         request = ResetPasswordRequest.builder()
                 .token("87654321").newPassword("newPassword").build();

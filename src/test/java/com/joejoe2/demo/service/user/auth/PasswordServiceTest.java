@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import redis.embedded.RedisServer;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -168,7 +169,7 @@ class PasswordServiceTest {
         VerifyToken token=new VerifyToken();
         token.setToken("12345678");
         token.setUser(user);
-        token.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        token.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(token);
         user.setActive(false);
         userRepository.save(user);
@@ -187,7 +188,7 @@ class PasswordServiceTest {
         VerifyToken token=new VerifyToken();
         token.setToken("12345678");
         token.setUser(user);
-        token.setExpireAt(LocalDateTime.now().plusMinutes(10));
+        token.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(token);
         assertDoesNotThrow(()->{
             passwordService.resetPassword(token.getToken(), "a12345678");

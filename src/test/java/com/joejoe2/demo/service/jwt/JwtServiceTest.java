@@ -22,6 +22,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 import redis.embedded.RedisServer;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
@@ -175,7 +176,7 @@ class JwtServiceTest {
         AccessToken accessToken = new AccessToken();
         accessToken.setToken("test_token");
         accessToken.setUser(user);
-        accessToken.setExpireAt(LocalDateTime.now().plusMinutes(15));
+        accessToken.setExpireAt(Instant.now().plusSeconds(900));
         accessTokenRepository.save(accessToken);
         assertDoesNotThrow(()->{
             jwtService.revokeAccessToken(accessToken.getToken());
