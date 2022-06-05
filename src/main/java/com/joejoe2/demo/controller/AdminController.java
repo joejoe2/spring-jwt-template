@@ -36,37 +36,34 @@ public class AdminController {
 
     /**
      * change the role of target user, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
+     * 2. will return code 403 and {"message": "xxx"} if
      *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
-     * 3. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
-     *    <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 4. a {@link ChangeUserRoleRequest} will return code 400 and {"message": "xxx"} if <br>
-     *    <ul>
-     *        <li>target user is not exist</li>
+     *        <li>you are not ADMIN</li>
      *        <li>target user==request user</li>
-     *        <li>target role is not exist</li>
      *        <li>target role==original role</li>
      *        <li>target user is the only ADMIN</li>
-     *    </ul>
-     * 5. side effects if the {@link ChangeUserRoleRequest} success
-     *    <ul>
-     *        <li>target user will be logged out by revoke all access and refresh tokens</li>
-     *    <ul>
+     *    </ul><br><br>
+     *
+     * 3. will return code 404 if target user is not exist<br><br>
+     *
+     * 4. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
+     *    <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
+     * 5. if the {@link ChangeUserRoleRequest} success,
+     *    target user will be logged out by revoke all access and refresh tokens</li>
+     *
      * @param request
      * @return status code, json
      * <ul>
      *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
+     *     <li>403, <code>{"message": "xxx"}</code></li>
+     *     <li>404, <code>{"message": "xxx"}</code></li>
      * </ul>
      */
     @ApiAllowsTo(roles = Role.ADMIN)
@@ -76,33 +73,31 @@ public class AdminController {
         try {
             roleService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation|UserDoesNotExist e){
+        } catch (InvalidOperation e){
             response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        } catch (IllegalArgumentException e){
-            response.put("message", "role is not exist !");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     /**
      * activate target user, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
      * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
-     * 3. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 4. a {@linkplain UserIdRequest ActivateUserRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user is not exist</li>
+     *      <ul>
      *        <li>target user==request user</li>
      *        <li>target user is already active</li>
-     *    </ul>
+     *    </ul><br><br>
+     *
+     * 3. will return code 404 if target user is not exist<br><br>
+     *
+     * 4. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages
+     *
      * @param request
      * @return status code, json
      * <ul>
@@ -110,7 +105,8 @@ public class AdminController {
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>400, <code>{"message": "xxx"}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
+     *     <li>403, <code>{"message": "xxx"}</code></li>
+     *     <li>404, <code>{"message": "xxx"}</code></li>
      * </ul>
      */
     @ApiAllowsTo(roles = Role.ADMIN)
@@ -120,34 +116,32 @@ public class AdminController {
         try {
             activationService.activateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation|UserDoesNotExist e){
+        } catch (InvalidOperation e){
             response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     /**
-     * deactivate target user, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
+     * deactivate target user(cannot login anymore), this is only allowed to ADMIN <br><br>
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
      * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
-     * 3. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 4. a {@linkplain UserIdRequest DeActivateUserRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user is not exist</li>
+     *      <ul>
      *        <li>target user==request user</li>
      *        <li>target user is already inactive</li>
-     *    </ul>
-     * 5. side effect if this method success
-     *    <ul>
-     *        <li>target user will be logged out by revoke all access and refresh tokens</li>
-     *    </ul>
+     *      </ul><br><br>
+     *
+     * 3. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
+     * 4. if the {@linkplain UserIdRequest DeActivateUserRequest} success
+     *    ,target user will be logged out by revoke all access and refresh tokens
+     *
      * @param request
      * @return status code, json
      * <ul>
@@ -155,7 +149,8 @@ public class AdminController {
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>400, <code>{"message": "xxx"}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
+     *     <li>403, <code>{"message": "xxx"}</code></li>
+     *     <li>404, <code>{"message": "xxx"}</code></li>
      * </ul>
      */
     @ApiAllowsTo(roles = Role.ADMIN)
@@ -165,25 +160,25 @@ public class AdminController {
         try {
             activationService.deactivateUser(request.getId());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation|UserDoesNotExist e){
+        } catch (InvalidOperation e){
             response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     /**
      * get all user profiles or user profiles with page param, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not ADMIN or not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
-     * 3. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
+     * 2. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 4. if no given {@linkplain PageRequest request body}, this will return all user profiles, otherwise will be a page request
+     *
+     * 3. if no given {@linkplain PageRequest request body},
+     *    this will return all user profiles, otherwise will be a page request
      * @param request
      * @return status code, json
      * <ul>
@@ -192,7 +187,6 @@ public class AdminController {
      *     , "totalItems": int, "currentPage": int,"totalPages": int, "pageSize": int}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
      * </ul>
      */
     @ApiAllowsTo(roles = Role.ADMIN)

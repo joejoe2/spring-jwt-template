@@ -25,11 +25,11 @@ public class RefreshToken {
     @Column(updatable = false, nullable = false)
     private Instant expireAt;
 
-    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY) //if delete this => also delete accessToken
+    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, optional = false) //if delete this => also delete accessToken
     @OnDelete(action = OnDeleteAction.CASCADE) //if delete accessToken => also delete this
     private AccessToken accessToken;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

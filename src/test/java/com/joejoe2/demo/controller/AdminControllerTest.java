@@ -1,6 +1,7 @@
 package com.joejoe2.demo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
@@ -8,23 +9,25 @@ import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
+import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.service.user.auth.ActivationService;
 import com.joejoe2.demo.service.user.auth.RoleService;
 import com.joejoe2.demo.service.user.profile.ProfileService;
-import com.joejoe2.demo.utils.AuthUtil;
+import com.joejoe2.demo.utils.JwtUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -32,8 +35,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,27 +54,49 @@ class AdminControllerTest {
     ActivationService activationService;
     @MockBean
     ProfileService profileService;
-
+    @MockBean
+    JwtService jwtService;
+    @Autowired
+    JwtConfig jwtConfig;
     @Autowired
     UserRepository userRepository;
 
+    User admin;
+    String adminAccessToken;
     User user;
+    String userAccessToken;
 
     @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
-    void createUser(){
-        user=new User();
-        user.setUserName("testAdmin");
-        user.setRole(Role.ADMIN);
-        user.setEmail("testAdmin@email.com");
+    void createUser() throws InvalidTokenException {
+        admin =new User();
+        admin.setUserName("testAdmin");
+        admin.setRole(Role.ADMIN);
+        admin.setEmail("testAdmin@email.com");
+        admin.setPassword("pa55ward");
+        userRepository.save(admin);
+        user = new User();
+        user.setUserName("testUser");
+        user.setRole(Role.NORMAL);
+        user.setEmail("testUser@email.com");
         user.setPassword("pa55ward");
         userRepository.save(user);
+        userRepository.flush();
+
+        Calendar exp = Calendar.getInstance();
+        exp.add(Calendar.SECOND, 900);
+        adminAccessToken = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", jwtConfig.getIssuer(), admin, exp);
+        userAccessToken = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", jwtConfig.getIssuer(), user, exp);
+        Mockito.doReturn(false).when(jwtService).isAccessTokenInBlackList(Mockito.any());
+        Mockito.doReturn(new UserDetail(admin)).when(jwtService).getUserDetailFromAccessToken(adminAccessToken);
+        Mockito.doReturn(new UserDetail(user)).when(jwtService).getUserDetailFromAccessToken(userAccessToken);
     }
 
     @AfterEach
     void deleteUser(){
+        userRepository.delete(admin);
         userRepository.delete(user);
     }
 
@@ -79,11 +104,17 @@ class AdminControllerTest {
 
     @Test
     void changeRole() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
+        //test not authenticated
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+        //test not admin
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .header(HttpHeaders.AUTHORIZATION, userAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
         //test success
         ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
@@ -91,184 +122,166 @@ class AdminControllerTest {
                 .build();
         Mockito.doNothing().when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        //clear mock login
-        mockedStatic.close();
     }
 
     @Test
-    void changeRoleWithBadRequest() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
-        //test 400
-        //0. validation
-        ChangeUserRoleRequest badRequest=ChangeUserRoleRequest.builder()
+    void changeRoleWithError() throws Exception{
+        //test validation
+        ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
                 .id("invalid id")
-                .role("")
+                .role("not exist role")
                 .build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(jsonPath("$.errors.role").exists())
                 .andExpect(status().isBadRequest());
-        //1. InvalidOperation
-        badRequest=ChangeUserRoleRequest.builder()
+        //test InvalidOperation
+        request=ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
         Mockito.doThrow(new InvalidOperation("")).when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //2. UserDoesNotExist
-        badRequest=ChangeUserRoleRequest.builder()
+                .andExpect(status().isForbidden());
+        //test UserDoesNotExist
+        request=ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
         Mockito.doThrow(new UserDoesNotExist("")).when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //3. role is not exist
-        badRequest=ChangeUserRoleRequest.builder()
-                .id(UUID.randomUUID().toString())
-                .role("not exist role")
-                .build();
-        Mockito.doNothing().when(roleService).changeRoleOf(Mockito.any(), Mockito.any());
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("role is not exist !"));
-        //clear mock login
-        mockedStatic.close();
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void activateUser() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
+        //test not authenticated
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+        //test not admin
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .header(HttpHeaders.AUTHORIZATION, userAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        //clear mock login
-        mockedStatic.close();
     }
 
     @Test
-    void activateUserWithBadRequest() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
-        //test 400
-        //0. validation
-        UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
+    void activateUserWithError() throws Exception{
+        //test validation
+        UserIdRequest request=UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
-        //1. InvalidOperation
-        badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doThrow(new InvalidOperation("")).when(activationService).activateUser(badRequest.getId());
+        //test InvalidOperation
+        request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doThrow(new InvalidOperation("")).when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).activateUser(badRequest.getId());
+                .andExpect(status().isForbidden());
+        //test UserDoesNotExist
+        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //clear mock login
-        mockedStatic.close();
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void deactivateUser() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
+        //test not authenticated
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+        //test not admin
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .header(HttpHeaders.AUTHORIZATION, userAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
         //test success
         UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
-        //clear mock login
-        mockedStatic.close();
     }
 
     @Test
-    void deactivateUserWithBadRequest() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
-        //test 400
-        //0. validation
-        UserIdRequest badRequest=UserIdRequest.builder().id("invalid id").build();
+    void deactivateUserWithError() throws Exception{
+        //test validation
+        UserIdRequest request=UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
-        //1. InvalidOperation
-        badRequest=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
-        Mockito.doThrow(new InvalidOperation("")).when(activationService).deactivateUser(badRequest.getId());
+        //test InvalidOperation
+        request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        Mockito.doThrow(new InvalidOperation("")).when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //2. UserDoesNotExist
-        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).deactivateUser(badRequest.getId());
+                .andExpect(status().isForbidden());
+        //test UserDoesNotExist
+        Mockito.doThrow(new UserDoesNotExist("")).when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
-        //clear mock login
-        mockedStatic.close();
+                .andExpect(status().isNotFound());
     }
 
     static class CustomResponse{
@@ -281,11 +294,17 @@ class AdminControllerTest {
 
     @Test
     void getAllUserProfiles() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
+        //test not authenticated
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+        //test not admin
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+                        .header(HttpHeaders.AUTHORIZATION, userAccessToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
         // prepare data
         List<UserProfile> profiles=new ArrayList<>();
         for (int i=0;i<50;i++){
@@ -301,6 +320,7 @@ class AdminControllerTest {
         //test success
         Mockito.doReturn(profiles).when(profileService).getAllUserProfiles();
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.profiles").isArray())
                 .andExpect(status().isOk()).andReturn();
@@ -310,6 +330,7 @@ class AdminControllerTest {
         Mockito.doReturn(new PageList<>(10, 2, 5, 10, profiles.subList(20, 30)))
                 .when(profileService).getAllUserProfilesWithPage(2, 10);
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
@@ -318,29 +339,20 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.currentPage").value(2))
                 .andExpect(jsonPath("$.totalPages").value(5))
                 .andExpect(jsonPath("$.pageSize").value(10))
-                .andExpect(status().isOk()).andReturn();
-        //clear mock login
-        mockedStatic.close();
+                .andExpect(status().isOk());
     }
 
     @Test
-    void getAllUserProfilesWithBadRequest() throws Exception{
-        //mock login
-        MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
-        mockedStatic.when(AuthUtil::currentUserDetail)
-                .thenReturn(new UserDetail(user));
-        //test 400
-        //0. validation
-        PageRequest badRequest=PageRequest.builder().page(-1).size(0).build();
+    void getAllUserProfilesWithError() throws Exception{
+        //test validation
+        PageRequest request=PageRequest.builder().page(-1).size(0).build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(badRequest))
+                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.page").exists())
                 .andExpect(jsonPath("$.errors.size").exists())
                 .andExpect(status().isBadRequest());
-        //clear mock login
-        mockedStatic.close();
     }
 }

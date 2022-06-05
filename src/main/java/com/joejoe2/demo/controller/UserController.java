@@ -24,14 +24,9 @@ public class UserController {
 
     /**
      * change your password to new password, this is allowed to any authenticated user(with access token) <br><br>
-     * 1. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
      * @return status code, json
      * <ul>
      *     <li>200, <code>{"id": "xxx",
@@ -41,7 +36,6 @@ public class UserController {
      *     "isActive": true or false,
      *     "registeredAt": "time in utc"}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
      * </ul>
      */
     @AuthenticatedApi

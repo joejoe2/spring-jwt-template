@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ForgetPasswordRequest {
+    /**
+     * email of the user
+     */
     @Email
     private String email;
 }

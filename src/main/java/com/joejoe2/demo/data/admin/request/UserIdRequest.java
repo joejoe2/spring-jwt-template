@@ -8,11 +8,17 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 
+/**
+ * request with target user id
+ */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserIdRequest {
+    /**
+     * id of target user
+     */
     @UUID(message = "invalid user id !")
     @NotEmpty(message = "user id cannot be empty !")
     private String id;

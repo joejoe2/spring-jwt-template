@@ -1,6 +1,8 @@
 package com.joejoe2.demo.utils;
 
 import com.joejoe2.demo.config.JwtConfig;
+import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import io.jsonwebtoken.Claims;
@@ -77,5 +79,23 @@ class JwtUtilTest {
 
         //invalid token
         assertThrows(JwtException.class, ()->JwtUtil.parseToken(jwtConfig.getPublicKey(), "invalid_token"));
+    }
+
+    @Test
+    void extractUserDetailFromAccessToken() throws InvalidTokenException {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        user.setUserName("test");
+        user.setRole(Role.ADMIN);
+        Calendar exp = Calendar.getInstance();
+        exp.add(Calendar.SECOND, 900);
+
+        //test success
+        String accessToken = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", jwtConfig.getIssuer(), user, exp);
+        UserDetail userDetail = JwtUtil.extractUserDetailFromAccessToken(jwtConfig.getPublicKey(), accessToken);
+        assertEquals(user.getId().toString(), userDetail.getId());
+        assertEquals(user.getUserName(), userDetail.getUsername());
+        assertEquals(user.getRole(), userDetail.getRole());
+        assertEquals(user.isActive(), userDetail.isActive());
     }
 }

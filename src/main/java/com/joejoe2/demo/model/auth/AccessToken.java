@@ -29,7 +29,7 @@ public class AccessToken {
     @Column(updatable = false, nullable = false)
     private Instant expireAt;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

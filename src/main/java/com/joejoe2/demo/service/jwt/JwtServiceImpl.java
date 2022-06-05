@@ -111,21 +111,9 @@ public class JwtServiceImpl implements JwtService{
         return new TokenPair(accessToken, newRefreshToken);
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
-
     @Override
     public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {
-        try {
-            Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), token);
-            String tokenType = (String) data.get("type");
-            if (!tokenType.equals("access_token")){
-                throw new InvalidTokenException("invalid token !");
-            }
-            return new UserDetail((String) data.get("id"), (String) data.get("username"),
-                    (Boolean) data.get("isActive"),Role.valueOf((String) data.get("role")), token);
-        }catch (JwtException | NullPointerException ex){
-            throw new InvalidTokenException("invalid token !");
-        }
+        return JwtUtil.extractUserDetailFromAccessToken(jwtConfig.getPublicKey(), token);
     }
 
     @Override
@@ -148,7 +136,7 @@ public class JwtServiceImpl implements JwtService{
     @Override
     public void revokeAccessToken(List<AccessToken> accessTokens) {
         accessTokenRepository.deleteAll(accessTokens); // refreshToken will be cascade deleted
-        accessTokens.forEach((a)->addAccessTokenToBlackList(a));
+        accessTokens.forEach(this::addAccessTokenToBlackList);
     }
 
     @Override

@@ -62,12 +62,14 @@ public class AuthController {
      * login and get the jwt access and refresh tokens, this is allowed to everyone <br><br>
      * 1. any {@link LoginRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
      * 2. a {@link LoginRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>user is not exist</li>
      *        <li>user is inactive</li>
      *        <li>incorrect username or password</li>
      *    </ul>
+     *
      * @param request
      * @return status code, json
      * <ul>
@@ -101,12 +103,14 @@ public class AuthController {
      * but follow the <code>allow.host</code> setting <br><br>
      * 1. any {@link LoginRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
      * 2. a {@link LoginRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>user is not exist</li>
      *        <li>user is inactive</li>
      *        <li>incorrect username or password</li>
      *    </ul>
+     *
      * @param request
      * @return status code, json
      * <ul>
@@ -145,6 +149,7 @@ public class AuthController {
      * use refresh token to exchange new access and refresh tokens, this is allowed to everyone<br><br>
      * 1. any {@link RefreshRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
      * 2. a {@link RefreshRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>the refresh token is invalid (could be expired or revoked)</li>
@@ -179,6 +184,7 @@ public class AuthController {
      *        <li>you do not have "refresh_token" in your cookie</li>
      *        <li>the refresh token is invalid (could be expired or revoked)</li>
      *    </ul>
+     *
      * @param refreshToken in your http-only cookie (with key "refresh_token")
      * @return status code, json
      * <ul>
@@ -198,7 +204,6 @@ public class AuthController {
             cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
-
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
         } catch (InvalidTokenException e) {
             responseBody.put("message", e.getMessage());
@@ -209,19 +214,13 @@ public class AuthController {
     /**
      * use access token to logout related user, this is allowed to any authenticated user(with access token),
      * notice that the access token and related refresh token will both be revoked after logout <br><br>
-     * 1. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * 2. will return code 403 if
-     *    <ul>
-     *        <li>you are not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
      * @return status code, json
      * <ul>
      *     <li>200, <code>{}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
      * </ul>
      */
     @AuthenticatedApi
@@ -292,28 +291,25 @@ public class AuthController {
 
     /**
      * change your password to new password, this is allowed to any authenticated user(with access token) <br><br>
-     * 1. any {@link ChangePasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@link ChangePasswordRequest} will return code 400 and {"message": "xxx"} if
+     * 1. will return code 401 if you are not authenticated
+     * (the access token is invalid, expired, or revoked)<br><br>
+     *
+     * 2. will return code 403 and {"message": "xxx"} if
      *    <ul>
      *        <li>old password is incorrect</li>
      *        <li>old password==new password</li>
-     *    </ul>
-     * 3. will return code 401 if
-     *    <ul>
-     *        <li>the access token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * 4. will return code 403 if
-     *    <ul>
-     *        <li>you are not authenticated (no <code>AUTHORIZATION "Bearer access_token"</code> in header)</li>
-     *    </ul>
+     *    </ul><br><br>
+     *
+     * 3. any {@link ChangePasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
+     *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
      * @param request
      * @return status code, json
      * <ul>
      *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
      *     <li>401</li>
-     *     <li>403</li>
+     *     <li>403, <code>{"message": "xxx"}</code></li>
      * </ul>
      */
     @AuthenticatedApi
@@ -326,7 +322,7 @@ public class AuthController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }catch (InvalidOperation ex){
             response.put("message", ex.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }catch (UserDoesNotExist ex){
             // will occur if user is not in db but the userDetail is loaded before this method
             // with JwtAuthenticationFilter
@@ -341,17 +337,22 @@ public class AuthController {
      * request a password reset link and send to your email, this is allowed to everyone <br><br>
      * 1. any {@link ForgetPasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@link ForgetPasswordRequest} will return code 400 and {"message": "xxx"} if
+     *
+     * 2. will return code 403 and {"message": "xxx"} if
      *    <ul>
-     *        <li>target user (with that email) is not exist</li>
      *        <li>target user (with that email) is inactive</li>
      *        <li>there is a password reset link still active</li>
      *    </ul>
+     *
+     * 3. will return code 404 if target user(with that email) is not exist<br><br>
+     *
      * @param request
      * @return status code, json
      * <ul>
      *     <li>200, <code>{}</code></li>
      *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
+     *     <li>403, <code>{"message": "xxx"}</code></li>
+     *     <li>404, <code>{"message": "xxx"}</code></li>
      * </ul>
      */
     @RequestMapping(path = "/api/auth/forgetPassword", method = RequestMethod.POST)
@@ -363,9 +364,12 @@ public class AuthController {
             emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
                     "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
             return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation | UserDoesNotExist ex){
-            response.put("message", ex.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+        }catch (InvalidOperation e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e){
+            response.put("message", e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
@@ -373,11 +377,13 @@ public class AuthController {
      * use token after {@link AuthController#forgetPassword(ForgetPasswordRequest) password reset link} to reset password, this is allowed to everyone <br><br>
      * 1. any {@link ResetPasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
      *    to specify the fields failing to pass the validation with errors messages <br><br>
+     *
      * 2. a {@link ResetPasswordRequest} will return code 400 and {"message": "xxx"} if
      *    <ul>
      *        <li>target user is inactive</li>
      *        <li>the token from password reset link is not valid or expired</li>
      *    </ul>
+     *
      * @see AuthController#forgetPassword(ForgetPasswordRequest)
      * @param request
      * @return status code, json
