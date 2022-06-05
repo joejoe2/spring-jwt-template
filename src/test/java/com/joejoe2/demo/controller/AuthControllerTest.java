@@ -249,6 +249,7 @@ class AuthControllerTest {
 
     @Test
     void webRefreshWithError() throws Exception{
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         //test InvalidTokenException
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
                         .cookie(new Cookie("refresh_token", "invalid_token")))
