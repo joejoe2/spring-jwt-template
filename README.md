@@ -19,6 +19,7 @@ Including:
 - `admin api` user activate/deactivate, change role, and getUserList
 - validation on `@RequestBody`
 - `@RateLimit on user or ip` based on bucket token algorithm and redis
+- `api documentation` via swagger (at path `/swagger-ui/index.html`)
 
 we will use open-ssl to generate the private and public key for jwt.
 
@@ -162,5 +163,4 @@ run `mvn test` or `./mvnw test`
 
 ## ToDo
 
-1. add test for controllers
-2. write documentation for api
+1. set max attempts for login fail

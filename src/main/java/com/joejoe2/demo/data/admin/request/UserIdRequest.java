@@ -1,6 +1,7 @@
 package com.joejoe2.demo.data.admin.request;
 
 import com.joejoe2.demo.validation.constraint.UUID;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +17,7 @@ import javax.validation.constraints.NotEmpty;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserIdRequest {
-    /**
-     * id of target user
-     */
+    @Schema(description = "id of target user")
     @UUID(message = "invalid user id !")
     @NotEmpty(message = "user id cannot be empty !")
     private String id;

@@ -2,17 +2,21 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
+import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
 import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.demo.controller.constraint.rate.LimitTarget;
 import com.joejoe2.demo.controller.constraint.rate.RateLimit;
-import com.joejoe2.demo.data.auth.TokenPair;
-import com.joejoe2.demo.data.auth.UserDetail;
-import com.joejoe2.demo.data.auth.VerificationPair;
+import com.joejoe2.demo.data.ErrorMessageResponse;
+import com.joejoe2.demo.data.InvalidRequestResponse;
+import com.joejoe2.demo.data.PageOfUserProfile;
+import com.joejoe2.demo.data.auth.*;
 import com.joejoe2.demo.data.auth.request.*;
+import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
+import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.service.email.EmailService;
@@ -21,6 +25,13 @@ import com.joejoe2.demo.service.user.auth.PasswordService;
 import com.joejoe2.demo.service.user.auth.RegistrationService;
 import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.headers.Header;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,143 +70,134 @@ public class AuthController {
     @Autowired
     ResetPasswordURL resetPasswordURL;
 
-    /**
-     * login and get the jwt access and refresh tokens, this is allowed to everyone <br><br>
-     * 1. any {@link LoginRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 2. a {@link LoginRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>user is not exist</li>
-     *        <li>user is inactive</li>
-     *        <li>incorrect username or password</li>
-     *    </ul>
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx"}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "login and get the jwt access and refresh tokens",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>user is not exist</li>\n" +
+                    "<li>user is inactive</li>\n" +
+                    "<li>incorrect username or password</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "login and get the jwt access and refresh tokens",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TokenResponse.class)))
+    })
     @RequestMapping(path = "/api/auth/login", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> login(@Valid @RequestBody LoginRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity login(@Valid @RequestBody LoginRequest request) {
         try {
-            UserDetail userDetail = AuthUtil.authenticate(authenticationManager, request.getUsername(), request.getPassword());
+            UserDetail userDetail = AuthUtil.authenticate(authenticationManager,
+                    request.getUsername(), request.getPassword());
             TokenPair tokenPair = jwtService.issueTokens(userDetail);
-            response.put("access_token", tokenPair.getAccessToken().getToken());
-            response.put("refresh_token", tokenPair.getRefreshToken().getToken());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (AuthenticationException e){
-            response.put("message", e.getMessage()+" !");
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-        }catch (UserDoesNotExist e){
+            return ResponseEntity.ok(new TokenResponse(tokenPair));
+        } catch (AuthenticationException e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage() + " !"),
+                    HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
             // if user is deleted after AuthUtil.authenticate and before jwtService.issueTokens
             // this is considered to be an accident
-            response.put("message", "unknown error, please try again later !");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorMessageResponse("unknown error, please try again later !"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * login and get the jwt access tokens and set refresh in http-only cookie, this is allowed to everyone
-     * but follow the <code>allow.host</code> setting <br><br>
-     * 1. any {@link LoginRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 2. a {@link LoginRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>user is not exist</li>
-     *        <li>user is inactive</li>
-     *        <li>incorrect username or password</li>
-     *    </ul>
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"access_token": "xxx"}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     * and <code>"refresh_token"</code> will be set in your http-only cookie
-     */
+
+    @Operation(summary = "login and get the jwt access tokens and set refresh token in http-only cookie",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>user is not exist</li>\n" +
+                    "<li>user is inactive</li>\n" +
+                    "<li>incorrect username or password</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "login and get the jwt access tokens and set refresh in http-only cookie",
+                    content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
+                    headers = {@Header(name = "refresh_token",
+                            description = "refresh token in http-only cookie")})
+    })
     @RequestMapping(path = "/web/api/auth/login", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> webLogin(@Valid @RequestBody LoginRequest request, HttpServletResponse response){
-        Map<String, String> responseBody = new HashMap<>();
+    public ResponseEntity webLogin(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         try {
             UserDetail userDetail = AuthUtil.authenticate(authenticationManager, request.getUsername(), request.getPassword());
             TokenPair tokenPair = jwtService.issueTokens(userDetail);
-            responseBody.put("access_token", tokenPair.getAccessToken().getToken());
             //place refresh_token in http only cookie
             Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());
             cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
 
-            return new ResponseEntity<>(responseBody, HttpStatus.OK);
-        } catch (AuthenticationException e){
-            responseBody.put("message", e.getMessage()+" !");
-            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
-        }catch (UserDoesNotExist e){
+            return new ResponseEntity<>(Collections.singletonMap("access_token",
+                    tokenPair.getAccessToken().getToken()), HttpStatus.OK);
+        } catch (AuthenticationException e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage() + " !"),
+                    HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
             // if user is deleted after AuthUtil.authenticate and before jwtService.issueTokens
             // this is considered to be an accident
-            responseBody.put("message", "unknown error, please try again later !");
-            return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorMessageResponse("unknown error, please try again later !"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * use refresh token to exchange new access and refresh tokens, this is allowed to everyone<br><br>
-     * 1. any {@link RefreshRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 2. a {@link RefreshRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>the refresh token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"access_token": "xxx", "refresh_token": "xxx"}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "use refresh token to exchange new access and refresh tokens",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "the refresh token is invalid (could be expired or revoked)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "exchange new access and refresh tokens",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TokenResponse.class)))
+    })
     @RequestMapping(path = "/api/auth/refresh", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> refresh(@Valid @RequestBody RefreshRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity refresh(@Valid @RequestBody RefreshRequest request) {
         try {
             TokenPair tokenPair = jwtService.refreshTokens(request.getRefresh_token());
-            response.put("access_token", tokenPair.getAccessToken().getToken());
-            response.put("refresh_token",  tokenPair.getRefreshToken().getToken());
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok(new TokenResponse(tokenPair));
         } catch (InvalidTokenException e) {
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()),
+                    HttpStatus.FORBIDDEN);
         }
     }
 
-    /**
-     * use refresh token(in your http-only cookie) to exchange new access token and set new refresh in http-only cookie,
-     * this is allowed to everyone but follow the <code>allow.host</code> setting <br><br>
-     * 1. will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>you do not have "refresh_token" in your cookie</li>
-     *        <li>the refresh token is invalid (could be expired or revoked)</li>
-     *    </ul>
-     *
-     * @param refreshToken in your http-only cookie (with key "refresh_token")
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"access_token": "xxx"}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     * and <code>"refresh_token"</code> will be set in your http-only cookie
-     */
+
+    @Operation(summary = "use refresh token(in your http-only cookie) to exchange new access token and set new refresh in http-only cookie",
+            description = "this is allowed to everyone but protected by the <code>allow.host</code> cors setting")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "the refresh token is invalid (could be expired or revoked)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "exchange new access and refresh tokens",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(hidden = true)),
+                    headers = {@Header(name = "refresh_token",
+                            description = "refresh token in http-only cookie")})
+    })
     @RequestMapping(path = "/web/api/auth/refresh", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> webRefresh(@CookieValue(name = "refresh_token", defaultValue = "") String refreshToken, HttpServletResponse response){
+    public ResponseEntity<Map<String, String>> webRefresh(@CookieValue(name = "refresh_token", defaultValue = "") String refreshToken, HttpServletResponse response) {
         Map<String, String> responseBody = new HashMap<>();
         try {
             TokenPair tokenPair = jwtService.refreshTokens(refreshToken);
@@ -207,29 +210,26 @@ public class AuthController {
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
         } catch (InvalidTokenException e) {
             responseBody.put("message", e.getMessage());
-            return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(responseBody, HttpStatus.FORBIDDEN);
         }
     }
 
-    /**
-     * use access token to logout related user, this is allowed to any authenticated user(with access token),
-     * notice that the access token and related refresh token will both be revoked after logout <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>401</li>
-     * </ul>
-     */
+
+    @Operation(summary = "use access token to logout related user",
+            description = "this is allowed to any authenticated user")
     @AuthenticatedApi
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200", description = "logout",
+                    content = @Content),
+    })
     @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> logout(){
+    public ResponseEntity logout() {
         Map<String, String> response = new HashMap<>();
         try {
             jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessToken());
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            return ResponseEntity.ok().build();
         } catch (InvalidTokenException e) {
             //because the access token has been checked by JwtAuthenticationFilter,
             //this will happen if the access token is deleted/revoked by another request,
@@ -239,168 +239,138 @@ public class AuthController {
         }
     }
 
-    /**
-     * register a user with verification, this is allowed to everyone<br><br>
-     * 1. any {@link RegisterRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * 2. a {@link RegisterRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user(username or email) is already taken</li>
-     *        <li>you do not pass the verification via {@link VerificationService}</li>
-     *    </ul>
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "register an user",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "registration fail",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "register an user",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = UserProfile.class)))
+    })
     @RequestMapping(path = "/api/auth/register", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> register(@Valid @RequestBody RegisterRequest request){
+    public ResponseEntity register(@Valid @RequestBody RegisterRequest request) {
         Map<String, String> response = new HashMap<>();
         try {
-            User user = registrationService.registerUser(request.getUsername(), request.getPassword(), request.getEmail(), request.getVerification());
-            response.put("id", user.getId().toString());
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            User user = registrationService.registerUser(request.getUsername(), request.getPassword()
+                    , request.getEmail(), request.getVerification());
+            return ResponseEntity.ok(new UserProfile(user));
         } catch (AlreadyExist | InvalidOperation e) {
             response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
         }
     }
 
-    /**
-     * issue a verification code with email, this is allowed to everyone,
-     * note that the "key" in response body is used along with verification code to pass the verification<br><br>
-     * 1. any {@link IssueVerificationCodeRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"key", "xxx"}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "issue a verification code with email",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "send a verification code to the email, " +
+                    "note that the \"key\" is used along with verification code to pass the verification",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = VerificationKey.class)))
+    })
     @RequestMapping(path = "/api/auth/issueVerificationCode", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> issueVerificationCode(@Valid @RequestBody IssueVerificationCodeRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity issueVerificationCode(@Valid @RequestBody IssueVerificationCodeRequest request) {
         VerificationPair verificationPair = verificationService.issueVerificationCode(request.getEmail());
-        response.put("key", verificationPair.getKey());
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(new VerificationKey(verificationPair.getKey()));
     }
 
-    /**
-     * change your password to new password, this is allowed to any authenticated user(with access token) <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * 2. will return code 403 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>old password is incorrect</li>
-     *        <li>old password==new password</li>
-     *    </ul><br><br>
-     *
-     * 3. any {@link ChangePasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>401</li>
-     *     <li>403, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "change your password to new password",
+            description = "this is allowed to any authenticated user " +
+                    "and having a rate limit(10 times / 3600 sec) for each user")
     @AuthenticatedApi
     @RateLimit(target = LimitTarget.USER, key = "/api/auth/changePassword", limit = 10, period = 3600)
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "password change fail",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "after success, you will be logged out " +
+                    "by revoke all access and refresh tokens", content = @Content)
+    })
     @RequestMapping(path = "/api/auth/changePassword", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> changePassword(@Valid @RequestBody ChangePasswordRequest request){
-        Map<String, Object> response = new HashMap<>();
-        try{
+    public ResponseEntity changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        try {
             passwordService.changePasswordOf(AuthUtil.currentUserDetail().getId(), request.getOldPassword(), request.getNewPassword());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation ex){
-            response.put("message", ex.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        }catch (UserDoesNotExist ex){
+            return ResponseEntity.ok().build();
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
             // will occur if user is not in db but the userDetail is loaded before this method
             // with JwtAuthenticationFilter
             // this is considered to be an accident
-            response.put("message", "unknown error, please try again later !");
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorMessageResponse("unknown error, please try again later !"),
+                    HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
 
-    /**
-     * request a password reset link and send to your email, this is allowed to everyone <br><br>
-     * 1. any {@link ForgetPasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 2. will return code 403 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user (with that email) is inactive</li>
-     *        <li>there is a password reset link still active</li>
-     *    </ul>
-     *
-     * 3. will return code 404 if target user(with that email) is not exist<br><br>
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>403, <code>{"message": "xxx"}</code></li>
-     *     <li>404, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+    @Operation(summary = "request a password reset link and send to your email",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "fail to generate a password reset link",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "send a password reset link to your email",
+                    content = @Content)
+    })
     @RequestMapping(path = "/api/auth/forgetPassword", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> forgetPassword(@Valid @RequestBody ForgetPasswordRequest request){
-        Map<String, Object> response = new HashMap<>();
-        try{
-            VerifyToken verifyToken=passwordService.requestResetPasswordToken(request.getEmail());
-            //send reset password link to user
+    public ResponseEntity forgetPassword(@Valid @RequestBody ForgetPasswordRequest request) {
+        try {
+            VerifyToken verifyToken = passwordService.requestResetPasswordToken(request.getEmail());
             emailService.sendSimpleEmail(request.getEmail(), "Your Reset Password Link",
-                    "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix()+verifyToken.getToken());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        } catch (UserDoesNotExist e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+                    "click the link to reset your password:\n" + resetPasswordURL.getUrlPrefix() + verifyToken.getToken());
+            return ResponseEntity.ok().build();
+        } catch (UserDoesNotExist | InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         }
     }
 
-    /**
-     * use token after {@link AuthController#forgetPassword(ForgetPasswordRequest) password reset link} to reset password, this is allowed to everyone <br><br>
-     * 1. any {@link ResetPasswordRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 2. a {@link ResetPasswordRequest} will return code 400 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>target user is inactive</li>
-     *        <li>the token from password reset link is not valid or expired</li>
-     *    </ul>
-     *
-     * @see AuthController#forgetPassword(ForgetPasswordRequest)
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "use token after password reset link to reset password",
+            description = "this is allowed to everyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403",
+                    description = "fail to reset password",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "after success, you will be logged out " +
+                    "by revoke all access and refresh tokens", content = @Content)
+    })
     @RequestMapping(path = "/api/auth/resetPassword", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody ResetPasswordRequest request){
-        Map<String, Object> response = new HashMap<>();
-        try{
+    public ResponseEntity resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        try {
             passwordService.resetPassword(request.getToken(), request.getNewPassword());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }catch (InvalidOperation ex){
-            response.put("message", ex.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.ok().build();
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
         }
     }
 }

@@ -74,27 +74,27 @@ class UserControllerTest {
     @Test
     void profile() throws Exception{
         //test not authenticated
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile"))
                 .andExpect(status().isUnauthorized());
         //test success
         Mockito.when(profileService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile")
                         .header(HttpHeaders.AUTHORIZATION, userAccessToken)
                 .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.profile.id").value(user.getId().toString()))
-                .andExpect(jsonPath("$.profile.username").value(user.getUserName()))
-                .andExpect(jsonPath("$.profile.email").value(user.getEmail()))
-                .andExpect(jsonPath("$.profile.role").value(user.getRole().toString()))
-                .andExpect(jsonPath("$.profile.isActive").value(user.isActive()))
-                .andExpect(jsonPath("$.profile.registeredAt").value(user.getCreateAt().toString()));
+                .andExpect(jsonPath("$.id").value(user.getId().toString()))
+                .andExpect(jsonPath("$.username").value(user.getUserName()))
+                .andExpect(jsonPath("$.email").value(user.getEmail()))
+                .andExpect(jsonPath("$.role").value(user.getRole().toString()))
+                .andExpect(jsonPath("$.isActive").value(user.isActive()))
+                .andExpect(jsonPath("$.registeredAt").value(user.getCreateAt().toString()));
     }
 
     @Test
     void profileWithError() throws Exception{
         //test 500
         Mockito.when(profileService.getProfile(Mockito.any())).thenThrow(new UserDoesNotExist(""));
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/user/profile")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile")
                         .header(HttpHeaders.AUTHORIZATION, userAccessToken)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());

@@ -1,9 +1,8 @@
 package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
-import com.joejoe2.demo.data.PageList;
+import com.joejoe2.demo.data.*;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
-import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.InvalidOperation;
@@ -12,17 +11,22 @@ import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.service.user.auth.ActivationService;
 import com.joejoe2.demo.service.user.auth.RoleService;
 import com.joejoe2.demo.service.user.profile.ProfileService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
 
 @Controller
 @RequestMapping(path = "/api/admin") //path prefix
@@ -34,175 +38,135 @@ public class AdminController {
     @Autowired
     ProfileService profileService;
 
-    /**
-     * change the role of target user, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * 2. will return code 403 and {"message": "xxx"} if
-     *    <ul>
-     *        <li>you are not ADMIN</li>
-     *        <li>target user==request user</li>
-     *        <li>target role==original role</li>
-     *        <li>target user is the only ADMIN</li>
-     *    </ul><br><br>
-     *
-     * 3. will return code 404 if target user is not exist<br><br>
-     *
-     * 4. any {@link ChangeUserRoleRequest} with invalid body will return code 400 and
-     *    <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 5. if the {@link ChangeUserRoleRequest} success,
-     *    target user will be logged out by revoke all access and refresh tokens</li>
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>401</li>
-     *     <li>403, <code>{"message": "xxx"}</code></li>
-     *     <li>404, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "change the role of target user",
+            description = "change the role of target user, this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>you are not ADMIN</li>\n" +
+                    "<li>target user==request user</li>\n" +
+                    "<li>target role==original role</li>\n" +
+                    "<li>target user is the only ADMIN</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "target user is not exist",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "after success, target user will be logged out " +
+                    "by revoke all access and refresh tokens", content = @Content),
+    })
     @RequestMapping(path = "/changeRoleOf", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> changeRole(@Valid @RequestBody ChangeUserRoleRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity changeRole(@Valid @RequestBody ChangeUserRoleRequest request) {
         try {
             roleService.changeRoleOf(request.getId(), Role.valueOf(request.getRole()));
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        } catch (UserDoesNotExist e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok().build();
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }
     }
 
-    /**
-     * activate target user, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * 2. will return code 403 if
-     *      <ul>
-     *        <li>target user==request user</li>
-     *        <li>target user is already active</li>
-     *    </ul><br><br>
-     *
-     * 3. will return code 404 if target user is not exist<br><br>
-     *
-     * 4. any {@linkplain UserIdRequest ActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     *     <li>401</li>
-     *     <li>403, <code>{"message": "xxx"}</code></li>
-     *     <li>404, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "activate target user",
+            description = "activate target user, this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>you are not ADMIN</li>\n" +
+                    "<li>target user==request user</li>\n" +
+                    "<li>target user is already active</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "target user is not exist",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "after success, target user will be logged out " +
+                    "by revoke all access and refresh tokens", content = @Content),
+    })
     @RequestMapping(path = "/activateUser", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> activateUser(@Valid @RequestBody UserIdRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity activateUser(@Valid @RequestBody UserIdRequest request) {
         try {
             activationService.activateUser(request.getId());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        } catch (UserDoesNotExist e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok().build();
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }
     }
 
-    /**
-     * deactivate target user(cannot login anymore), this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * 2. will return code 403 if
-     *      <ul>
-     *        <li>target user==request user</li>
-     *        <li>target user is already inactive</li>
-     *      </ul><br><br>
-     *
-     * 3. any {@linkplain UserIdRequest DeActivateUserRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 4. if the {@linkplain UserIdRequest DeActivateUserRequest} success
-     *    ,target user will be logged out by revoke all access and refresh tokens
-     *
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>400, <code>{"message": "xxx"}</code></li>
-     *     <li>401</li>
-     *     <li>403, <code>{"message": "xxx"}</code></li>
-     *     <li>404, <code>{"message": "xxx"}</code></li>
-     * </ul>
-     */
+
+    @Operation(summary = "deactivate target user",
+            description = "deactivate target user, this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>you are not ADMIN</li>\n" +
+                    "<li>target user==request user</li>\n" +
+                    "<li>target user is already inactive</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(responseCode = "404", description = "target user is not exist",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "after success, target user will be logged out " +
+                    "by revoke all access and refresh tokens", content = @Content),
+    })
     @RequestMapping(path = "/deactivateUser", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, String>> deactivateUser(@Valid @RequestBody UserIdRequest request){
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity deactivateUser(@Valid @RequestBody UserIdRequest request) {
         try {
             activationService.deactivateUser(request.getId());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } catch (InvalidOperation e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
-        } catch (UserDoesNotExist e){
-            response.put("message", e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+            return ResponseEntity.ok().build();
+        } catch (InvalidOperation e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.FORBIDDEN);
+        } catch (UserDoesNotExist e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()), HttpStatus.NOT_FOUND);
         }
     }
 
-    /**
-     * get all user profiles or user profiles with page param, this is only allowed to ADMIN <br><br>
-     * 1. will return code 401 if you are not authenticated
-     * (the access token is invalid, expired, or revoked)<br><br>
-     *
-     * 2. any {@linkplain PageRequest GetUserProfilesRequest} with invalid body will return code 400 and <code>{"errors": ["field name": ["error msg", ...], ...]}</code>
-     *    to specify the fields failing to pass the validation with errors messages <br><br>
-     *
-     * 3. if no given {@linkplain PageRequest request body},
-     *    this will return all user profiles, otherwise will be a page request
-     * @param request
-     * @return status code, json
-     * <ul>
-     *     <li>200, <code>{"profiles": [{"id":"xxx","username":"xxx","email":"xxx","role":"xxx","isActive":true or false,"registeredAt":"time in utc"}, ...]}</code></li>
-     *     <li>200, <code>{"profiles": [{"id":"xxx","username":"xxx","email":"xxx","role":"xxx","isActive":true or false,"registeredAt":"time in utc"}, ...]
-     *     , "totalItems": int, "currentPage": int,"totalPages": int, "pageSize": int}</code></li>
-     *     <li>400, <code>{"errors": ["field name": ["error msg", ...], ...]}</code></li>
-     *     <li>401</li>
-     * </ul>
-     */
+
+    @Operation(summary = "get all user profiles with page param",
+            description = "get all user profiles or user profiles with page param," +
+                    " this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
-    @RequestMapping(path = "/getUserList", method = RequestMethod.POST)
-    public ResponseEntity<Map<String, Object>> getAllUserProfiles(@Valid @RequestBody(required = false) PageRequest request){
-        Map<String, Object> response = new HashMap<>();
-        if (request==null)
-            response.put("profiles", profileService.getAllUserProfiles());
-        else {
-            PageList<UserProfile> pageList = profileService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
-            response.put("profiles", pageList.getList());
-            response.put("totalItems", pageList.getTotalItems());
-            response.put("currentPage", pageList.getCurrentPage());
-            response.put("totalPages", pageList.getTotalPages());
-            response.put("pageSize", pageList.getPageSize());
-        }
-        return new ResponseEntity<>(response, HttpStatus.OK);
+    @SecurityRequirement(name = "jwt")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400", description = "invalid request body",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = InvalidRequestResponse.class))),
+            @ApiResponse(responseCode = "403", description = "<ul>\n" +
+                    "<li>you are not ADMIN</li>\n" +
+                    "</ul>",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "get all user profiles with page param",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PageOfUserProfile.class)))
+    })
+    @RequestMapping(path = "/getUserList", method = RequestMethod.GET)
+    public ResponseEntity getAllUserProfiles(@Valid PageRequest request) {
+        PageList<UserProfile> pageList = profileService.getAllUserProfilesWithPage(request.getPage(), request.getSize());
+        return ResponseEntity.ok(new PageOfUserProfile(pageList));
     }
 }

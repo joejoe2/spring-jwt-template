@@ -34,7 +34,6 @@ import redis.embedded.RedisServer;
 
 import javax.servlet.http.Cookie;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -129,7 +128,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginWithBadRequest() throws Exception{
+    void loginWithError() throws Exception{
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test  validation
         LoginRequest request=LoginRequest.builder().username("").password("").build();
@@ -149,7 +148,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
         mockedStatic.close();
     }
 
@@ -174,7 +173,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void webLoginWithBadRequest() throws Exception{
+    void webLoginWithError() throws Exception{
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test validation
         LoginRequest request=LoginRequest.builder().username("").password("").build();
@@ -194,7 +193,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
         mockedStatic.close();
     }
 
@@ -231,7 +230,7 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -254,7 +253,7 @@ class AuthControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
                         .cookie(new Cookie("refresh_token", "invalid_token")))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -396,6 +395,6 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isForbidden());
     }
 }

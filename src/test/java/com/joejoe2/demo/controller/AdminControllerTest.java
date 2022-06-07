@@ -31,7 +31,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.Instant;
@@ -40,7 +39,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -284,23 +282,15 @@ class AdminControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    static class CustomResponse{
-        public List profiles;
-
-        CustomResponse(List profiles){
-            this.profiles=profiles;
-        }
-    }
-
     @Test
     void getAllUserProfiles() throws Exception{
         //test not authenticated
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isUnauthorized());
         //test not admin
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList")
                         .header(HttpHeaders.AUTHORIZATION, userAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
@@ -318,21 +308,10 @@ class AdminControllerTest {
             profiles.add(new UserProfile(user));
         }
         //test success
-        Mockito.doReturn(profiles).when(profileService).getAllUserProfiles();
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
-                        .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.profiles").isArray())
-                .andExpect(status().isOk()).andReturn();
-        assertEquals(objectMapper.writeValueAsString(new CustomResponse(profiles)), result.getResponse().getContentAsString());
-        //test success with page request
-        PageRequest request=PageRequest.builder().page(2).size(10).build();
         Mockito.doReturn(new PageList<>(10, 2, 5, 10, profiles.subList(20, 30)))
                 .when(profileService).getAllUserProfilesWithPage(2, 10);
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList?page=2&size=10")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.profiles").isArray())
                 .andExpect(jsonPath("$.totalItems").value(10))
@@ -345,11 +324,8 @@ class AdminControllerTest {
     @Test
     void getAllUserProfilesWithError() throws Exception{
         //test validation
-        PageRequest request=PageRequest.builder().page(-1).size(0).build();
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/getUserList")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList?page=-1&size=0")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.errors.page").exists())
                 .andExpect(jsonPath("$.errors.size").exists())

@@ -29,8 +29,10 @@ public class ControllerConstraintInterceptor implements HandlerInterceptor {
         IPUtils.setRequestIP(request.getRemoteAddr());
 
         try {
-            authConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
-            rateConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
+            if (handler instanceof HandlerMethod){
+                authConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
+                rateConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
+            }
         }catch (ControllerConstraintViolation ex){
             setJsonResponse(response, ex.getRejectStatus(), ex.getRejectMessage());
             return false;
