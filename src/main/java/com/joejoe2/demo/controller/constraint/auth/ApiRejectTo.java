@@ -14,5 +14,4 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface ApiRejectTo {
     Role[] roles() default {};
     String rejectMessage() default "you don't have enough permission !";
-    int rejectStatus() default 403;
 }

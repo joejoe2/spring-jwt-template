@@ -74,9 +74,6 @@ public class AuthController {
     @Operation(summary = "login and get the jwt access and refresh tokens",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>user is not exist</li>\n" +
                     "<li>user is inactive</li>\n" +
@@ -111,9 +108,6 @@ public class AuthController {
     @Operation(summary = "login and get the jwt access tokens and set refresh token in http-only cookie",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>user is not exist</li>\n" +
                     "<li>user is inactive</li>\n" +
@@ -155,9 +149,6 @@ public class AuthController {
     @Operation(summary = "use refresh token to exchange new access and refresh tokens",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "the refresh token is invalid (could be expired or revoked)",
                     content = @Content(mediaType = "application/json",
@@ -182,9 +173,6 @@ public class AuthController {
     @Operation(summary = "use refresh token(in your http-only cookie) to exchange new access token and set new refresh in http-only cookie",
             description = "this is allowed to everyone but protected by the <code>allow.host</code> cors setting")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "the refresh token is invalid (could be expired or revoked)",
                     content = @Content(mediaType = "application/json",
@@ -243,9 +231,6 @@ public class AuthController {
     @Operation(summary = "register an user",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "registration fail",
                     content = @Content(mediaType = "application/json",
@@ -272,9 +257,6 @@ public class AuthController {
     @Operation(summary = "issue a verification code with email",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(
                     responseCode = "200", description = "send a verification code to the email, " +
                     "note that the \"key\" is used along with verification code to pass the verification",
@@ -295,9 +277,6 @@ public class AuthController {
     @RateLimit(target = LimitTarget.USER, key = "/api/auth/changePassword", limit = 10, period = 3600)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "password change fail",
                     content = @Content(mediaType = "application/json",
@@ -326,9 +305,6 @@ public class AuthController {
     @Operation(summary = "request a password reset link and send to your email",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "fail to generate a password reset link",
                     content = @Content(mediaType = "application/json",
@@ -353,9 +329,6 @@ public class AuthController {
     @Operation(summary = "use token after password reset link to reset password",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403",
                     description = "fail to reset password",
                     content = @Content(mediaType = "application/json",

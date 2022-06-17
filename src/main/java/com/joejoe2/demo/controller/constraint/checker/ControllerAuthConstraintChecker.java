@@ -13,6 +13,8 @@ import java.util.Arrays;
 
 @Component
 public class ControllerAuthConstraintChecker {
+    private static final int REJECT = 403, NOT_AUTHENTICATED = 401;
+
     public void checkWithMethod(Method method) throws ControllerConstraintViolation {
         checkAuthenticatedApiConstraint(method);
 
@@ -21,13 +23,13 @@ public class ControllerAuthConstraintChecker {
                 if (Arrays.stream(apiAllowsTo.roles())
                         .noneMatch((role)->role==AuthUtil.currentUserDetail().getRole()))
                     throw new ControllerConstraintViolation(
-                            apiAllowsTo.rejectStatus(), apiAllowsTo.rejectMessage());
+                            REJECT, apiAllowsTo.rejectMessage());
                 else break;
             }else if(constraint instanceof ApiRejectTo apiRejectTo){
                 if (Arrays.stream(apiRejectTo.roles())
                         .anyMatch((role -> role==AuthUtil.currentUserDetail().getRole())))
                     throw new ControllerConstraintViolation(
-                            apiRejectTo.rejectStatus(), apiRejectTo.rejectMessage());
+                            REJECT, apiRejectTo.rejectMessage());
                 else break;
             }
         }
@@ -38,14 +40,14 @@ public class ControllerAuthConstraintChecker {
         if (constraint!=null){
             if (!AuthUtil.isAuthenticated())
                 throw new ControllerConstraintViolation(
-                        constraint.rejectStatus(), constraint.rejectMessage());
+                        NOT_AUTHENTICATED, constraint.rejectMessage());
         }
 
         for (Annotation annotation:method.getAnnotations()){
             constraint = annotation.annotationType().getAnnotation(AuthenticatedApi.class);
             if (constraint!=null){
                 if (!AuthUtil.isAuthenticated())
-                    throw new ControllerConstraintViolation(constraint.rejectStatus(),
+                    throw new ControllerConstraintViolation(NOT_AUTHENTICATED,
                             constraint.rejectMessage());
                 else break;
             }

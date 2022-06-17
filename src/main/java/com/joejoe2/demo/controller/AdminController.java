@@ -40,13 +40,10 @@ public class AdminController {
 
 
     @Operation(summary = "change the role of target user",
-            description = "change the role of target user, this is only allowed to ADMIN")
+            description = "this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>you are not ADMIN</li>\n" +
                     "<li>target user==request user</li>\n" +
@@ -76,13 +73,10 @@ public class AdminController {
 
 
     @Operation(summary = "activate target user",
-            description = "activate target user, this is only allowed to ADMIN")
+            description = "this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>you are not ADMIN</li>\n" +
                     "<li>target user==request user</li>\n" +
@@ -111,13 +105,10 @@ public class AdminController {
 
 
     @Operation(summary = "deactivate target user",
-            description = "deactivate target user, this is only allowed to ADMIN")
+            description = "this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>you are not ADMIN</li>\n" +
                     "<li>target user==request user</li>\n" +
@@ -146,14 +137,10 @@ public class AdminController {
 
 
     @Operation(summary = "get all user profiles with page param",
-            description = "get all user profiles or user profiles with page param," +
-                    " this is only allowed to ADMIN")
+            description = "this is only allowed to ADMIN")
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "400", description = "invalid request body",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = InvalidRequestResponse.class))),
             @ApiResponse(responseCode = "403", description = "<ul>\n" +
                     "<li>you are not ADMIN</li>\n" +
                     "</ul>",
