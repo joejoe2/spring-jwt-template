@@ -1,6 +1,10 @@
 package com.joejoe2.demo.model.auth;
 
+import com.joejoe2.demo.config.JwtConfig;
+import com.joejoe2.demo.utils.JwtUtil;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -8,10 +12,13 @@ import org.hibernate.annotations.OnDeleteAction;
 import javax.persistence.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.UUID;
 
 @Data
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken {
     @Id
     //@GeneratedValue(generator = "UUID")
@@ -32,4 +39,13 @@ public class RefreshToken {
     @ManyToOne(optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
+
+    public RefreshToken(JwtConfig jwtConfig, AccessToken accessToken) {
+        Calendar exp = Calendar.getInstance();
+        exp.add(Calendar.SECOND, jwtConfig.getRefreshTokenLifetimeSec());
+        this.token = JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), getId().toString(), jwtConfig.getIssuer(), exp);
+        this.accessToken = accessToken;
+        this.user = accessToken.getUser();
+        this.expireAt = exp.toInstant();
+    }
 }

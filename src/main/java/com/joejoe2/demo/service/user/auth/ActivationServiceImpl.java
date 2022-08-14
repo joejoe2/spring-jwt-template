@@ -48,7 +48,7 @@ public class ActivationServiceImpl implements ActivationService {
 
         User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot deactivate yourself !");
-        if (user.getRole()== Role.ADMIN)throw new InvalidOperation("cannot deactivate an admin !");
+        if (user.getRole()==Role.ADMIN)throw new InvalidOperation("cannot deactivate an admin !");
         if (!user.isActive())throw new InvalidOperation("target user is already inactive !");
 
         user.setActive(false);

@@ -7,7 +7,6 @@ import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
 import com.joejoe2.demo.model.auth.RefreshToken;
-import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.jwt.AccessTokenRepository;
 import com.joejoe2.demo.repository.jwt.RefreshTokenRepository;
@@ -16,18 +15,13 @@ import com.joejoe2.demo.service.redis.RedisService;
 import com.joejoe2.demo.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import org.jobrunr.jobs.annotations.Job;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class JwtServiceImpl implements JwtService{
@@ -43,26 +37,13 @@ public class JwtServiceImpl implements JwtService{
     private RedisService redisService;
 
     private AccessToken createAccessToken(User user) {
-        Calendar exp = Calendar.getInstance();
-        exp.add(Calendar.SECOND, jwtConfig.getAccessTokenLifetimeSec());
-
-        AccessToken accessToken = new AccessToken();
-        accessToken.setToken(JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), accessToken.getId().toString(), jwtConfig.getIssuer(), user, exp));
-        accessToken.setUser(user);
-        accessToken.setExpireAt(exp.toInstant());
+        AccessToken accessToken = new AccessToken(jwtConfig, user);
         accessTokenRepository.save(accessToken);
         return accessToken;
     }
 
     private RefreshToken createRefreshToken(AccessToken accessToken) {
-        Calendar exp = Calendar.getInstance();
-        exp.add(Calendar.SECOND, jwtConfig.getRefreshTokenLifetimeSec());
-
-        RefreshToken refreshToken = new RefreshToken();
-        refreshToken.setToken(JwtUtil.generateRefreshToken(jwtConfig.getPrivateKey(), refreshToken.getId().toString(), jwtConfig.getIssuer(), exp));
-        refreshToken.setAccessToken(accessToken);
-        refreshToken.setUser(accessToken.getUser());
-        refreshToken.setExpireAt(exp.toInstant());
+        RefreshToken refreshToken = new RefreshToken(jwtConfig, accessToken);
         refreshTokenRepository.save(refreshToken);
         return refreshToken;
     }
