@@ -122,12 +122,12 @@ public class JwtServiceImpl implements JwtService{
 
     @Override
     public void addAccessTokenToBlackList(AccessToken accessToken){
-        redisService.set("access_token:"+accessToken.getToken(), "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
+        redisService.set("revoked_access_token:{"+accessToken.getToken()+"}", "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
     }
 
     @Override
     public boolean isAccessTokenInBlackList(String accessPlainToken){
-        return redisService.has("access_token:"+accessPlainToken);
+        return redisService.has("revoked_access_token:{"+accessPlainToken+"}");
     }
 
     @Job(name = "delete all expired refresh tokens and related access tokens")
