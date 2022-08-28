@@ -94,8 +94,8 @@ class AdminControllerTest {
 
     @AfterEach
     void deleteUser(){
-        userRepository.delete(admin);
-        userRepository.delete(user);
+        userRepository.deleteById(admin.getId());
+        userRepository.deleteById(user.getId());
     }
 
     ObjectMapper objectMapper=new ObjectMapper();

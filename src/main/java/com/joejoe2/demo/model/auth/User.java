@@ -8,7 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 @Data
@@ -17,8 +17,7 @@ import java.util.UUID;
 public class User{
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
-    @Source(value = SourceType.DB) // allow more precision from db
-    private Timestamp version;
+    private Instant version;
 
     @Id
     @GeneratedValue(generator = "UUID")
@@ -50,4 +49,17 @@ public class User{
 
     @Column(nullable = true)
     private Instant authAt;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return isActive() == user.isActive() && getId().equals(user.getId()) && getUserName().equals(user.getUserName()) && getEmail().equals(user.getEmail()) && getRole() == user.getRole();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getUserName(), getEmail(), getRole(), isActive());
+    }
 }

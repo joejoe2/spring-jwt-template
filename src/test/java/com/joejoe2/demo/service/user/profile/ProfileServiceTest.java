@@ -40,7 +40,7 @@ class ProfileServiceTest {
         user.setPassword("pa55ward");
         user.setRole(Role.NORMAL);
         userRepository.save(user);
-        userRepository.delete(user);
+        userRepository.deleteById(user.getId());
         //test with a not exist user
         assertThrows(UserDoesNotExist.class, ()->profileService.getProfile(user.getId().toString()));
     }

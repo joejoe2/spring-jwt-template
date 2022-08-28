@@ -7,9 +7,7 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +17,7 @@ import redis.embedded.RedisServer;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -33,6 +32,7 @@ class PasswordServiceTest {
     PasswordEncoder passwordEncoder;
     @Autowired
     VerifyTokenRepository verifyTokenRepository;
+    User user;
 
     private static RedisServer redisServer;
 
@@ -47,59 +47,49 @@ class PasswordServiceTest {
         redisServer.stop();
     }
 
-    @Test
-    @Transactional
-    void changePasswordOfWithIllegalArgument(){
-        User user = new User();
+    @BeforeEach
+    void setUp() {
+        user = new User();
         user.setUserName("test");
         user.setEmail("test@email.com");
         user.setPassword(passwordEncoder.encode("pa55ward"));
         user.setRole(Role.NORMAL);
         userRepository.save(user);
+    }
+
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteById(user.getId());
+        verifyTokenRepository.deleteAll();
+    }
+
+    @Test
+    void changePasswordOfWithIllegalArgument(){
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf("invalid_uid", "pa55ward", "pa55ward123"));
         assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "invalid_password"));
     }
 
     @Test
-    @Transactional
     void changePasswordOfWithInvalidOperation(){
-        User user = new User();
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword(passwordEncoder.encode("pa55ward"));
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-
         //test with incorrect password
         assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "incorrect", "pa55ward"));
         //test if old password==new password
         assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
     }
+
     @Test
-    @Transactional
     void changePasswordOfWithDoesNotExist(){
-        User user = new User();
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword(passwordEncoder.encode("pa55ward"));
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-        userRepository.delete(user);
+        UUID id = UUID.randomUUID();
+        while (userRepository.existsById(id))
+            id = UUID.randomUUID();
         //test with a not exist user
-        assertThrows(UserDoesNotExist.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
+        UUID finalId = id;
+        assertThrows(UserDoesNotExist.class, ()-> passwordService.changePasswordOf(finalId.toString(), "pa55ward", "pa55ward"));
     }
 
     @Test
-    @Transactional
     void changePasswordOf(){
-        User user = new User();
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword(passwordEncoder.encode("pa55ward"));
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-
         //test success
         assertDoesNotThrow(()->{
             passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward123");
@@ -108,33 +98,19 @@ class PasswordServiceTest {
     }
 
     @Test
-    @Transactional
     void requestResetPasswordWithIllegalArgument(){
-        User user=new User();
-        user.setUserName("test");
-        user.setPassword("pa55ward");
-        user.setEmail("test@email.com");
-        userRepository.save(user);
-
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->passwordService.requestResetPasswordToken("invalid email"));
     }
 
     @Test
-    @Transactional
     void requestResetPasswordWithDoesNotExist(){
         //test a not exist user email
         assertThrows(UserDoesNotExist.class, ()->passwordService.requestResetPasswordToken("not@email.com"));
     }
 
     @Test
-    @Transactional
     void requestResetPassword() {
-        User user=new User();
-        user.setUserName("test");
-        user.setPassword("pa55ward");
-        user.setEmail("test@email.com");
-        userRepository.save(user);
         //test success
         assertDoesNotThrow(()->{
             assertEquals(user, passwordService.requestResetPasswordToken("test@email.com").getUser());
@@ -142,27 +118,14 @@ class PasswordServiceTest {
     }
 
     @Test
-    @Transactional
     void resetPasswordWithIllegalArgument() {
-        User user=new User();
-        user.setUserName("test");
-        user.setPassword("pa55ward");
-        user.setEmail("test@email.com");
-        userRepository.save(user);
-
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, ()->passwordService.resetPassword("", "**-*/"));
     }
 
     @Test
-    @Transactional
     void resetPasswordWithInvalidOperation() {
-        User user=new User();
-        user.setUserName("test");
-        user.setPassword("pa55ward");
-        user.setEmail("test@email.com");
-        userRepository.save(user);
-
+        user = userRepository.findById(user.getId()).get();
         //test an incorrect token
         assertThrows(InvalidOperation.class, ()->passwordService.resetPassword("invalid token", "pa55ward"));
         //test a disabled user
@@ -177,13 +140,7 @@ class PasswordServiceTest {
     }
 
     @Test
-    @Transactional
     void resetPassword() {
-        User user=new User();
-        user.setUserName("test");
-        user.setPassword("pa55ward");
-        user.setEmail("test@email.com");
-        userRepository.save(user);
         //test success
         VerifyToken token=new VerifyToken();
         token.setToken("12345678");

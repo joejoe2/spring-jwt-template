@@ -90,7 +90,7 @@ class AuthControllerTest {
 
     @AfterEach
     void deleteUser(){
-        userRepository.delete(user);
+        userRepository.deleteById(user.getId());
     }
 
     private static RedisServer redisServer;

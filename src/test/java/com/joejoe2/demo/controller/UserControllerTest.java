@@ -68,7 +68,7 @@ class UserControllerTest {
 
     @AfterEach
     void deleteUser(){
-        userRepository.delete(user);
+        userRepository.deleteById(user.getId());
     }
 
     @Test

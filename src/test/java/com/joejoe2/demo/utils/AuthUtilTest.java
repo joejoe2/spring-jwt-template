@@ -38,7 +38,7 @@ class AuthUtilTest {
 
     @AfterEach
     void tearDown() {
-        userRepository.delete(user);
+        userRepository.deleteById(user.getId());
     }
 
     @Test

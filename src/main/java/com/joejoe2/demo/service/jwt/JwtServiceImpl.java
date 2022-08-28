@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class JwtServiceImpl implements JwtService{
@@ -52,7 +53,8 @@ public class JwtServiceImpl implements JwtService{
     @Transactional(rollbackFor = Exception.class)
     @Override
     public TokenPair issueTokens(UserDetail userDetail) throws UserDoesNotExist {
-        User user=userRepository.getByUserName(userDetail.getUsername()).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+        User user=userRepository.getByUserName(userDetail.getUsername())
+                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
         AccessToken accessToken = createAccessToken(user);
         RefreshToken refreshToken = createRefreshToken(accessToken);
 

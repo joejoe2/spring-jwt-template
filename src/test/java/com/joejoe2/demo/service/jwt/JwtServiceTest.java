@@ -42,6 +42,7 @@ class JwtServiceTest {
     private AccessTokenRepository accessTokenRepository;
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
+    User user;
 
     //JwtService need redis for revoke access token
     private static RedisServer redisServer;
@@ -57,12 +58,30 @@ class JwtServiceTest {
         redisServer.stop();
     }
 
-    @Test
-    @Transactional
-    void issueTokensWithUserDoesNotExist() {
-        User user = new User();
+    @BeforeEach
+    void setUp() {
+        user = new User();
         user.setId(UUID.randomUUID());
         user.setUserName("test");
+        user.setEmail("test@email.com");
+        user.setPassword("pa55ward");
+        user.setRole(Role.NORMAL);
+        userRepository.save(user);
+    }
+
+    @AfterEach
+    void tearDown() {
+        userRepository.deleteById(user.getId());
+    }
+
+    @Test
+    void issueTokensWithUserDoesNotExist() {
+        UUID id=UUID.randomUUID();
+        while (userRepository.existsById(id))
+            id=UUID.randomUUID();
+        User user = new User();
+        user.setId(id);
+        user.setUserName("notExists");
         user.setEmail("test@email.com");
         user.setPassword("pa55ward");
         user.setRole(Role.NORMAL);
@@ -73,14 +92,7 @@ class JwtServiceTest {
     @Test
     @Transactional
     void issueTokens() {
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword("pa55ward");
-        user.setRole(Role.NORMAL);
         //test exist user
-        userRepository.save(user);
         assertDoesNotThrow(()->{
             TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
             AccessToken accessToken = tokenPair.getAccessToken();
@@ -103,17 +115,8 @@ class JwtServiceTest {
     }
 
     @Test
-    @Transactional
     void refreshTokens() {
         // = revokeAccessToken + issueTokens
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword("pa55ward");
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-
         assertDoesNotThrow(()->{
             TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
             spyService.refreshTokens(tokenPair.getRefreshToken().getToken());
@@ -140,11 +143,6 @@ class JwtServiceTest {
         exp.add(Calendar.SECOND, 900);
 
         //test normal token
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword("pa55ward");
         String token = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", "iss", user, exp);
         assertDoesNotThrow(()->{
             UserDetail userDetail = jwtService.getUserDetailFromAccessToken(token);
@@ -163,16 +161,8 @@ class JwtServiceTest {
     }
 
     @Test
-    @Transactional
     void revokeAccessToken() {
         //test valid token
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        user.setUserName("test");
-        user.setEmail("test@email.com");
-        user.setPassword("pa55ward");
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
         AccessToken accessToken = new AccessToken();
         accessToken.setToken("test_token");
         accessToken.setUser(user);

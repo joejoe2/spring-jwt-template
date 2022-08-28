@@ -75,9 +75,9 @@ class ControllerAuthConstraintCheckerTest {
 
     @AfterEach
     void destroy(){
-        userRepository.delete(testUser);
-        userRepository.delete(testStaff);
-        userRepository.delete(testAdmin);
+        userRepository.deleteById(testUser.getId());
+        userRepository.deleteById(testStaff.getId());
+        userRepository.deleteById(testAdmin.getId());
     }
 
     @Test
