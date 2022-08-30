@@ -21,6 +21,7 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.service.email.EmailService;
 import com.joejoe2.demo.service.jwt.JwtService;
+import com.joejoe2.demo.service.user.auth.LoginService;
 import com.joejoe2.demo.service.user.auth.PasswordService;
 import com.joejoe2.demo.service.user.auth.RegistrationService;
 import com.joejoe2.demo.service.verification.VerificationService;
@@ -53,7 +54,7 @@ import java.util.Map;
 @Controller
 public class AuthController {
     @Autowired
-    AuthenticationManager authenticationManager;
+    LoginService loginService;
     @Autowired
     JwtService jwtService;
     @Autowired
@@ -89,8 +90,7 @@ public class AuthController {
     @RequestMapping(path = "/api/auth/login", method = RequestMethod.POST)
     public ResponseEntity login(@Valid @RequestBody LoginRequest request) {
         try {
-            UserDetail userDetail = AuthUtil.authenticate(authenticationManager,
-                    request.getUsername(), request.getPassword());
+            UserDetail userDetail = loginService.login(request.getUsername(), request.getPassword());
             TokenPair tokenPair = jwtService.issueTokens(userDetail);
             return ResponseEntity.ok(new TokenResponse(tokenPair));
         } catch (AuthenticationException e) {
@@ -124,7 +124,7 @@ public class AuthController {
     @RequestMapping(path = "/web/api/auth/login", method = RequestMethod.POST)
     public ResponseEntity webLogin(@Valid @RequestBody LoginRequest request, HttpServletResponse response) {
         try {
-            UserDetail userDetail = AuthUtil.authenticate(authenticationManager, request.getUsername(), request.getPassword());
+            UserDetail userDetail = loginService.login(request.getUsername(), request.getPassword());
             TokenPair tokenPair = jwtService.issueTokens(userDetail);
             //place refresh_token in http only cookie
             Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());

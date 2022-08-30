@@ -10,6 +10,7 @@ Including:
 - `basic models` for user, access token, and refresh token
 - `login api` issue access token and refresh token
 - `web login api` issue access token and set refresh token in http only cookie
+- `set max login failure attempts` block login for a  while if too many failure attempts
 - `refresh api` exchange new tokens via refresh token
 - `web refresh api` exchange new tokens via the refresh token in http only cookie
 - `register api` with email verification
@@ -160,7 +161,3 @@ run `mvn test` or `./mvnw test`
 5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
 6. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
 7. `docker-compose up` or `docker-compose up -d`
-
-## ToDo
-
-1. set max attempts for login fail

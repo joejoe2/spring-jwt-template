@@ -50,6 +50,9 @@ public class User{
     @Column(nullable = true)
     private Instant authAt;
 
+    @Embedded
+    LoginAttempt loginAttempt = new LoginAttempt();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
