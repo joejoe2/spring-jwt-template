@@ -27,7 +27,7 @@ class LoginServiceTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    User user;
+    User user, incative;
 
     @BeforeEach
     void setUp() {
@@ -39,11 +39,18 @@ class LoginServiceTest {
         user.setPassword(passwordEncoder.encode("pa55ward"));
         user.setEmail("test@email.com");
         userRepository.save(user);
+        incative = new User();
+        incative.setActive(false);
+        incative.setUserName("incative");
+        incative.setPassword(passwordEncoder.encode("pa55ward"));
+        incative.setEmail("incative@email.com");
+        userRepository.save(incative);
     }
 
     @AfterEach
     void tearDown() {
         userRepository.deleteById(user.getId());
+        userRepository.deleteById(incative.getId());
     }
 
     @Test
@@ -97,5 +104,19 @@ class LoginServiceTest {
             loginService.login(user.getUserName(), "pa55ward");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
+    }
+
+    @Test
+    void loginInactive() {
+        // inactive user cannot login, will never increase attempts
+        assertThrows(AuthenticationException.class, ()->{
+            loginService.login(incative.getUserName(), "error");
+        });
+        assertEquals(0, userRepository.findById(incative.getId()).get().getLoginAttempt().getAttempts());
+
+        assertThrows(AuthenticationException.class, ()->{
+            loginService.login(incative.getUserName(), "pa55ward");
+        });
+        assertEquals(0, userRepository.findById(incative.getId()).get().getLoginAttempt().getAttempts());
     }
 }

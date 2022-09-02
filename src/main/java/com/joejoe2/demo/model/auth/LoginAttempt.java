@@ -27,15 +27,16 @@ public class LoginAttempt {
         return !isExceedLimit(loginConfig);
     }
 
-    public void reset(){
+    public void attemptSuccess(LoginConfig loginConfig){
+        if (!canAttempt(loginConfig)) throw new RuntimeException("cannot attempt !");
         setAttempts(0);
+        setLastAttempt(Instant.now());
     }
 
-    public LoginAttempt(int attempts, Instant lastAttempt) {
-        this.attempts = attempts;
-        this.lastAttempt = lastAttempt;
-    }
-
-    public LoginAttempt() {
+    public void attemptFail(LoginConfig loginConfig){
+        if (!canAttempt(loginConfig)) throw new RuntimeException("cannot attempt !");
+        if (isExceedLimit(loginConfig)) setAttempts(0);
+        setAttempts(getAttempts()+1);
+        setLastAttempt(Instant.now());
     }
 }

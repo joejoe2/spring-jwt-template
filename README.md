@@ -113,6 +113,15 @@ work with this project.
    # set allow host (frontend)
    allow.host=http://localhost:8888
    ```
+   - `login related settings` (ex. block user to login for 
+   900 seconds after 5 consecutive unsuccessful attempts 
+   with incorrect password)
+   ```
+   # login max attempt settings
+   login.maxAttempts=5
+   # in seconds
+   login.attempts.coolTime=900
+   ```
 
 7. copy the contents of `private.key` and `public.key` (generated at project root in step 4.) into `application.yml`
     ```
@@ -142,9 +151,8 @@ run `mvn test` or `./mvnw test`
 
 ## Deploy
 
-1. install maven, docker and docker-compose
-2. run `mvn package -Dmaven.test.skip=true`
-3. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), 
+1. install docker and docker-compose
+2. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), 
    but you need to set `jwt.secret.privateKey` and `jwt.secret.publicKey` like this format
    ```
    jwt.secret.publicKey="-----BEGIN PUBLIC KEY-----
@@ -157,7 +165,7 @@ run `mvn test` or `./mvnw test`
    1wIDAQAB
    -----END PUBLIC KEY-----"
    ```
-4. copy `./nginx/nginx-certbot.env.example` to `./nginx/nginx-certbot.env` (just set `CERTBOT_EMAIL` at first line)
-5. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
-6. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
-7. `docker-compose up` or `docker-compose up -d`
+3. copy `./nginx/nginx-certbot.env.example` to `./nginx/nginx-certbot.env` (just set `CERTBOT_EMAIL` at first line)
+4. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
+5. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
+6. `docker-compose up` or `docker-compose up -d`
