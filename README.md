@@ -52,7 +52,7 @@ work with this project.
 4. install open-ssl and run `./jwtRSA256.sh` 
 
 
-5. cd to `./src/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
+5. cd to `./src/main/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
 
 
 6. edit `application.properties` depends on your need
