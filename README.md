@@ -40,22 +40,25 @@ work with this project.
 
 ## Get started
 
-1. clone the repo and run `mvn install` or `./mvnw install`
+1. install JDK-17 and Maven (recommended to use IntelliJ IDE)
 
 
-2. set up a postgresql server on localhost:5432 with database `spring-test`
+2. clone the repo and run `mvn install` or `./mvnw install`
 
 
-3. set up a redis server on localhost:6379
+3. set up a postgresql server on localhost:5432 with database `spring-test`
 
 
-4. install open-ssl and run `./jwtRSA256.sh` 
+4. set up a redis server on localhost:6379
 
 
-5. cd to `./src/main/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
+5. install open-ssl and run `./jwtRSA256.sh` 
 
 
-6. edit `application.properties` depends on your need
+6. cd to `./src/main/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
+
+
+7. edit `application.properties` depends on your need
     - `db related settings`
      ```
     # connect to database `spring-test` on localhost:5432
@@ -123,7 +126,7 @@ work with this project.
    login.attempts.coolTime=900
    ```
 
-7. copy the contents of `private.key` and `public.key` (generated at project root in step 4.) into `application.yml`
+8. copy the contents of `private.key` and `public.key` (generated at project root in step 4.) into `application.yml`
     ```
    jwt:
      secret:
@@ -136,7 +139,7 @@ work with this project.
          ... your PUBLIC KEY ...
          -----END PUBLIC KEY-----
     ```
-8. now you can start to develop your own project
+9. now you can start to develop your own project
 
 ## Notice
 
