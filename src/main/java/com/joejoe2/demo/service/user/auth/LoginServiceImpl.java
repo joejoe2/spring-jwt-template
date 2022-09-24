@@ -38,7 +38,7 @@ public class LoginServiceImpl implements LoginService {
 
         LoginAttempt loginAttempt = user.getLoginAttempt();
         if (!loginAttempt.canAttempt(loginConfig))
-            throw new AuthenticationServiceException("You have try too many times, please try again later !");
+            throw new AuthenticationServiceException("You have try too many times, please try again later");
 
         try {
             UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
