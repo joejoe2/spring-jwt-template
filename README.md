@@ -6,7 +6,13 @@
 
 This is a template to help you to get started with jwt-based spring boot backend.
 
-Including:
+Besides, this project can be used as a ```Single-Sign On center (or authentication service) ```
+directly. 
+We will use open-ssl to generate the private and public key and sign JWT tokens 
+with the private key. 
+Other applications can use the public key to verify the JWT tokens.
+
+## Features
 - `basic models` for user, access token, and refresh token
 - `login api` issue access token and refresh token
 - `web login api` issue access token and set refresh token in http only cookie
@@ -21,8 +27,6 @@ Including:
 - validation on `@RequestBody`
 - `@RateLimit on user or ip` based on bucket token algorithm and redis
 - `api documentation` via swagger (at path `/swagger-ui/index.html`)
-
-we will use open-ssl to generate the private and public key for jwt.
 
 
 ## Architecture
