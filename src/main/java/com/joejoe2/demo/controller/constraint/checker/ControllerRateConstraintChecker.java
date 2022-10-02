@@ -29,22 +29,20 @@ public class ControllerRateConstraintChecker {
 
     public void checkWithMethod(Method method) throws ControllerConstraintViolation {
         RateLimit rateLimit = method.getAnnotation(RateLimit.class);
-        if (rateLimit==null)return;
-        if (rateLimit.target() == LimitTarget.USER && !AuthUtil.isAuthenticated())return;
+        if (rateLimit==null) return;
+        if (rateLimit.target() == LimitTarget.USER && !AuthUtil.isAuthenticated()) return;
 
         switch (rateLimit.target()){
             case USER:
-                processRateLimitByTokenBucket(AuthUtil.currentUserDetail().getId(), rateLimit.key(), rateLimit.limit(), rateLimit.period());
+                checkRateLimitByTokenBucket(AuthUtil.currentUserDetail().getId(), rateLimit.key(), rateLimit.limit(), rateLimit.period());
                 break;
             case IP:
-                processRateLimitByTokenBucket(IPUtils.getRequestIP(), rateLimit.key(), rateLimit.limit(), rateLimit.period());
+                checkRateLimitByTokenBucket(IPUtils.getRequestIP(), rateLimit.key(), rateLimit.limit(), rateLimit.period());
                 break;
-            default:
-                return;
         }
     }
 
-    private void processRateLimitByTokenBucket(String targetIdentifier, String key, long limit, long window) throws ControllerConstraintViolation {
+    private void checkRateLimitByTokenBucket(String targetIdentifier, String key, long limit, long window) throws ControllerConstraintViolation {
         final boolean[] isExceed = {false};
 
         for (int retry = MAX_RETRY; retry>0; retry--){

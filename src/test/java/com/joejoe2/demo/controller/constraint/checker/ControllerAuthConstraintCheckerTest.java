@@ -16,6 +16,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,12 +34,12 @@ class ControllerAuthConstraintCheckerTest {
         public void authenticated(){
         }
 
-        @ApiAllowsTo(roles = {Role.ADMIN, Role.STAFF})
+        @ApiAllowsTo(roles = {Role.ADMIN, Role.STAFF}, rejectStatus = 400)
         public void allow(){
 
         }
 
-        @ApiRejectTo(roles = Role.NORMAL)
+        @ApiRejectTo(roles = Role.NORMAL, rejectMessage = "test")
         public void reject(){
 
         }
@@ -93,7 +94,7 @@ class ControllerAuthConstraintCheckerTest {
     }
 
     @Test
-    void checkWithMethodForApiAllowsTo() {
+    void checkWithMethodForApiAllowsTo() throws Exception{
         //if does not login
         assertThrows(ControllerConstraintViolation.class, ()->checker.checkWithMethod(testMethod.getClass().getMethod("authenticated")));
         //mock login
@@ -101,7 +102,12 @@ class ControllerAuthConstraintCheckerTest {
         mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         //test violate
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(testUser));
-        assertThrows(ControllerConstraintViolation.class, ()->checker.checkWithMethod(testMethod.getClass().getMethod("allow")));
+        //test status code
+        try {
+            checker.checkWithMethod(testMethod.getClass().getMethod("allow"));
+        }catch (ControllerConstraintViolation e){
+            assertEquals(400, e.getRejectStatus());
+        }
         //test does not violate
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(testStaff));
         assertDoesNotThrow(()->checker.checkWithMethod(testMethod.getClass().getMethod("allow")));
@@ -112,7 +118,7 @@ class ControllerAuthConstraintCheckerTest {
     }
 
     @Test
-    void checkWithMethodForApiRejectTo() {
+    void checkWithMethodForApiRejectTo() throws Exception{
         //if does not login
         assertThrows(ControllerConstraintViolation.class, ()->checker.checkWithMethod(testMethod.getClass().getMethod("reject")));
         //mock login
@@ -121,6 +127,12 @@ class ControllerAuthConstraintCheckerTest {
         //test violate
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(testUser));
         assertThrows(ControllerConstraintViolation.class, ()->checker.checkWithMethod(testMethod.getClass().getMethod("reject")));
+        //test message
+        try {
+            checker.checkWithMethod(testMethod.getClass().getMethod("reject"));
+        }catch (ControllerConstraintViolation e){
+            assertEquals("test", e.getRejectMessage());
+        }
         //test does not violate
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(testStaff));
         assertDoesNotThrow(()->checker.checkWithMethod(testMethod.getClass().getMethod("reject")));

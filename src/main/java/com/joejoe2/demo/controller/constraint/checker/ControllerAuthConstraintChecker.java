@@ -13,42 +13,45 @@ import java.util.Arrays;
 
 @Component
 public class ControllerAuthConstraintChecker {
-    private static final int REJECT = 403, NOT_AUTHENTICATED = 401;
 
     public void checkWithMethod(Method method) throws ControllerConstraintViolation {
         checkAuthenticatedApiConstraint(method);
+        checkRoleConstraints(method);
+    }
 
-        for (Annotation constraint:method.getAnnotations()){
-            if (constraint instanceof ApiAllowsTo apiAllowsTo){
-                if (Arrays.stream(apiAllowsTo.roles())
-                        .noneMatch((role)->role==AuthUtil.currentUserDetail().getRole()))
-                    throw new ControllerConstraintViolation(
-                            REJECT, apiAllowsTo.rejectMessage());
-                else break;
-            }else if(constraint instanceof ApiRejectTo apiRejectTo){
-                if (Arrays.stream(apiRejectTo.roles())
-                        .anyMatch((role -> role==AuthUtil.currentUserDetail().getRole())))
-                    throw new ControllerConstraintViolation(
-                            REJECT, apiRejectTo.rejectMessage());
+    private static void checkAuthenticatedApiConstraint(Method method) throws ControllerConstraintViolation {
+        //why AnnotatedElementUtils not work at here ?
+        AuthenticatedApi constraint = method.getAnnotation(AuthenticatedApi.class);
+        //direct check
+        if (constraint!=null){
+            if (!AuthUtil.isAuthenticated())
+                throw new ControllerConstraintViolation(
+                        constraint.rejectStatus(), constraint.rejectMessage());
+        }
+        //check for one level in composed annotations
+        for (Annotation annotation:method.getAnnotations()){
+            constraint = annotation.annotationType().getAnnotation(AuthenticatedApi.class);
+            if (constraint!=null){
+                if (!AuthUtil.isAuthenticated())
+                    throw new ControllerConstraintViolation(constraint.rejectStatus(), constraint.rejectMessage());
                 else break;
             }
         }
     }
 
-    private static void checkAuthenticatedApiConstraint(Method method) throws ControllerConstraintViolation {
-        AuthenticatedApi constraint = method.getAnnotation(AuthenticatedApi.class);
-        if (constraint!=null){
-            if (!AuthUtil.isAuthenticated())
-                throw new ControllerConstraintViolation(
-                        NOT_AUTHENTICATED, constraint.rejectMessage());
-        }
-
-        for (Annotation annotation:method.getAnnotations()){
-            constraint = annotation.annotationType().getAnnotation(AuthenticatedApi.class);
-            if (constraint!=null){
-                if (!AuthUtil.isAuthenticated())
-                    throw new ControllerConstraintViolation(NOT_AUTHENTICATED,
-                            constraint.rejectMessage());
+    private static void checkRoleConstraints(Method method) throws ControllerConstraintViolation {
+        for (Annotation constraint:method.getAnnotations()){
+            if (constraint instanceof ApiAllowsTo apiAllowsTo){
+                if (Arrays.stream(apiAllowsTo.roles())
+                        .noneMatch((role)->role==AuthUtil.currentUserDetail().getRole()))
+                    throw new ControllerConstraintViolation(
+                            apiAllowsTo.rejectStatus(), apiAllowsTo.rejectMessage());
+                else break;
+            }else if(constraint instanceof ApiRejectTo apiRejectTo){
+                if (Arrays.stream(apiRejectTo.roles())
+                        .anyMatch((role -> role==AuthUtil.currentUserDetail().getRole())))
+                    throw new ControllerConstraintViolation(
+                            apiRejectTo.rejectStatus(), apiRejectTo.rejectMessage());
                 else break;
             }
         }
