@@ -1,7 +1,10 @@
 package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
-import com.joejoe2.demo.data.*;
+import com.joejoe2.demo.data.ErrorMessageResponse;
+import com.joejoe2.demo.data.PageList;
+import com.joejoe2.demo.data.PageOfUserProfile;
+import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.user.UserProfile;
@@ -22,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -45,12 +47,13 @@ public class AdminController {
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>you are not ADMIN</li>\n" +
-                    "<li>target user==request user</li>\n" +
-                    "<li>target role==original role</li>\n" +
-                    "<li>target user is the only ADMIN</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>you are not ADMIN</li>
+                    <li>target user==request user</li>
+                    <li>target role==original role</li>
+                    <li>target user is the only ADMIN</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "target user is not exist",
@@ -78,11 +81,12 @@ public class AdminController {
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>you are not ADMIN</li>\n" +
-                    "<li>target user==request user</li>\n" +
-                    "<li>target user is already active</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>you are not ADMIN</li>
+                    <li>target user==request user</li>
+                    <li>target user is already active</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "target user is not exist",
@@ -110,11 +114,12 @@ public class AdminController {
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>you are not ADMIN</li>\n" +
-                    "<li>target user==request user</li>\n" +
-                    "<li>target user is already inactive</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>you are not ADMIN</li>
+                    <li>target user==request user</li>
+                    <li>target user is already inactive</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(responseCode = "404", description = "target user is not exist",
@@ -142,9 +147,10 @@ public class AdminController {
     @ApiAllowsTo(roles = Role.ADMIN)
     @SecurityRequirement(name = "jwt")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>you are not ADMIN</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>you are not ADMIN</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(

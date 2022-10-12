@@ -2,13 +2,10 @@ package com.joejoe2.demo.controller;
 
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.config.ResetPasswordURL;
-import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
 import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
 import com.joejoe2.demo.controller.constraint.rate.LimitTarget;
 import com.joejoe2.demo.controller.constraint.rate.RateLimit;
 import com.joejoe2.demo.data.ErrorMessageResponse;
-import com.joejoe2.demo.data.InvalidRequestResponse;
-import com.joejoe2.demo.data.PageOfUserProfile;
 import com.joejoe2.demo.data.auth.*;
 import com.joejoe2.demo.data.auth.request.*;
 import com.joejoe2.demo.data.user.UserProfile;
@@ -16,7 +13,6 @@ import com.joejoe2.demo.exception.AlreadyExist;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
-import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.service.email.EmailService;
@@ -36,7 +32,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CookieValue;
@@ -75,11 +70,12 @@ public class AuthController {
     @Operation(summary = "login and get the jwt access and refresh tokens",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>user is not exist</li>\n" +
-                    "<li>user is inactive</li>\n" +
-                    "<li>incorrect username or password</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>user is not exist</li>
+                    <li>user is inactive</li>
+                    <li>incorrect username or password</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(
@@ -108,11 +104,12 @@ public class AuthController {
     @Operation(summary = "login and get the jwt access tokens and set refresh token in http-only cookie",
             description = "this is allowed to everyone")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "403", description = "<ul>\n" +
-                    "<li>user is not exist</li>\n" +
-                    "<li>user is inactive</li>\n" +
-                    "<li>incorrect username or password</li>\n" +
-                    "</ul>",
+            @ApiResponse(responseCode = "403", description = """
+                    <ul>
+                    <li>user is not exist</li>
+                    <li>user is inactive</li>
+                    <li>incorrect username or password</li>
+                    </ul>""",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessageResponse.class))),
             @ApiResponse(
