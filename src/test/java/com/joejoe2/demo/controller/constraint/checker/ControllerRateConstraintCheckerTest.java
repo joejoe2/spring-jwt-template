@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller.constraint.checker;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.controller.constraint.rate.LimitTarget;
 import com.joejoe2.demo.controller.constraint.rate.RateLimit;
 import com.joejoe2.demo.data.auth.UserDetail;
@@ -13,18 +14,19 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import redis.embedded.RedisServer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class ControllerRateConstraintCheckerTest {
     @Autowired
     ControllerRateConstraintChecker rateConstraintChecker;
@@ -48,19 +50,6 @@ class ControllerRateConstraintCheckerTest {
     @BeforeEach
     void setup(){
         testMethod = new TestMethod();
-    }
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
     }
 
     @Test

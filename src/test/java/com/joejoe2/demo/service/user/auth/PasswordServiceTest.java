@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.Role;
@@ -8,21 +9,20 @@ import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
-import redis.embedded.RedisServer;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class PasswordServiceTest {
     @Autowired
     PasswordService passwordService;
@@ -33,19 +33,6 @@ class PasswordServiceTest {
     @Autowired
     VerifyTokenRepository verifyTokenRepository;
     User user;
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
-    }
 
     @BeforeEach
     void setUp() {

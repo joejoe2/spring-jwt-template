@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -7,16 +8,14 @@ import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.utils.AuthUtil;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import redis.embedded.RedisServer;
 
 import java.util.UUID;
 
@@ -24,24 +23,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class RoleServiceTest {
     @Autowired
     RoleService roleService;
     @Autowired
     UserRepository userRepository;
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
-    }
 
     @Test
     @Transactional

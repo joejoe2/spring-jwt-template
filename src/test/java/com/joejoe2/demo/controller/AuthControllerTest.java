@@ -1,6 +1,7 @@
 package com.joejoe2.demo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
@@ -15,6 +16,7 @@ import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.utils.JwtUtil;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +32,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import redis.embedded.RedisServer;
 
 import javax.servlet.http.Cookie;
 import java.time.Instant;
@@ -45,6 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class AuthControllerTest {
     @Autowired
     AuthenticationManager authenticationManager;
@@ -91,19 +93,6 @@ class AuthControllerTest {
     @AfterEach
     void deleteUser(){
         userRepository.deleteById(user.getId());
-    }
-
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
     }
 
     ObjectMapper objectMapper=new ObjectMapper();

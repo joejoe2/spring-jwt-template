@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.jwt;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
@@ -14,16 +15,15 @@ import com.joejoe2.demo.repository.jwt.RefreshTokenRepository;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.utils.JwtUtil;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import redis.embedded.RedisServer;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class JwtServiceTest {
     @Autowired
     JwtService jwtService;
@@ -43,20 +44,6 @@ class JwtServiceTest {
     @Autowired
     private RefreshTokenRepository refreshTokenRepository;
     User user;
-
-    //JwtService need redis for revoke access token
-    private static RedisServer redisServer;
-
-    @BeforeAll
-    static void beforeAll() {
-        redisServer=RedisServer.builder().port(6370).setting("maxmemory 128M").build();
-        redisServer.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        redisServer.stop();
-    }
 
     @BeforeEach
     void setUp() {
