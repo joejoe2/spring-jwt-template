@@ -6,12 +6,15 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.util.List;
+
 public class TestContext implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
 
     private static boolean started = false;
     static {
         GenericContainer redis = new GenericContainer("redis:6.2.7-alpine")
-                .withExposedPorts(6370);
+                .withExposedPorts(6379);
+        redis.getPortBindings().add("6370:6379");
         redis.start();
 
         System.setProperty("spring.redis.host", redis.getContainerIpAddress());
