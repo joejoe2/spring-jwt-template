@@ -44,7 +44,7 @@ work with this project.
 
 ## Get started
 
-1. install JDK-17 and Maven (recommended to use IntelliJ IDE)
+1. install Docker, JDK-17 and Maven (recommended to use IntelliJ IDE)
 
 
 2. clone the repo and run `mvn install` or `./mvnw install`
