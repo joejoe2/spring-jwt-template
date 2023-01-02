@@ -1,11 +1,13 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.LoginConfig;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class LoginServiceTest {
     @Autowired
     LoginConfig loginConfig;

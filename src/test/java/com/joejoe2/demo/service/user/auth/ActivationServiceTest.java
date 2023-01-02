@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.user.auth;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.Role;
@@ -7,6 +8,7 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class ActivationServiceTest {
     @Autowired
     ActivationService activationService;

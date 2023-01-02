@@ -1,5 +1,6 @@
 package com.joejoe2.demo.utils;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidTokenException;
@@ -9,6 +10,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class JwtUtilTest {
     @Autowired
     JwtConfig jwtConfig;

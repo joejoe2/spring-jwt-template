@@ -10,7 +10,7 @@ services:
       - spring-net
 
   db:
-    image: postgres
+    image: postgres:15.1
     restart: always
     environment:
       POSTGRES_PASSWORD: root_password  # please change it

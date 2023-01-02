@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.verification;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.VerificationCode;
@@ -7,6 +8,7 @@ import com.joejoe2.demo.repository.verification.VerificationCodeRepository;
 import com.joejoe2.demo.service.verification.VerificationService;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -21,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class VerificationServiceTest {
     @Autowired
     VerificationService verificationService;

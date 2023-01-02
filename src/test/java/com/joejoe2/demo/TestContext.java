@@ -19,6 +19,14 @@ public class TestContext implements BeforeAllCallback, ExtensionContext.Store.Cl
 
         System.setProperty("spring.redis.host", redis.getContainerIpAddress());
         System.setProperty("spring.redis.port", redis.getFirstMappedPort() + "");
+
+        GenericContainer postgres = new GenericContainer("postgres:15.1")
+                .withExposedPorts(5432)
+                .withEnv("POSTGRES_PASSWORD", "pa55ward")
+                .withEnv("POSTGRES_DB", "spring-test");
+        postgres.getPortBindings().add("5430:5432");
+        postgres.start();
+        System.setProperty("spring.datasource.url", "jdbc:postgresql://localhost:"+postgres.getFirstMappedPort()+"/spring-test");
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.joejoe2.demo.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.PageRequest;
@@ -22,6 +23,7 @@ import com.joejoe2.demo.utils.JwtUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -45,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class AdminControllerTest {
     @MockBean
     RoleService roleService;

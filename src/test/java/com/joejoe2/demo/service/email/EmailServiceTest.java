@@ -1,7 +1,9 @@
 package com.joejoe2.demo.service.email;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.service.email.EmailService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -12,6 +14,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class EmailServiceTest {
     /*@MockBean
     JavaMailSender emailSender;*/

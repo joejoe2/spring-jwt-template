@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller.constraint.checker;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.controller.constraint.auth.ApiAllowsTo;
 import com.joejoe2.demo.controller.constraint.auth.ApiRejectTo;
 import com.joejoe2.demo.controller.constraint.auth.AuthenticatedApi;
@@ -12,6 +13,7 @@ import com.joejoe2.demo.utils.AuthUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class ControllerAuthConstraintCheckerTest {
     @Autowired
     ControllerAuthConstraintChecker checker;

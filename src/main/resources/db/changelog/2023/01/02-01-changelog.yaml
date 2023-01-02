@@ -1,0 +1,337 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1672645921114-1
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_accesstoken
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: token
+                  type: TEXT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expire_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_id
+                  type: UUID
+            tableName: access_token
+  - changeSet:
+      id: 1672645921114-2
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_account_user
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: now()
+                  name: version
+                  type: TIMESTAMP
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_name
+                  type: VARCHAR(32)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: password
+                  type: VARCHAR(64)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: email
+                  type: VARCHAR(128)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: role
+                  type: VARCHAR(32)
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: true
+                  name: is_active
+                  type: boolean
+              - column:
+                  name: create_at
+                  type: DATETIME
+              - column:
+                  name: update_at
+                  type: DATETIME
+              - column:
+                  name: auth_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: !!float '0'
+                  name: attempts
+                  type: integer
+              - column:
+                  name: last_attempt
+                  type: DATETIME
+            tableName: account_user
+  - changeSet:
+      id: 1672645921114-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_refreshtoken
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: token
+                  type: TEXT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expire_at
+                  type: DATETIME
+              - column:
+                  constraints:
+                    nullable: false
+                  name: access_token_id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: user_id
+                  type: UUID
+            tableName: refresh_token
+  - changeSet:
+      id: 1672645921114-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_verificationcode
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: email
+                  type: VARCHAR(128)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: code
+                  type: VARCHAR(5)
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expire_at
+                  type: DATETIME
+            tableName: verification_code
+  - changeSet:
+      id: 1672645921114-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - createTable:
+            columns:
+              - column:
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+                    primaryKeyName: pk_verifytoken
+                  name: id
+                  type: UUID
+              - column:
+                  constraints:
+                    nullable: false
+                  name: token
+                  type: TEXT
+              - column:
+                  constraints:
+                    nullable: false
+                  name: expire_at
+                  type: DATETIME
+              - column:
+                  name: user_id
+                  type: UUID
+            tableName: verify_token
+  - changeSet:
+      id: 1672645921114-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_accesstoken_id
+            tableName: access_token
+  - changeSet:
+      id: 1672645921114-7
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: token
+            constraintName: uc_accesstoken_token
+            tableName: access_token
+  - changeSet:
+      id: 1672645921114-8
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: email
+            constraintName: uc_account_user_email
+            tableName: account_user
+  - changeSet:
+      id: 1672645921114-9
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_account_user_id
+            tableName: account_user
+  - changeSet:
+      id: 1672645921114-10
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: user_name
+            constraintName: uc_account_user_username
+            tableName: account_user
+  - changeSet:
+      id: 1672645921114-11
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_refreshtoken_id
+            tableName: refresh_token
+  - changeSet:
+      id: 1672645921114-12
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: token
+            constraintName: uc_refreshtoken_token
+            tableName: refresh_token
+  - changeSet:
+      id: 1672645921114-13
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_verificationcode_id
+            tableName: verification_code
+  - changeSet:
+      id: 1672645921114-14
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: id
+            constraintName: uc_verifytoken_id
+            tableName: verify_token
+  - changeSet:
+      id: 1672645921114-15
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: token
+            constraintName: uc_verifytoken_token
+            tableName: verify_token
+  - changeSet:
+      id: 1672645921114-16
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addUniqueConstraint:
+            columnNames: user_id
+            constraintName: uc_verifytoken_user
+            tableName: verify_token
+  - changeSet:
+      id: 1672645921114-17
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: access_token
+            constraintName: FK_ACCESSTOKEN_ON_USER
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1672645921114-18
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: access_token_id
+            baseTableName: refresh_token
+            constraintName: FK_REFRESHTOKEN_ON_ACCESSTOKEN
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: access_token
+  - changeSet:
+      id: 1672645921114-19
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: refresh_token
+            constraintName: FK_REFRESHTOKEN_ON_USER
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: account_user
+  - changeSet:
+      id: 1672645921114-20
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: user_id
+            baseTableName: verify_token
+            constraintName: FK_VERIFYTOKEN_ON_USER
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: account_user
+

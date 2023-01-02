@@ -1,5 +1,6 @@
 package com.joejoe2.demo.controller;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.user.UserProfile;
@@ -13,6 +14,7 @@ import com.joejoe2.demo.service.user.profile.ProfileService;
 import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.utils.JwtUtil;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class UserControllerTest {
     @MockBean
     ProfileService profileService;

@@ -1,5 +1,6 @@
 package com.joejoe2.demo.service.user.profile;
 
+import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.data.PageList;
 import com.joejoe2.demo.data.user.UserProfile;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -7,6 +8,7 @@ import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class ProfileServiceTest {
     @Autowired
     ProfileService profileService;

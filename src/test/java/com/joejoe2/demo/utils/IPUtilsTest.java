@@ -1,6 +1,8 @@
 package com.joejoe2.demo.utils;
 
+import com.joejoe2.demo.TestContext;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.context.request.RequestAttributes;
@@ -10,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@ExtendWith(TestContext.class)
 class IPUtilsTest {
 
     @Test
