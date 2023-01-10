@@ -4,6 +4,7 @@ import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
@@ -99,6 +100,16 @@ class JwtServiceTest {
     void refreshTokensWithInvalidToken() {
         //test invalid token
         assertThrows(InvalidTokenException.class, ()->jwtService.refreshTokens("invalid_token"));
+    }
+
+    @Test
+    @Transactional
+    void refreshTokensWithInactiveUser() throws Exception{
+        user.setActive(false);
+        TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
+        RefreshToken refreshToken = tokenPair.getRefreshToken();
+        //test InvalidOperation
+        assertThrows(InvalidOperation.class, ()->jwtService.refreshTokens(refreshToken.getToken()));
     }
 
     @Test

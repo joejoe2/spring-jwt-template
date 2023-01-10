@@ -160,7 +160,7 @@ public class AuthController {
         try {
             TokenPair tokenPair = jwtService.refreshTokens(request.getRefresh_token());
             return ResponseEntity.ok(new TokenResponse(tokenPair));
-        } catch (InvalidTokenException e) {
+        } catch (InvalidTokenException | InvalidOperation e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()),
                     HttpStatus.FORBIDDEN);
         }
@@ -193,7 +193,7 @@ public class AuthController {
             cookie.setHttpOnly(true);
             response.addCookie(cookie);
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
-        } catch (InvalidTokenException e) {
+        } catch (InvalidTokenException | InvalidOperation e) {
             responseBody.put("message", e.getMessage());
             return new ResponseEntity<>(responseBody, HttpStatus.FORBIDDEN);
         }

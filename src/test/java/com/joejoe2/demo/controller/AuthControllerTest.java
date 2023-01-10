@@ -7,6 +7,7 @@ import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
 import com.joejoe2.demo.data.auth.request.*;
+import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.model.auth.*;
 import com.joejoe2.demo.repository.user.UserRepository;
@@ -220,6 +221,15 @@ class AuthControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isForbidden());
+        //test InvalidOperation
+        request=RefreshRequest.builder().refresh_token("inactive_token").build();
+        Mockito.doThrow(new InvalidOperation("")).when(jwtService).refreshTokens("inactive_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -237,10 +247,16 @@ class AuthControllerTest {
 
     @Test
     void webRefreshWithError() throws Exception{
-        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         //test InvalidTokenException
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
                         .cookie(new Cookie("refresh_token", "invalid_token")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(status().isForbidden());
+        //test InvalidOperation
+        Mockito.doThrow(new InvalidOperation("")).when(jwtService).refreshTokens("inactive_token");
+        mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
+                        .cookie(new Cookie("refresh_token", "inactive_token")))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isForbidden());
     }

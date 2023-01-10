@@ -25,8 +25,9 @@ public interface JwtService {
      * @param refreshPlainToken refresh token(in plaintext)
      * @return generated access and refresh token
      * @throws InvalidTokenException if the refresh token(in plaintext) is invalid
+     * @throws InvalidOperation if the user is inactive
      */
-    TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException;
+    TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException, InvalidOperation;
 
     /**
      * retrieve UserDetail from access token

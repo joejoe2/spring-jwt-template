@@ -14,6 +14,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,6 +46,7 @@ class AuthUtilTest {
     }
 
     @Test
+    @Transactional
     void authenticate() {
         //test a not exist username
         assertThrows(AuthenticationException.class, ()->AuthUtil.authenticate(authenticationManager, "not exist", "pa55ward"));
@@ -54,10 +56,12 @@ class AuthUtilTest {
         assertThrows(AuthenticationException.class, ()->AuthUtil.authenticate(authenticationManager, "not exist", "12345678"));
         assertFalse(()->AuthUtil.isAuthenticated());
         assertThrows(AuthenticationException.class, ()->AuthUtil.currentUserDetail());
-
         //test with correct username and password
         AuthUtil.authenticate(authenticationManager, "test", "pa55ward");
         assertTrue(()->AuthUtil.isAuthenticated());
         assertDoesNotThrow(()->AuthUtil.currentUserDetail());
+        //test with inactive user
+        user.setActive(false);
+        assertThrows(AuthenticationException.class, ()->AuthUtil.authenticate(authenticationManager, "test", "pa55ward"));
     }
 }

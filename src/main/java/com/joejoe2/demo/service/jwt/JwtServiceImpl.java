@@ -3,6 +3,7 @@ package com.joejoe2.demo.service.jwt;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
 import com.joejoe2.demo.model.auth.AccessToken;
@@ -67,7 +68,7 @@ public class JwtServiceImpl implements JwtService{
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException {
+    public TokenPair refreshTokens(String refreshPlainToken) throws InvalidTokenException, InvalidOperation {
         //parse refresh token
         try {
             JwtUtil.parseToken(jwtConfig.getPublicKey(), refreshPlainToken);
@@ -79,6 +80,8 @@ public class JwtServiceImpl implements JwtService{
                 .getByTokenAndExpireAtGreaterThan(refreshPlainToken, Instant.now())
                 .orElseThrow(()->new InvalidTokenException("invalid refresh token !"));
         User user = refreshToken.getUser();
+        if (!user.isActive())
+            throw new InvalidOperation("cannot refresh tokens for inactive user !");
 
         // refresh token will be cascade deleted
         revokeAccessToken(refreshToken.getAccessToken());
