@@ -1,22 +1,24 @@
 # spring-jwt-template
 
+[![workflow](https://github.com/joejoe2/spring-jwt-template/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/joejoe2/spring-jwt-template/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/joejoe2/spring-jwt-template/branch/main/graph/badge.svg?token=24IMFJ0D50)](https://codecov.io/gh/joejoe2/spring-jwt-template)
- 
+
 ## Description
 
 This is a template to help you to get started with jwt-based spring boot backend.
 
 Besides, this project can be used as a ```Single-Sign On center (or authentication service) ```
-directly. 
-We will use open-ssl to generate the private and public key and sign JWT tokens 
-with the private key. 
+directly.
+We will use open-ssl to generate the private and public key and sign JWT tokens
+with the private key.
 Other applications can use the public key to verify the JWT tokens.
 
 ## Features
+
 - `basic models` for user, access token, and refresh token
 - `login api` issue access token and refresh token
 - `web login api` issue access token and set refresh token in http only cookie
-- `set max login failure attempts` block login for a  while if too many failure attempts
+- `set max login failure attempts` block login for a while if too many failure attempts
 - `refresh api` exchange new tokens via refresh token
 - `web refresh api` exchange new tokens via the refresh token in http only cookie
 - `register api` with email verification
@@ -28,14 +30,17 @@ Other applications can use the public key to verify the JWT tokens.
 - `@RateLimit on user or ip` based on bucket token algorithm and redis
 - `api documentation` via swagger (at path `/swagger-ui/index.html`)
 
-
 ## Architecture
 
 ![image](architecture.png)
 
+## Online demo
+
+[https://frontend.joejoe2.com](https://frontend.joejoe2.com)
+
 ## Example frontend
 
-We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend) to 
+We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend) to
 work with this project.
 
 ![image](demo_login.png)
@@ -56,10 +61,11 @@ work with this project.
 4. set up a redis server on localhost:6379
 
 
-5. install open-ssl and run `./jwtRSA256.sh` 
+5. install open-ssl and run `./jwtRSA256.sh`
 
 
-6. cd to `./src/main/resources/`, then copy `application-dev.properties` and `application-dev.yml` to `application.properties` and `application.yml`
+6. cd to `./src/main/resources/`, then copy `application-dev.properties` and `application-dev.yml`
+   to `application.properties` and `application.yml`
 
 
 7. edit `application.properties` depends on your need
@@ -108,21 +114,22 @@ work with this project.
     spring.mail.properties.mail.smtp.auth=true
     spring.mail.properties.mail.smtp.starttls.enable=true
     ```
-   - `set reset password url`(redirect user to your reset password page in frontend, we will append token for you to send the password reset request)
+    - `set reset password url`(redirect user to your reset password page in frontend, we will append token for you to
+      send the password reset request)
    ```
    # set reset password url
    reset.password.url=http://localhost:8888/resetPassword?token=
    ```
-   - `set allow host`(this is used for web login/refresh api
-   , because we will set refresh token in http only cookie, 
-   you should set this to the hostname of your frontend)
+    - `set allow host`(this is used for web login/refresh api
+      , because we will set refresh token in http only cookie,
+      you should set this to the hostname of your frontend)
    ```
    # set allow host (frontend)
    allow.host=http://localhost:8888
    ```
-   - `login related settings` (ex. block user to login for 
-   900 seconds after 5 consecutive unsuccessful attempts 
-   with incorrect password)
+    - `login related settings` (ex. block user to login for
+      900 seconds after 5 consecutive unsuccessful attempts
+      with incorrect password)
    ```
    # login max attempt settings
    login.maxAttempts=5
@@ -147,9 +154,9 @@ work with this project.
 
 ## Notice
 
-We use RSA private key to sign tokens and public key 
-to verify tokens (described in above). So you can use the public key to 
-parse and verify the tokens out of this application (could use 
+We use RSA private key to sign tokens and public key
+to verify tokens (described in above). So you can use the public key to
+parse and verify the tokens out of this application (could use
 this application as an AuthService).
 
 ## Testing
@@ -159,7 +166,8 @@ run `mvn test` or `./mvnw test`
 ## Deploy
 
 1. install docker and docker-compose
-2. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned above), 
+2. copy `./env/application.env.example` to `./env/application.env` and edit just like application.properties(mentioned
+   above),
    but you need to set `jwt.secret.privateKey` and `jwt.secret.publicKey` like this format
    ```
    jwt.secret.publicKey="-----BEGIN PUBLIC KEY-----
@@ -174,5 +182,6 @@ run `mvn test` or `./mvnw test`
    ```
 3. copy `./nginx/nginx-certbot.env.example` to `./nginx/nginx-certbot.env` (just set `CERTBOT_EMAIL` at first line)
 4. edit `./nginx/user_conf.d/server.conf` (just change server_name to your own FQDN)
-5. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings in `./env/application.env`
+5. make sure that `POSTGRES_PASSWORD` and `POSTGRES_DB` in `./docker-compose.yml` is same with settings
+   in `./env/application.env`
 6. `docker-compose up` or `docker-compose up -d`

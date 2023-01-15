@@ -12,6 +12,8 @@ import java.util.UUID;
 
 public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> {
     void deleteByExpireAtLessThan(LocalDateTime dateTime);
+
     Optional<AccessToken> getByTokenAndExpireAtGreaterThan(String token, Instant dateTime);
+
     List<AccessToken> getByUser(User user);
 }

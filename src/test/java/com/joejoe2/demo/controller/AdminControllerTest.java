@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.PageList;
-import com.joejoe2.demo.data.PageRequest;
 import com.joejoe2.demo.data.admin.request.ChangeUserRoleRequest;
 import com.joejoe2.demo.data.admin.request.UserIdRequest;
 import com.joejoe2.demo.data.auth.UserDetail;
@@ -72,7 +71,7 @@ class AdminControllerTest {
 
     @BeforeEach
     void createUser() throws InvalidTokenException {
-        admin =new User();
+        admin = new User();
         admin.setUserName("testAdmin");
         admin.setRole(Role.ADMIN);
         admin.setEmail("testAdmin@email.com");
@@ -96,15 +95,15 @@ class AdminControllerTest {
     }
 
     @AfterEach
-    void deleteUser(){
+    void deleteUser() {
         userRepository.deleteById(admin.getId());
         userRepository.deleteById(user.getId());
     }
 
-    ObjectMapper objectMapper=new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
-    void changeRole() throws Exception{
+    void changeRole() throws Exception {
         //test not authenticated
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/changeRoleOf")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +116,7 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
         //test success
-        ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
+        ChangeUserRoleRequest request = ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
@@ -131,9 +130,9 @@ class AdminControllerTest {
     }
 
     @Test
-    void changeRoleWithError() throws Exception{
+    void changeRoleWithError() throws Exception {
         //test validation
-        ChangeUserRoleRequest request=ChangeUserRoleRequest.builder()
+        ChangeUserRoleRequest request = ChangeUserRoleRequest.builder()
                 .id("invalid id")
                 .role("not exist role")
                 .build();
@@ -146,7 +145,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.errors.role").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidOperation
-        request=ChangeUserRoleRequest.builder()
+        request = ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
@@ -159,7 +158,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isForbidden());
         //test UserDoesNotExist
-        request=ChangeUserRoleRequest.builder()
+        request = ChangeUserRoleRequest.builder()
                 .id(UUID.randomUUID().toString())
                 .role(Role.ADMIN.toString())
                 .build();
@@ -174,7 +173,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void activateUser() throws Exception{
+    void activateUser() throws Exception {
         //test not authenticated
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -187,7 +186,7 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
         //test success
-        UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        UserIdRequest request = UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
@@ -198,9 +197,9 @@ class AdminControllerTest {
     }
 
     @Test
-    void activateUserWithError() throws Exception{
+    void activateUserWithError() throws Exception {
         //test validation
-        UserIdRequest request=UserIdRequest.builder().id("invalid id").build();
+        UserIdRequest request = UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -209,7 +208,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidOperation
-        request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        request = UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doThrow(new InvalidOperation("")).when(activationService).activateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/activateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
@@ -230,7 +229,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void deactivateUser() throws Exception{
+    void deactivateUser() throws Exception {
         //test not authenticated
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -243,7 +242,7 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
         //test success
-        UserIdRequest request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        UserIdRequest request = UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doNothing().when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
@@ -254,9 +253,9 @@ class AdminControllerTest {
     }
 
     @Test
-    void deactivateUserWithError() throws Exception{
+    void deactivateUserWithError() throws Exception {
         //test validation
-        UserIdRequest request=UserIdRequest.builder().id("invalid id").build();
+        UserIdRequest request = UserIdRequest.builder().id("invalid id").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -265,7 +264,7 @@ class AdminControllerTest {
                 .andExpect(jsonPath("$.errors.id").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidOperation
-        request=UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
+        request = UserIdRequest.builder().id(UUID.randomUUID().toString()).build();
         Mockito.doThrow(new InvalidOperation("")).when(activationService).deactivateUser(request.getId());
         mockMvc.perform(MockMvcRequestBuilders.post("/api/admin/deactivateUser")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)
@@ -286,7 +285,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void getAllUserProfiles() throws Exception{
+    void getAllUserProfiles() throws Exception {
         //test not authenticated
         mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -299,13 +298,13 @@ class AdminControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isForbidden());
         // prepare data
-        List<UserProfile> profiles=new ArrayList<>();
-        for (int i=0;i<50;i++){
-            User user=new User();
+        List<UserProfile> profiles = new ArrayList<>();
+        for (int i = 0; i < 50; i++) {
+            User user = new User();
             user.setId(UUID.randomUUID());
-            user.setUserName("test"+i);
-            user.setEmail("test"+i+"@email.com");
-            user.setRole(i%3==0? Role.ADMIN:i%3==1?Role.STAFF:Role.NORMAL);
+            user.setUserName("test" + i);
+            user.setEmail("test" + i + "@email.com");
+            user.setRole(i % 3 == 0 ? Role.ADMIN : i % 3 == 1 ? Role.STAFF : Role.NORMAL);
             user.setActive(i % 2 == 0);
             user.setCreateAt(Instant.now());
             profiles.add(new UserProfile(user));
@@ -325,7 +324,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void getAllUserProfilesWithError() throws Exception{
+    void getAllUserProfilesWithError() throws Exception {
         //test validation
         mockMvc.perform(MockMvcRequestBuilders.get("/api/admin/getUserList?page=-1&size=0")
                         .header(HttpHeaders.AUTHORIZATION, adminAccessToken)

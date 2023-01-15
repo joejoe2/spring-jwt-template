@@ -16,24 +16,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class RegistrationServiceImpl implements RegistrationService{
+public class RegistrationServiceImpl implements RegistrationService {
     @Autowired
     UserRepository userRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
     @Autowired
     VerificationService verificationService;
+    EmailValidator emailValidator = new EmailValidator();
+    PasswordValidator passwordValidator = new PasswordValidator();
+    UserNameValidator userNameValidator = new UserNameValidator();
 
     @Override
     public User createUser(String username, String password, String email, Role role) throws AlreadyExist {
-        username = new UserNameValidator().validate(username);
-        password = new PasswordValidator().validate(password);
-        email = new EmailValidator().validate(email);
+        username = userNameValidator.validate(username);
+        password = passwordValidator.validate(password);
+        email = emailValidator.validate(email);
 
-        if (userRepository.getByUserName(username).isPresent()||userRepository.getByEmail(email).isPresent())
+        if (userRepository.getByUserName(username).isPresent() || userRepository.getByEmail(email).isPresent())
             throw new AlreadyExist("username or email is already taken !");
 
-        User user=new User();
+        User user = new User();
         user.setUserName(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);

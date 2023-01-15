@@ -11,11 +11,11 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.service.user.profile.ProfileService;
-import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.utils.JwtUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -54,7 +54,7 @@ class UserControllerTest {
 
     @BeforeEach
     void createUser() throws InvalidTokenException {
-        user=new User();
+        user = new User();
         user.setUserName("testUser");
         user.setRole(Role.NORMAL);
         user.setEmail("testUser@email.com");
@@ -70,12 +70,12 @@ class UserControllerTest {
     }
 
     @AfterEach
-    void deleteUser(){
+    void deleteUser() {
         userRepository.deleteById(user.getId());
     }
 
     @Test
-    void profile() throws Exception{
+    void profile() throws Exception {
         //test not authenticated
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile"))
                 .andExpect(status().isUnauthorized());
@@ -83,7 +83,7 @@ class UserControllerTest {
         Mockito.when(profileService.getProfile(Mockito.any())).thenReturn(new UserProfile(user));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile")
                         .header(HttpHeaders.AUTHORIZATION, userAccessToken)
-                .accept(MediaType.APPLICATION_JSON))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
                 .andExpect(jsonPath("$.username").value(user.getUserName()))
@@ -94,7 +94,7 @@ class UserControllerTest {
     }
 
     @Test
-    void profileWithError() throws Exception{
+    void profileWithError() throws Exception {
         //test 500
         Mockito.when(profileService.getProfile(Mockito.any())).thenThrow(new UserDoesNotExist(""));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/user/profile")

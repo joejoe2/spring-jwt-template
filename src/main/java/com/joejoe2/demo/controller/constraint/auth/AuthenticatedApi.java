@@ -10,5 +10,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface AuthenticatedApi {
     String rejectMessage() default "";
+
     int rejectStatus() default 401;
 }

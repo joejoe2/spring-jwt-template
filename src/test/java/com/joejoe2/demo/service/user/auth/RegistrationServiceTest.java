@@ -13,7 +13,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -25,8 +26,9 @@ class RegistrationServiceTest {
     RegistrationService registrationService;
 
     @Test
-    @Transactional // roll back after test
-    void createUserWithIllegalArgument() throws Exception{
+    @Transactional
+        // roll back after test
+    void createUserWithIllegalArgument() throws Exception {
         //test IllegalArgument
         assertThrows(IllegalArgumentException.class, () -> registrationService.createUser("**-@#", "pa55ward", "test@email.com", Role.NORMAL));
         assertThrows(IllegalArgumentException.class, () -> registrationService.createUser("test", "**-@#", "test@email.com", Role.NORMAL));
@@ -34,8 +36,9 @@ class RegistrationServiceTest {
     }
 
     @Test
-    @Transactional // roll back after test
-    void createUserWithAlreadyExist() throws Exception{
+    @Transactional
+        // roll back after test
+    void createUserWithAlreadyExist() throws Exception {
         //test with duplicated username or email
         registrationService.createUser("test1", "pa55ward", "test1@email.com", Role.NORMAL);
         assertThrows(AlreadyExist.class, () -> registrationService.createUser("test1", "pa55ward", "test11@email.com", Role.NORMAL));
@@ -43,8 +46,9 @@ class RegistrationServiceTest {
     }
 
     @Test
-    @Transactional // roll back after test
-    void createUser() throws Exception{
+    @Transactional
+        // roll back after test
+    void createUser() throws Exception {
         //test whether users are created
         User test1, test2, test3;
         test1 = registrationService.createUser("test1", "pa55ward", "test1@email.com", Role.NORMAL);

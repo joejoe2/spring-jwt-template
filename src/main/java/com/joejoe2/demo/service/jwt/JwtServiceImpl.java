@@ -23,10 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @Service
-public class JwtServiceImpl implements JwtService{
+public class JwtServiceImpl implements JwtService {
     @Autowired
     private JwtConfig jwtConfig;
     @Autowired
@@ -54,8 +53,8 @@ public class JwtServiceImpl implements JwtService{
     @Transactional(rollbackFor = Exception.class)
     @Override
     public TokenPair issueTokens(UserDetail userDetail) throws UserDoesNotExist {
-        User user=userRepository.getByUserName(userDetail.getUsername())
-                .orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+        User user = userRepository.getByUserName(userDetail.getUsername())
+                .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
         AccessToken accessToken = createAccessToken(user);
         RefreshToken refreshToken = createRefreshToken(accessToken);
 
@@ -72,13 +71,13 @@ public class JwtServiceImpl implements JwtService{
         //parse refresh token
         try {
             JwtUtil.parseToken(jwtConfig.getPublicKey(), refreshPlainToken);
-        }catch (JwtException e){
+        } catch (JwtException e) {
             throw new InvalidTokenException("invalid refresh token !");
         }
         //load refresh token
         RefreshToken refreshToken = refreshTokenRepository
                 .getByTokenAndExpireAtGreaterThan(refreshPlainToken, Instant.now())
-                .orElseThrow(()->new InvalidTokenException("invalid refresh token !"));
+                .orElseThrow(() -> new InvalidTokenException("invalid refresh token !"));
         User user = refreshToken.getUser();
         if (!user.isActive())
             throw new InvalidOperation("cannot refresh tokens for inactive user !");
@@ -106,7 +105,7 @@ public class JwtServiceImpl implements JwtService{
     public void revokeAccessToken(String accessPlainToken) throws InvalidTokenException {
         AccessToken accessToken = accessTokenRepository
                 .getByTokenAndExpireAtGreaterThan(accessPlainToken, Instant.now())
-                .orElseThrow(()->new InvalidTokenException("invalid token !"));
+                .orElseThrow(() -> new InvalidTokenException("invalid token !"));
 
         accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
         addAccessTokenToBlackList(accessToken);
@@ -126,13 +125,13 @@ public class JwtServiceImpl implements JwtService{
     }
 
     @Override
-    public void addAccessTokenToBlackList(AccessToken accessToken){
-        redisService.set("revoked_access_token:{"+accessToken.getToken()+"}", "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
+    public void addAccessTokenToBlackList(AccessToken accessToken) {
+        redisService.set("revoked_access_token:{" + accessToken.getToken() + "}", "", Duration.ofSeconds(jwtConfig.getAccessTokenLifetimeSec()));
     }
 
     @Override
-    public boolean isAccessTokenInBlackList(String accessPlainToken){
-        return redisService.has("revoked_access_token:{"+accessPlainToken+"}");
+    public boolean isAccessTokenInBlackList(String accessPlainToken) {
+        return redisService.has("revoked_access_token:{" + accessPlainToken + "}");
     }
 
     @Job(name = "delete all expired refresh tokens and related access tokens")

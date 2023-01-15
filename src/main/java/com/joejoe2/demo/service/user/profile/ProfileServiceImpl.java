@@ -22,8 +22,8 @@ public class ProfileServiceImpl implements ProfileService {
     UserRepository userRepository;
 
     @Override
-    public UserProfile getProfile(String userId) throws UserDoesNotExist{
-        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
+    public UserProfile getProfile(String userId) throws UserDoesNotExist {
+        User user = userRepository.findById(UUID.fromString(userId)).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
         return new UserProfile(user);
     }
 
@@ -33,9 +33,9 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public PageList<UserProfile> getAllUserProfilesWithPage(int page, int size){
-        if (page<0||size<=0)throw new IllegalArgumentException("invalid page or size !");
-        Page<User> paging =  userRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createAt")));
+    public PageList<UserProfile> getAllUserProfilesWithPage(int page, int size) {
+        if (page < 0 || size <= 0) throw new IllegalArgumentException("invalid page or size !");
+        Page<User> paging = userRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createAt")));
         List<UserProfile> profiles = paging.getContent().stream().map((UserProfile::new)).collect(Collectors.toList());
         return new PageList<>(paging.getTotalElements(), paging.getNumber(), paging.getTotalPages(), paging.getSize(), profiles);
     }

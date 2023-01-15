@@ -26,10 +26,10 @@ public class JobRunrInitializer implements CommandLineRunner {
         createRecurrentJob(env);
     }
 
-    private void createRecurrentJob(Environment env){
-        if (!env.getProperty("init.recurrent-job", Boolean.class, true))return;
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), ()->jwtService.deleteExpiredTokens());
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), ()->verificationService.deleteExpiredVerificationCodes());
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), ()->verificationService.deleteExpiredVerifyTokens());
+    private void createRecurrentJob(Environment env) {
+        if (!env.getProperty("init.recurrent-job", Boolean.class, true)) return;
+        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> jwtService.deleteExpiredTokens());
+        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> verificationService.deleteExpiredVerificationCodes());
+        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> verificationService.deleteExpiredVerifyTokens());
     }
 }

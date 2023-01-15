@@ -16,27 +16,27 @@ public class LoginAttempt {
     @Column(nullable = true)
     Instant lastAttempt;
 
-    public boolean isExceedLimit(LoginConfig loginConfig){
+    public boolean isExceedLimit(LoginConfig loginConfig) {
         return getAttempts() >= loginConfig.getMaxAttempts();
     }
 
-    public boolean canAttempt(LoginConfig loginConfig){
-        if(getLastAttempt() != null && getLastAttempt().plusSeconds(loginConfig.getCoolTime()).isBefore(Instant.now())){
+    public boolean canAttempt(LoginConfig loginConfig) {
+        if (getLastAttempt() != null && getLastAttempt().plusSeconds(loginConfig.getCoolTime()).isBefore(Instant.now())) {
             return true;
         }
         return !isExceedLimit(loginConfig);
     }
 
-    public void attemptSuccess(LoginConfig loginConfig){
+    public void attemptSuccess(LoginConfig loginConfig) {
         if (!canAttempt(loginConfig)) throw new RuntimeException("cannot attempt !");
         setAttempts(0);
         setLastAttempt(Instant.now());
     }
 
-    public void attemptFail(LoginConfig loginConfig){
+    public void attemptFail(LoginConfig loginConfig) {
         if (!canAttempt(loginConfig)) throw new RuntimeException("cannot attempt !");
         if (isExceedLimit(loginConfig)) setAttempts(0);
-        setAttempts(getAttempts()+1);
+        setAttempts(getAttempts() + 1);
         setLastAttempt(Instant.now());
     }
 }

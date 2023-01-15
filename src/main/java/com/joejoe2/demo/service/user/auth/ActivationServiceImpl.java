@@ -26,15 +26,17 @@ public class ActivationServiceImpl implements ActivationService {
     JwtService jwtService;
     @Autowired
     AccessTokenRepository accessTokenRepository;
+    UUIDValidator uuidValidator = new UUIDValidator();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Override
     public void activateUser(String userId) throws InvalidOperation, UserDoesNotExist {
-        UUID id = new UUIDValidator().validate(userId);
+        UUID id = uuidValidator.validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
-        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot activate yourself !");
-        if (user.isActive())throw new InvalidOperation("target user is already active !");
+        User user = userRepository.findById(id).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        if (AuthUtil.isAuthenticated() && AuthUtil.currentUserDetail().getId().equals(id.toString()))
+            throw new InvalidOperation("cannot activate yourself !");
+        if (user.isActive()) throw new InvalidOperation("target user is already active !");
 
         user.setActive(true);
         userRepository.save(user);
@@ -44,12 +46,13 @@ public class ActivationServiceImpl implements ActivationService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void deactivateUser(String userId) throws InvalidOperation, UserDoesNotExist {
-        UUID id = new UUIDValidator().validate(userId);
+        UUID id = uuidValidator.validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
-        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot deactivate yourself !");
-        if (user.getRole()==Role.ADMIN)throw new InvalidOperation("cannot deactivate an admin !");
-        if (!user.isActive())throw new InvalidOperation("target user is already inactive !");
+        User user = userRepository.findById(id).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        if (AuthUtil.isAuthenticated() && AuthUtil.currentUserDetail().getId().equals(id.toString()))
+            throw new InvalidOperation("cannot deactivate yourself !");
+        if (user.getRole() == Role.ADMIN) throw new InvalidOperation("cannot deactivate an admin !");
+        if (!user.isActive()) throw new InvalidOperation("target user is already inactive !");
 
         user.setActive(false);
         userRepository.save(user);

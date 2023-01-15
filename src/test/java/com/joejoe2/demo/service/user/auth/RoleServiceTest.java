@@ -61,13 +61,14 @@ class RoleServiceTest {
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(user));
-        assertThrows(InvalidOperation.class, ()-> roleService.changeRoleOf(user.getId().toString(), Role.NORMAL));
+        assertThrows(InvalidOperation.class, () -> roleService.changeRoleOf(user.getId().toString(), Role.NORMAL));
         //clear mock login
         mockedStatic.close();
     }
 
     @Test
-    @Transactional void changeRoleOf(){
+    @Transactional
+    void changeRoleOf() {
         // test with exist user
         User user = new User();
         user.setUserName("test");
@@ -76,11 +77,11 @@ class RoleServiceTest {
         user.setRole(Role.NORMAL);
         userRepository.save(user);
         User finalUser1 = user;
-        assertDoesNotThrow(()-> roleService.changeRoleOf(finalUser1.getId().toString(), Role.STAFF));
+        assertDoesNotThrow(() -> roleService.changeRoleOf(finalUser1.getId().toString(), Role.STAFF));
         user = userRepository.findById(user.getId()).get();
         assertEquals(user.getRole(), Role.STAFF);
         User finalUser = user;
-        assertDoesNotThrow(()-> roleService.changeRoleOf(finalUser.getId().toString(), Role.ADMIN));
+        assertDoesNotThrow(() -> roleService.changeRoleOf(finalUser.getId().toString(), Role.ADMIN));
         user = userRepository.findById(user.getId()).get();
         assertEquals(user.getRole(), Role.ADMIN);
     }

@@ -9,7 +9,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data

@@ -26,22 +26,25 @@ public class RoleServiceImpl implements RoleService {
     JwtService jwtService;
     @Autowired
     AccessTokenRepository accessTokenRepository;
+    UUIDValidator uuidValidator = new UUIDValidator();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void changeRoleOf(String userId, Role role) throws InvalidOperation, UserDoesNotExist {
-        UUID id = new UUIDValidator().validate(userId);
+        UUID id = uuidValidator.validate(userId);
 
-        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
-        if (AuthUtil.isAuthenticated()&&AuthUtil.currentUserDetail().getId().equals(id.toString()))throw new InvalidOperation("cannot change the role of yourself !");
+        User user = userRepository.findById(id).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        if (AuthUtil.isAuthenticated() && AuthUtil.currentUserDetail().getId().equals(id.toString()))
+            throw new InvalidOperation("cannot change the role of yourself !");
         Role originalRole = user.getRole();
-        if (role.equals(originalRole))throw new InvalidOperation("role doesn't change !");
+        if (role.equals(originalRole)) throw new InvalidOperation("role doesn't change !");
 
         user.setRole(role);
         userRepository.save(user);
 
-        if (Role.ADMIN.equals(originalRole)&&userRepository.getByRole(Role.ADMIN).size()==0)throw new InvalidOperation("cannot change the role of the only ADMIN !");
+        if (Role.ADMIN.equals(originalRole) && userRepository.getByRole(Role.ADMIN).size() == 0)
+            throw new InvalidOperation("cannot change the role of the only ADMIN !");
 
         //need to logout user after role change
         jwtService.revokeAccessToken(accessTokenRepository.getByUser(user));

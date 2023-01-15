@@ -15,7 +15,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -57,30 +58,30 @@ class LoginServiceTest {
     }
 
     @Test
-    void login() throws Exception{
-        assertThrows(BadCredentialsException.class, ()->{
+    void login() throws Exception {
+        assertThrows(BadCredentialsException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(1, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(BadCredentialsException.class, ()->{
+        assertThrows(BadCredentialsException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(user.getUserName(), "pa55ward");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        Thread.sleep(loginConfig.getCoolTime()*1000L);
+        Thread.sleep(loginConfig.getCoolTime() * 1000L);
 
-        assertThrows(BadCredentialsException.class, ()->{
+        assertThrows(BadCredentialsException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(1, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
@@ -88,22 +89,22 @@ class LoginServiceTest {
         loginService.login(user.getUserName(), "pa55ward");
         assertEquals(0, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(BadCredentialsException.class, ()->{
+        assertThrows(BadCredentialsException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(1, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(BadCredentialsException.class, ()->{
+        assertThrows(BadCredentialsException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(user.getUserName(), "error");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(user.getUserName(), "pa55ward");
         });
         assertEquals(2, userRepository.findById(user.getId()).get().getLoginAttempt().getAttempts());
@@ -112,12 +113,12 @@ class LoginServiceTest {
     @Test
     void loginInactive() {
         // inactive user cannot login, will never increase attempts
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(incative.getUserName(), "error");
         });
         assertEquals(0, userRepository.findById(incative.getId()).get().getLoginAttempt().getAttempts());
 
-        assertThrows(AuthenticationException.class, ()->{
+        assertThrows(AuthenticationException.class, () -> {
             loginService.login(incative.getUserName(), "pa55ward");
         });
         assertEquals(0, userRepository.findById(incative.getId()).get().getLoginAttempt().getAttempts());

@@ -25,18 +25,18 @@ public class DefaultAdminInitializer implements CommandLineRunner {
         createDefaultAdmin(env);
     }
 
-    private void createDefaultAdmin(Environment env){
-        String adminName=env.getProperty("default.admin.username", "");
-        String adminPassword=env.getProperty("default.admin.password", "");
-        String adminEmail=env.getProperty("default.admin.email", "");
-        if (adminName.length()>0&&adminPassword.length()>0&&adminEmail.length()>0){
+    private void createDefaultAdmin(Environment env) {
+        String adminName = env.getProperty("default.admin.username", "");
+        String adminPassword = env.getProperty("default.admin.password", "");
+        String adminEmail = env.getProperty("default.admin.email", "");
+        if (adminName.length() > 0 && adminPassword.length() > 0 && adminEmail.length() > 0) {
             try {
                 registrationService.createUser(adminName, adminPassword, adminEmail, Role.ADMIN);
                 logger.info("create admin user from env !");
-            }catch (AlreadyExist e){
+            } catch (AlreadyExist e) {
                 logger.info("default admin already exist, skip creation !");
-            }catch (Exception e){
-                logger.error("cannot create default admin: "+e.getMessage());
+            } catch (Exception e) {
+                logger.error("cannot create default admin: " + e.getMessage());
             }
         }
     }

@@ -11,13 +11,13 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableAsync
 public class DemoApplication {
-	public static void main(String[] args) {
-		Locale.setDefault(Locale.ENGLISH);
-		SpringApplication.run(DemoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        Locale.setDefault(Locale.ENGLISH);
+        SpringApplication.run(DemoApplication.class, args);
+    }
 
-	@PostConstruct
-	public void init(){
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-	}
+    @PostConstruct
+    public void init() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
 }

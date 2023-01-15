@@ -16,7 +16,9 @@ import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.utils.JwtUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
@@ -77,7 +79,7 @@ class AuthControllerTest {
 
     @BeforeEach
     void createUser() throws InvalidTokenException {
-        user=new User();
+        user = new User();
         user.setUserName("testUser");
         user.setRole(Role.NORMAL);
         user.setEmail("testUser@email.com");
@@ -92,19 +94,19 @@ class AuthControllerTest {
     }
 
     @AfterEach
-    void deleteUser(){
+    void deleteUser() {
         userRepository.deleteById(user.getId());
     }
 
-    ObjectMapper objectMapper=new ObjectMapper();
+    ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
     @Transactional
-    void login() throws Exception{
+    void login() throws Exception {
         //test success
-        LoginRequest request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
+        LoginRequest request = LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(()->AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
+        mockedStatic.when(() -> AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
                 .thenReturn(new UserDetail(user));
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).issueTokens(new UserDetail(user));
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
@@ -118,10 +120,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginWithError() throws Exception{
+    void loginWithError() throws Exception {
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test  validation
-        LoginRequest request=LoginRequest.builder().username("").password("").build();
+        LoginRequest request = LoginRequest.builder().username("").password("").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -130,9 +132,10 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.password").exists())
                 .andExpect(status().isBadRequest());
         //test AuthenticationException
-        request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
-        mockedStatic.when(()->AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
-                .thenThrow(new AuthenticationException("") {});
+        request = LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
+        mockedStatic.when(() -> AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
+                .thenThrow(new AuthenticationException("") {
+                });
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -144,14 +147,14 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void webLogin() throws Exception{
+    void webLogin() throws Exception {
         //test success
-        LoginRequest request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
+        LoginRequest request = LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
-        mockedStatic.when(()->AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
+        mockedStatic.when(() -> AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
                 .thenReturn(new UserDetail(user));
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).issueTokens(new UserDetail(user));
-        Cookie cookie=mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/login")
+        Cookie cookie = mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
@@ -163,10 +166,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void webLoginWithError() throws Exception{
+    void webLoginWithError() throws Exception {
         MockedStatic<AuthUtil> mockedStatic = Mockito.mockStatic(AuthUtil.class);
         //test validation
-        LoginRequest request=LoginRequest.builder().username("").password("").build();
+        LoginRequest request = LoginRequest.builder().username("").password("").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -175,9 +178,10 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.password").exists())
                 .andExpect(status().isBadRequest());
         //test AuthenticationException
-        request=LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
-        mockedStatic.when(()->AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
-                .thenThrow(new AuthenticationException("") {});
+        request = LoginRequest.builder().username(user.getUserName()).password("pa55ward").build();
+        mockedStatic.when(() -> AuthUtil.authenticate(authenticationManager, user.getUserName(), "pa55ward"))
+                .thenThrow(new AuthenticationException("") {
+                });
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -189,9 +193,9 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void refresh() throws Exception{
+    void refresh() throws Exception {
         //test success
-        RefreshRequest request=RefreshRequest.builder().refresh_token("refresh_token").build();
+        RefreshRequest request = RefreshRequest.builder().refresh_token("refresh_token").build();
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -203,9 +207,9 @@ class AuthControllerTest {
     }
 
     @Test
-    void refreshWithError() throws Exception{
+    void refreshWithError() throws Exception {
         //test validation
-        RefreshRequest request=RefreshRequest.builder().refresh_token("").build();
+        RefreshRequest request = RefreshRequest.builder().refresh_token("").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
@@ -213,7 +217,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.refresh_token").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidTokenException
-        request=RefreshRequest.builder().refresh_token("invalid_token").build();
+        request = RefreshRequest.builder().refresh_token("invalid_token").build();
         Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -222,7 +226,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isForbidden());
         //test InvalidOperation
-        request=RefreshRequest.builder().refresh_token("inactive_token").build();
+        request = RefreshRequest.builder().refresh_token("inactive_token").build();
         Mockito.doThrow(new InvalidOperation("")).when(jwtService).refreshTokens("inactive_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -234,11 +238,11 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void webRefresh() throws Exception{
+    void webRefresh() throws Exception {
         //test success
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
-        Cookie cookie=mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
-                .cookie(new Cookie("refresh_token", "refresh_token")))
+        Cookie cookie = mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
+                        .cookie(new Cookie("refresh_token", "refresh_token")))
                 .andExpect(jsonPath("$.access_token").hasJsonPath())
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getCookie("refresh_token");
@@ -246,7 +250,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void webRefreshWithError() throws Exception{
+    void webRefreshWithError() throws Exception {
         //test InvalidTokenException
         Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/web/api/auth/refresh")
@@ -262,7 +266,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void logout() throws Exception{
+    void logout() throws Exception {
         Mockito.doNothing().when(jwtService).revokeAccessToken("access_token");
         //test success
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout")
@@ -271,10 +275,10 @@ class AuthControllerTest {
     }
 
     @Test
-    void logoutWithInvalidToken() throws Exception{
+    void logoutWithInvalidToken() throws Exception {
         Mockito.doThrow(new InvalidTokenException("")).when(jwtService).getUserDetailFromAccessToken("invalid token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout")
-                .header(HttpHeaders.AUTHORIZATION, "invalid token"))
+                        .header(HttpHeaders.AUTHORIZATION, "invalid token"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -283,7 +287,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void issueVerificationCode() throws Exception{
+    void issueVerificationCode() throws Exception {
         //test success
         IssueVerificationCodeRequest request =
                 IssueVerificationCodeRequest.builder().email(user.getEmail()).build();
@@ -299,7 +303,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void issueVerificationCodeWithBadRequest() throws Exception{
+    void issueVerificationCodeWithBadRequest() throws Exception {
         //test with invalid email format
         IssueVerificationCodeRequest request =
                 IssueVerificationCodeRequest.builder().email("invalid email").build();
@@ -314,7 +318,7 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void changePassword() throws Exception{
+    void changePassword() throws Exception {
         //test success
         ChangePasswordRequest request = ChangePasswordRequest.builder()
                 .oldPassword("pa55ward").newPassword("password").build();
@@ -328,7 +332,7 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void changePasswordWithError() throws Exception{
+    void changePasswordWithError() throws Exception {
         //test with incorrect old password
         ChangePasswordRequest request = ChangePasswordRequest.builder()
                 .oldPassword("incorrectolfpassword").newPassword("password").build();
@@ -357,8 +361,8 @@ class AuthControllerTest {
 
     @Test
     @Transactional
-    void resetPassword() throws Exception{
-        VerifyToken verifyToken=new VerifyToken();
+    void resetPassword() throws Exception {
+        VerifyToken verifyToken = new VerifyToken();
         verifyToken.setUser(user);
         verifyToken.setToken("12345678");
         //valid for 10 min
@@ -375,7 +379,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void resetPasswordError() throws Exception{
+    void resetPasswordError() throws Exception {
         //test validation
         ResetPasswordRequest request = ResetPasswordRequest.builder()
                 .token("").newPassword("invalid-password").build();
@@ -387,7 +391,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.errors.newPassword").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidOperation, with incorrect verifyToken
-        VerifyToken verifyToken=new VerifyToken();
+        VerifyToken verifyToken = new VerifyToken();
         verifyToken.setUser(user);
         verifyToken.setToken("12345678");
         //valid for 10 min

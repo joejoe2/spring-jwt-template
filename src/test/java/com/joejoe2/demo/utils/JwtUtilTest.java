@@ -45,7 +45,7 @@ class JwtUtilTest {
         assertEquals(user.getRole(), Role.valueOf((String) data.get("role")));
         assertEquals(user.isActive(), data.get("isActive"));
         assertEquals(jwtConfig.getIssuer(), data.get("iss"));
-        assertEquals((int) (exp.getTimeInMillis()/1000), data.get("exp"));
+        assertEquals((int) (exp.getTimeInMillis() / 1000), data.get("exp"));
     }
 
     @Test
@@ -57,7 +57,7 @@ class JwtUtilTest {
         Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), accessToken);
         assertEquals("refresh_token", data.get("type"));
         assertEquals(jwtConfig.getIssuer(), data.get("iss"));
-        assertEquals((int) (exp.getTimeInMillis()/1000), data.get("exp"));
+        assertEquals((int) (exp.getTimeInMillis() / 1000), data.get("exp"));
     }
 
     @Test
@@ -70,7 +70,7 @@ class JwtUtilTest {
 
         //token is expired
         String finalToken = token;
-        assertThrows(JwtException.class, ()->JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken));
+        assertThrows(JwtException.class, () -> JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken));
 
         //token is not expired
         Calendar exp = Calendar.getInstance();
@@ -78,10 +78,10 @@ class JwtUtilTest {
         claims.setExpiration(exp.getTime());
         token = Jwts.builder().setClaims(claims).signWith(jwtConfig.getPrivateKey()).compact();
         String finalToken1 = token;
-        assertDoesNotThrow(()->JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken1));
+        assertDoesNotThrow(() -> JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken1));
 
         //invalid token
-        assertThrows(JwtException.class, ()->JwtUtil.parseToken(jwtConfig.getPublicKey(), "invalid_token"));
+        assertThrows(JwtException.class, () -> JwtUtil.parseToken(jwtConfig.getPublicKey(), "invalid_token"));
     }
 
     @Test

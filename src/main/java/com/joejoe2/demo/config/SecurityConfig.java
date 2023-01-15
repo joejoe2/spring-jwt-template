@@ -1,7 +1,6 @@
 package com.joejoe2.demo.config;
 
 import com.joejoe2.demo.filter.JwtAuthenticationFilter;
-import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.service.user.UserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +27,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     CorsConfig corsConfig;
 
     @Bean
-    PasswordEncoder passwordEncoder(){
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 

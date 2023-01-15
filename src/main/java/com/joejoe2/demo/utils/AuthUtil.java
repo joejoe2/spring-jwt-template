@@ -14,17 +14,17 @@ public class AuthUtil {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 username, password));
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return ((UserDetail)authentication.getPrincipal());
+        return ((UserDetail) authentication.getPrincipal());
     }
 
-    public static boolean isAuthenticated(){
+    public static boolean isAuthenticated() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication!=null&&!(authentication instanceof AnonymousAuthenticationToken);
+        return authentication != null && !(authentication instanceof AnonymousAuthenticationToken);
     }
 
-    public static UserDetail currentUserDetail() throws AuthenticationException{
-        if (!isAuthenticated())throw new InternalAuthenticationServiceException("has not been authenticated !");
+    public static UserDetail currentUserDetail() throws AuthenticationException {
+        if (!isAuthenticated()) throw new InternalAuthenticationServiceException("has not been authenticated !");
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (UserDetail)authentication.getPrincipal();
+        return (UserDetail) authentication.getPrincipal();
     }
 }

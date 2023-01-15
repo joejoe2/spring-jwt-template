@@ -1,12 +1,11 @@
 package com.joejoe2.demo.model.auth;
 
 import lombok.Data;
-import org.hibernate.annotations.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -14,7 +13,7 @@ import java.util.UUID;
 @Data
 @Entity
 @Table(name = "account_user")
-public class User{
+public class User {
     @Version
     @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
     private Instant version;
@@ -36,10 +35,10 @@ public class User{
 
     @Column(length = 32, nullable = false)
     @Enumerated(EnumType.STRING)
-    private Role role=Role.NORMAL; //code level default
+    private Role role = Role.NORMAL; //code level default
 
     @Column(nullable = false, columnDefinition = "boolean default true") //db level default
-    private boolean isActive=true; //code level default
+    private boolean isActive = true; //code level default
 
     @CreationTimestamp
     private Instant createAt;

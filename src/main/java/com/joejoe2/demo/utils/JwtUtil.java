@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtUtil {
-    public static String generateAccessToken(RSAPrivateKey key, String jti, String issuer, User user, Calendar exp){
+    public static String generateAccessToken(RSAPrivateKey key, String jti, String issuer, User user, Calendar exp) {
         Claims claims = Jwts.claims();
         claims.put("type", "access_token");
         claims.put("id", user.getId().toString());
@@ -35,23 +35,23 @@ public class JwtUtil {
             "type", "id", "username", "role", "isActive"
     };
 
-    public static UserDetail extractUserDetailFromAccessToken(RSAPublicKey publicKey, String token) throws InvalidTokenException{
+    public static UserDetail extractUserDetailFromAccessToken(RSAPublicKey publicKey, String token) throws InvalidTokenException {
         try {
             Map<String, Object> data = JwtUtil.parseToken(publicKey, token);
-            if (Arrays.stream(REQUIRED_FIELDS).anyMatch((f)-> data.get(f)==null)){
+            if (Arrays.stream(REQUIRED_FIELDS).anyMatch((f) -> data.get(f) == null)) {
                 throw new InvalidTokenException("invalid token !");
             }
-            if (!data.get("type").equals("access_token")){
+            if (!data.get("type").equals("access_token")) {
                 throw new InvalidTokenException("invalid token !");
             }
             return new UserDetail((String) data.get("id"), (String) data.get("username"),
                     (Boolean) data.get("isActive"), Role.valueOf((String) data.get("role")), token);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             throw new InvalidTokenException("invalid token !");
         }
     }
 
-    public static String generateRefreshToken(RSAPrivateKey key, String jti, String issuer, Calendar exp){
+    public static String generateRefreshToken(RSAPrivateKey key, String jti, String issuer, Calendar exp) {
         Claims claims = Jwts.claims();
         claims.put("type", "refresh_token");
         claims.setExpiration(exp.getTime());
@@ -73,7 +73,7 @@ public class JwtUtil {
 
             return claims.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        }catch (Exception e){
+        } catch (Exception e) {
             throw new JwtException(e.getMessage());
         }
     }

@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -39,25 +38,29 @@ public class PasswordServiceImpl implements PasswordService {
     AccessTokenRepository accessTokenRepository;
     @Autowired
     VerifyTokenRepository verifyTokenRepository;
+    EmailValidator emailValidator = new EmailValidator();
+    PasswordValidator passwordValidator = new PasswordValidator();
+    UUIDValidator uuidValidator = new UUIDValidator();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)
     @Override
     public void changePasswordOf(String userId, String oldPassword, String newPassword) throws InvalidOperation, UserDoesNotExist {
-        UUID id = new UUIDValidator().validate(userId);
-        PasswordValidator passwordValidator = new PasswordValidator();
+        UUID id = uuidValidator.validate(userId);
 
         try {
             oldPassword = passwordValidator.validate(oldPassword);
-        }catch (ValidationError e){
+        } catch (ValidationError e) {
             throw new InvalidOperation("old password is not correct !");
         }
         newPassword = passwordValidator.validate(newPassword);
         newPassword = passwordEncoder.encode(newPassword);
 
-        User user = userRepository.findById(id).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
-        if (!passwordEncoder.matches(oldPassword, user.getPassword()))throw new InvalidOperation("old password is not correct !");
-        if(passwordEncoder.matches(oldPassword, newPassword))throw new InvalidOperation("new password is same with old password !");
+        User user = userRepository.findById(id).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        if (!passwordEncoder.matches(oldPassword, user.getPassword()))
+            throw new InvalidOperation("old password is not correct !");
+        if (passwordEncoder.matches(oldPassword, newPassword))
+            throw new InvalidOperation("new password is same with old password !");
 
         user.setPassword(newPassword);
         userRepository.save(user);
@@ -72,21 +75,21 @@ public class PasswordServiceImpl implements PasswordService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     @Override
-    public VerifyToken requestResetPasswordToken(String email) throws InvalidOperation, UserDoesNotExist{
-        email=new EmailValidator().validate(email);
+    public VerifyToken requestResetPasswordToken(String email) throws InvalidOperation, UserDoesNotExist {
+        email = emailValidator.validate(email);
 
-        User user=userRepository.getByEmail(email).orElseThrow(()->new UserDoesNotExist("user is not exist !"));
-        if (!user.isActive())throw new InvalidOperation("User is disabled !");
+        User user = userRepository.getByEmail(email).orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
+        if (!user.isActive()) throw new InvalidOperation("User is disabled !");
 
-        Optional<VerifyToken> token=verifyTokenRepository.getByUser(user);
-        if(token.isPresent()&&token.get().getExpireAt().isAfter(Instant.now()))
+        Optional<VerifyToken> token = verifyTokenRepository.getByUser(user);
+        if (token.isPresent() && token.get().getExpireAt().isAfter(Instant.now()))
             throw new InvalidOperation("already request to reset password, please try again later !");
-        if(token.isPresent()&&token.get().getExpireAt().isBefore(Instant.now()))
+        if (token.isPresent() && token.get().getExpireAt().isBefore(Instant.now()))
             verifyTokenRepository.delete(token.get());  // REPEATABLE_READ, if deleted by others
         // , it will cause (ERROR:  could not serialize access due to concurrent delete)
         // instead of being ignored by postgresql in read-committed
 
-        VerifyToken verifyToken=new VerifyToken();
+        VerifyToken verifyToken = new VerifyToken();
         verifyToken.setUser(user);
         verifyToken.setToken(Utils.randomNumericCode(128));
         //valid for 10 min
@@ -98,15 +101,15 @@ public class PasswordServiceImpl implements PasswordService {
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = Exception.class)
     @Override
-    public void resetPassword(String verifyToken, String newPassword) throws InvalidOperation{
-        newPassword = new PasswordValidator().validate(newPassword);
+    public void resetPassword(String verifyToken, String newPassword) throws InvalidOperation {
+        newPassword = passwordValidator.validate(newPassword);
         newPassword = passwordEncoder.encode(newPassword);
 
         VerifyToken token = verifyTokenRepository.getByTokenAndExpireAtGreaterThan(verifyToken, Instant.now())
-                .orElseThrow(()->new InvalidOperation("reset password request is invalid or expired, please try to use forget password again later !"));
+                .orElseThrow(() -> new InvalidOperation("reset password request is invalid or expired, please try to use forget password again later !"));
 
-        User user=token.getUser();
-        if (!user.isActive())throw new InvalidOperation("User is disabled !");
+        User user = token.getUser();
+        if (!user.isActive()) throw new InvalidOperation("User is disabled !");
 
         user.setPassword(newPassword);
         userRepository.save(user);

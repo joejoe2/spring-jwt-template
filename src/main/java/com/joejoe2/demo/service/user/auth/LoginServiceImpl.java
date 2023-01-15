@@ -18,8 +18,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-
 @Service
 public class LoginServiceImpl implements LoginService {
     @Autowired
@@ -34,7 +32,7 @@ public class LoginServiceImpl implements LoginService {
     @Override
     public UserDetail login(String username, String password) throws AuthenticationException {
         User user = userRepository.getByUserName(username)
-                .orElseThrow(()->new UsernameNotFoundException("Username is not exist !"));
+                .orElseThrow(() -> new UsernameNotFoundException("Username is not exist !"));
 
         LoginAttempt loginAttempt = user.getLoginAttempt();
         if (!loginAttempt.canAttempt(loginConfig))
@@ -45,7 +43,7 @@ public class LoginServiceImpl implements LoginService {
             loginAttempt.attemptSuccess(loginConfig);
             userRepository.save(user);
             return userDetail;
-        } catch (BadCredentialsException e){
+        } catch (BadCredentialsException e) {
             loginAttempt.attemptFail(loginConfig);
             userRepository.save(user);
             throw e;

@@ -15,7 +15,9 @@ import com.joejoe2.demo.repository.jwt.AccessTokenRepository;
 import com.joejoe2.demo.repository.jwt.RefreshTokenRepository;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.utils.JwtUtil;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,9 +66,9 @@ class JwtServiceTest {
 
     @Test
     void issueTokensWithUserDoesNotExist() {
-        UUID id=UUID.randomUUID();
+        UUID id = UUID.randomUUID();
         while (userRepository.existsById(id))
-            id=UUID.randomUUID();
+            id = UUID.randomUUID();
         User user = new User();
         user.setId(id);
         user.setUserName("notExists");
@@ -74,14 +76,14 @@ class JwtServiceTest {
         user.setPassword("pa55ward");
         user.setRole(Role.NORMAL);
         //test not exist user
-        assertThrows(UserDoesNotExist.class, ()-> jwtService.issueTokens(new UserDetail(user)));
+        assertThrows(UserDoesNotExist.class, () -> jwtService.issueTokens(new UserDetail(user)));
     }
 
     @Test
     @Transactional
     void issueTokens() {
         //test exist user
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
             AccessToken accessToken = tokenPair.getAccessToken();
             RefreshToken refreshToken = tokenPair.getRefreshToken();
@@ -99,23 +101,23 @@ class JwtServiceTest {
     @Test
     void refreshTokensWithInvalidToken() {
         //test invalid token
-        assertThrows(InvalidTokenException.class, ()->jwtService.refreshTokens("invalid_token"));
+        assertThrows(InvalidTokenException.class, () -> jwtService.refreshTokens("invalid_token"));
     }
 
     @Test
     @Transactional
-    void refreshTokensWithInactiveUser() throws Exception{
+    void refreshTokensWithInactiveUser() throws Exception {
         user.setActive(false);
         TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
         RefreshToken refreshToken = tokenPair.getRefreshToken();
         //test InvalidOperation
-        assertThrows(InvalidOperation.class, ()->jwtService.refreshTokens(refreshToken.getToken()));
+        assertThrows(InvalidOperation.class, () -> jwtService.refreshTokens(refreshToken.getToken()));
     }
 
     @Test
     void refreshTokens() {
         // = revokeAccessToken + issueTokens
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
             spyService.refreshTokens(tokenPair.getRefreshToken().getToken());
             Mockito.verify(spyService).revokeAccessToken(tokenPair.getAccessToken());
@@ -129,8 +131,8 @@ class JwtServiceTest {
         exp.add(Calendar.SECOND, 900);
 
         //test invalid token
-        assertThrows(InvalidTokenException.class, ()->jwtService.getUserDetailFromAccessToken("invalid_token"));
-        assertThrows(InvalidTokenException.class, ()->jwtService.getUserDetailFromAccessToken(JwtUtil.generateRefreshToken(
+        assertThrows(InvalidTokenException.class, () -> jwtService.getUserDetailFromAccessToken("invalid_token"));
+        assertThrows(InvalidTokenException.class, () -> jwtService.getUserDetailFromAccessToken(JwtUtil.generateRefreshToken(
                 jwtConfig.getPrivateKey(), "jti", "iss", exp
         )));
     }
@@ -142,7 +144,7 @@ class JwtServiceTest {
 
         //test normal token
         String token = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), "jti", "iss", user, exp);
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             UserDetail userDetail = jwtService.getUserDetailFromAccessToken(token);
             assertEquals(user.getId().toString(), userDetail.getId());
             assertEquals(user.getUserName(), userDetail.getUsername());
@@ -155,7 +157,7 @@ class JwtServiceTest {
     @Test
     void revokeAccessTokenWithInvalidToken() {
         //test invalid token
-        assertThrows(InvalidTokenException.class, ()-> jwtService.revokeAccessToken("invalid_token"));
+        assertThrows(InvalidTokenException.class, () -> jwtService.revokeAccessToken("invalid_token"));
     }
 
     @Test
@@ -166,7 +168,7 @@ class JwtServiceTest {
         accessToken.setUser(user);
         accessToken.setExpireAt(Instant.now().plusSeconds(900));
         accessTokenRepository.save(accessToken);
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             jwtService.revokeAccessToken(accessToken.getToken());
             assertTrue(jwtService.isAccessTokenInBlackList(accessToken.getToken()));
         });

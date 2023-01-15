@@ -2,15 +2,12 @@ package com.joejoe2.demo;
 
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
-
-import java.util.List;
 
 public class TestContext implements BeforeAllCallback, ExtensionContext.Store.CloseableResource {
 
     private static boolean started = false;
+
     static {
         GenericContainer redis = new GenericContainer("redis:6.2.7-alpine")
                 .withExposedPorts(6379);
@@ -26,7 +23,7 @@ public class TestContext implements BeforeAllCallback, ExtensionContext.Store.Cl
                 .withEnv("POSTGRES_DB", "spring-test");
         postgres.getPortBindings().add("5430:5432");
         postgres.start();
-        System.setProperty("spring.datasource.url", "jdbc:postgresql://localhost:"+postgres.getFirstMappedPort()+"/spring-test");
+        System.setProperty("spring.datasource.url", "jdbc:postgresql://localhost:" + postgres.getFirstMappedPort() + "/spring-test");
     }
 
     @Override

@@ -16,7 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Random;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -31,7 +32,7 @@ class ProfileServiceTest {
     @Transactional
     void getProfileWithIllegalArgumentException() {
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->profileService.getProfile("invalid uid"));
+        assertThrows(IllegalArgumentException.class, () -> profileService.getProfile("invalid uid"));
     }
 
     @Test
@@ -45,7 +46,7 @@ class ProfileServiceTest {
         userRepository.save(user);
         userRepository.deleteById(user.getId());
         //test with a not exist user
-        assertThrows(UserDoesNotExist.class, ()->profileService.getProfile(user.getId().toString()));
+        assertThrows(UserDoesNotExist.class, () -> profileService.getProfile(user.getId().toString()));
     }
 
     @Test
@@ -70,18 +71,18 @@ class ProfileServiceTest {
 
     @Test
     @Transactional
-    void getAllUserProfiles(){
+    void getAllUserProfiles() {
         Random random = new Random();
         long count = userRepository.count();
         long r = random.nextInt(100);
-        for (int i=0;i<r;i++){
-            User user=new User();
-            user.setUserName("test"+i);
+        for (int i = 0; i < r; i++) {
+            User user = new User();
+            user.setUserName("test" + i);
             user.setPassword("pa55ward");
-            user.setEmail("test"+i+"@email.com");
+            user.setEmail("test" + i + "@email.com");
             userRepository.save(user);
         }
-        assertEquals(count+r, profileService.getAllUserProfiles().size());
+        assertEquals(count + r, profileService.getAllUserProfiles().size());
     }
 
     @Test

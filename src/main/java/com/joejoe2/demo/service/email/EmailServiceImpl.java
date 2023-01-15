@@ -8,14 +8,15 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EmailServiceImpl implements EmailService{
+public class EmailServiceImpl implements EmailService {
     @Autowired
     private JavaMailSender emailSender;
 
     @Async
     @Override
     public void sendSimpleEmail(String to, String subject, String text) {
-        if (to==null||subject==null||text==null)throw new ValidationError("to, subject, or text cannot be null !");
+        if (to == null || subject == null || text == null)
+            throw new ValidationError("to, subject, or text cannot be null !");
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("noreply@joejoe2.com");

@@ -3,10 +3,8 @@ package com.joejoe2.demo.config;
 import lombok.SneakyThrows;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.converter.RsaKeyConverters;
 import org.springframework.stereotype.Component;
 
-import java.io.ByteArrayInputStream;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;

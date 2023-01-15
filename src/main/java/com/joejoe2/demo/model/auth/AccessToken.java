@@ -5,17 +5,14 @@ import com.joejoe2.demo.utils.JwtUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -28,9 +25,9 @@ public class AccessToken {
     //@GeneratedValue(generator = "UUID")
     //@GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
     @Column(unique = true, updatable = false, nullable = false)
-    private UUID id=UUID.randomUUID();
+    private UUID id = UUID.randomUUID();
 
-    @Column(unique = true, updatable = false, nullable = false, columnDefinition="TEXT")
+    @Column(unique = true, updatable = false, nullable = false, columnDefinition = "TEXT")
     private String token;
 
     @Column(updatable = false, nullable = false)

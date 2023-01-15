@@ -9,6 +9,7 @@ import java.util.List;
 public interface ProfileService {
     /**
      * load UserProfile with given userId
+     *
      * @param userId
      * @return
      * @throws UserDoesNotExist if target user is not exist
@@ -17,12 +18,14 @@ public interface ProfileService {
 
     /**
      * get all user profiles
+     *
      * @return all user profiles
      */
     List<UserProfile> getAllUserProfiles();
 
     /**
      * get all user profiles with page request
+     *
      * @param page must>=0
      * @param size must>0
      * @return paged user profiles

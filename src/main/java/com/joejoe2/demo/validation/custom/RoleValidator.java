@@ -11,7 +11,7 @@ public class RoleValidator implements ConstraintValidator<Role, String> {
         try {
             com.joejoe2.demo.model.auth.Role.valueOf(value);
             return true;
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             return false;
         }
     }

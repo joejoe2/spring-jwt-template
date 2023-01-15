@@ -29,14 +29,14 @@ public class ControllerConstraintInterceptor implements HandlerInterceptor {
         IPUtils.setRequestIP(request.getRemoteAddr());
 
         try {
-            if (handler instanceof HandlerMethod){
+            if (handler instanceof HandlerMethod) {
                 authConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
                 rateConstraintChecker.checkWithMethod(((HandlerMethod) handler).getMethod());
             }
-        }catch (ControllerConstraintViolation ex){
+        } catch (ControllerConstraintViolation ex) {
             setJsonResponse(response, ex.getRejectStatus(), ex.getRejectMessage());
             return false;
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(e.getMessage());
             setJsonResponse(response, 500, "");
             return false;
@@ -45,10 +45,10 @@ public class ControllerConstraintInterceptor implements HandlerInterceptor {
         return true;
     }
 
-    private void setJsonResponse(HttpServletResponse response, int status, String message){
-        if (message!=null&&!message.isEmpty()){
+    private void setJsonResponse(HttpServletResponse response, int status, String message) {
+        if (message != null && !message.isEmpty()) {
             try {
-                response.getWriter().write("{ \"message\": \""+message+"\"}");
+                response.getWriter().write("{ \"message\": \"" + message + "\"}");
             } catch (IOException e) {
                 e.printStackTrace();
             }

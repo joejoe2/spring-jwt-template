@@ -26,7 +26,7 @@ class RedisServiceTest {
     void set() {
         redisService.set("key1", "test", Duration.ofSeconds(30));
         assertTrue(redisTemplate.hasKey("key1"));
-        assert redisTemplate.getExpire("key1", TimeUnit.SECONDS)<30;
+        assert redisTemplate.getExpire("key1", TimeUnit.SECONDS) < 30;
     }
 
     @Test

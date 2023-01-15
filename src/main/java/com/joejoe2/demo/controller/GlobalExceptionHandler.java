@@ -33,9 +33,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     @ApiResponse(responseCode = "400", description = "field errors in request body/param",
             content = @Content(mediaType = "application/json", schema =
-    @Schema(implementation = InvalidRequestResponse.class),
-            examples = @ExampleObject(value = "{\"errors\":{\"field1\":[\"msg1\",\"msg2\"], " +
-                    "\"field2\":[...], ...}}")))
+            @Schema(implementation = InvalidRequestResponse.class),
+                    examples = @ExampleObject(value = "{\"errors\":{\"field1\":[\"msg1\",\"msg2\"], " +
+                            "\"field2\":[...], ...}}")))
     protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
         Map<String, TreeSet<String>> errors = new HashMap<>();
         for (FieldError error : ex.getFieldErrors()) {

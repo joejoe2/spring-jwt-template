@@ -18,7 +18,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface RateLimit {
     String key() default "";
+
     LimitTarget target() default LimitTarget.IP;
+
     long limit() default 10;
+
     long period() default 60;
 }

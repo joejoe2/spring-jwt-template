@@ -7,7 +7,6 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -19,14 +18,14 @@ public class VerifyToken {
     @Column(unique = true, updatable = false, nullable = false)
     private UUID id;
 
-    @Column(unique = true, updatable = false, nullable = false, columnDefinition="TEXT")
+    @Column(unique = true, updatable = false, nullable = false, columnDefinition = "TEXT")
     private String token;
 
     @Column(updatable = false, nullable = false)
     private Instant expireAt;
 
     @OneToOne
-    @JoinColumn(unique=true) //unidirectional one to one
+    @JoinColumn(unique = true) //unidirectional one to one
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 }

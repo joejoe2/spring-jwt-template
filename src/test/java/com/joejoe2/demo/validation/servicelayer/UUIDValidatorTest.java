@@ -5,7 +5,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class UUIDValidatorTest {
 
@@ -13,10 +14,10 @@ class UUIDValidatorTest {
     void validate() {
         UUIDValidator uuidValidator = new UUIDValidator();
 
-        assertThrows(ValidationError.class, ()->uuidValidator.validate(null));
-        assertThrows(ValidationError.class, ()->uuidValidator.validate(""));
-        assertThrows(ValidationError.class, ()->uuidValidator.validate("    "));
+        assertThrows(ValidationError.class, () -> uuidValidator.validate(null));
+        assertThrows(ValidationError.class, () -> uuidValidator.validate(""));
+        assertThrows(ValidationError.class, () -> uuidValidator.validate("    "));
 
-        assertDoesNotThrow(()->uuidValidator.validate(UUID.randomUUID().toString()));
+        assertDoesNotThrow(() -> uuidValidator.validate(UUID.randomUUID().toString()));
     }
 }

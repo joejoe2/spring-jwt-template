@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -27,10 +26,12 @@ public class VerificationServiceImpl implements VerificationService {
     VerifyTokenRepository verifyTokenRepository;
     @Autowired
     EmailService emailService;
+    EmailValidator emailValidator = new EmailValidator();
+    UUIDValidator uuidValidator = new UUIDValidator();
 
     @Override
-    public VerificationPair issueVerificationCode(String email){
-        email = new EmailValidator().validate(email);
+    public VerificationPair issueVerificationCode(String email) {
+        email = emailValidator.validate(email);
 
         Calendar exp = Calendar.getInstance();
         exp.add(Calendar.SECOND, 300);
@@ -39,17 +40,17 @@ public class VerificationServiceImpl implements VerificationService {
         emailVerification.setExpireAt(exp.toInstant());
         verificationRepository.save(emailVerification);
 
-        emailService.sendSimpleEmail(emailVerification.getEmail(), "Verification", "your verification code is "+emailVerification.getCode());
+        emailService.sendSimpleEmail(emailVerification.getEmail(), "Verification", "your verification code is " + emailVerification.getCode());
         return new VerificationPair(emailVerification.getId().toString(), emailVerification.getCode());
     }
 
     @Override
     public void verify(String key, String email, String code) throws InvalidOperation {
-        UUID keyId = new UUIDValidator().validate(key);
-        email = new EmailValidator().validate(email);
-        if (code==null)throw new ValidationError("code cannot be null !");
+        UUID keyId = uuidValidator.validate(key);
+        email = emailValidator.validate(email);
+        if (code == null) throw new ValidationError("code cannot be null !");
 
-        if(verificationRepository.deleteByIdAndEmailAndCodeAndExpireAtGreaterThan(keyId, email, code, Instant.now())==0){
+        if (verificationRepository.deleteByIdAndEmailAndCodeAndExpireAtGreaterThan(keyId, email, code, Instant.now()) == 0) {
             throw new InvalidOperation("verification fail !");
         }
     }

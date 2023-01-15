@@ -8,7 +8,9 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.model.auth.VerifyToken;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -51,55 +53,55 @@ class PasswordServiceTest {
     }
 
     @Test
-    void changePasswordOfWithIllegalArgument(){
+    void changePasswordOfWithIllegalArgument() {
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf("invalid_uid", "pa55ward", "pa55ward123"));
-        assertThrows(IllegalArgumentException.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "invalid_password"));
+        assertThrows(IllegalArgumentException.class, () -> passwordService.changePasswordOf("invalid_uid", "pa55ward", "pa55ward123"));
+        assertThrows(IllegalArgumentException.class, () -> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "invalid_password"));
     }
 
     @Test
-    void changePasswordOfWithInvalidOperation(){
+    void changePasswordOfWithInvalidOperation() {
         //test with incorrect password
-        assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "incorrect", "pa55ward"));
+        assertThrows(InvalidOperation.class, () -> passwordService.changePasswordOf(user.getId().toString(), "incorrect", "pa55ward"));
         //test if old password==new password
-        assertThrows(InvalidOperation.class, ()-> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
+        assertThrows(InvalidOperation.class, () -> passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward"));
     }
 
     @Test
-    void changePasswordOfWithDoesNotExist(){
+    void changePasswordOfWithDoesNotExist() {
         UUID id = UUID.randomUUID();
         while (userRepository.existsById(id))
             id = UUID.randomUUID();
         //test with a not exist user
         UUID finalId = id;
-        assertThrows(UserDoesNotExist.class, ()-> passwordService.changePasswordOf(finalId.toString(), "pa55ward", "pa55ward"));
+        assertThrows(UserDoesNotExist.class, () -> passwordService.changePasswordOf(finalId.toString(), "pa55ward", "pa55ward"));
     }
 
     @Test
-    void changePasswordOf(){
+    void changePasswordOf() {
         //test success
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             passwordService.changePasswordOf(user.getId().toString(), "pa55ward", "pa55ward123");
             assertTrue(passwordEncoder.matches("pa55ward123", userRepository.findById(user.getId()).get().getPassword()));
         });
     }
 
     @Test
-    void requestResetPasswordWithIllegalArgument(){
+    void requestResetPasswordWithIllegalArgument() {
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->passwordService.requestResetPasswordToken("invalid email"));
+        assertThrows(IllegalArgumentException.class, () -> passwordService.requestResetPasswordToken("invalid email"));
     }
 
     @Test
-    void requestResetPasswordWithDoesNotExist(){
+    void requestResetPasswordWithDoesNotExist() {
         //test a not exist user email
-        assertThrows(UserDoesNotExist.class, ()->passwordService.requestResetPasswordToken("not@email.com"));
+        assertThrows(UserDoesNotExist.class, () -> passwordService.requestResetPasswordToken("not@email.com"));
     }
 
     @Test
     void requestResetPassword() {
         //test success
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             assertEquals(user, passwordService.requestResetPasswordToken("test@email.com").getUser());
         });
     }
@@ -107,34 +109,34 @@ class PasswordServiceTest {
     @Test
     void resetPasswordWithIllegalArgument() {
         //test IllegalArgument
-        assertThrows(IllegalArgumentException.class, ()->passwordService.resetPassword("", "**-*/"));
+        assertThrows(IllegalArgumentException.class, () -> passwordService.resetPassword("", "**-*/"));
     }
 
     @Test
     void resetPasswordWithInvalidOperation() {
         user = userRepository.findById(user.getId()).get();
         //test an incorrect token
-        assertThrows(InvalidOperation.class, ()->passwordService.resetPassword("invalid token", "pa55ward"));
+        assertThrows(InvalidOperation.class, () -> passwordService.resetPassword("invalid token", "pa55ward"));
         //test a disabled user
-        VerifyToken token=new VerifyToken();
+        VerifyToken token = new VerifyToken();
         token.setToken("12345678");
         token.setUser(user);
         token.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(token);
         user.setActive(false);
         userRepository.save(user);
-        assertThrows(InvalidOperation.class, ()->passwordService.resetPassword(token.getToken(), "newPa55ward"));
+        assertThrows(InvalidOperation.class, () -> passwordService.resetPassword(token.getToken(), "newPa55ward"));
     }
 
     @Test
     void resetPassword() {
         //test success
-        VerifyToken token=new VerifyToken();
+        VerifyToken token = new VerifyToken();
         token.setToken("12345678");
         token.setUser(user);
         token.setExpireAt(Instant.now().plusSeconds(600));
         verifyTokenRepository.save(token);
-        assertDoesNotThrow(()->{
+        assertDoesNotThrow(() -> {
             passwordService.resetPassword(token.getToken(), "a12345678");
             assertTrue(passwordEncoder.matches("a12345678", userRepository.findById(user.getId()).get().getPassword()));
         });

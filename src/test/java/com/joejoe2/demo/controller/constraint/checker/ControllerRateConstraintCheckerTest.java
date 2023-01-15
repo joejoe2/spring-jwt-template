@@ -10,8 +10,6 @@ import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.utils.AuthUtil;
 import com.joejoe2.demo.utils.IPUtils;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +20,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -33,14 +32,14 @@ class ControllerRateConstraintCheckerTest {
     @Autowired
     UserRepository userRepository;
 
-    class TestMethod{
+    class TestMethod {
         @RateLimit(target = LimitTarget.USER, key = "limitByUser", limit = 3, period = 30)
-        public void limitByUser(){
+        public void limitByUser() {
 
         }
 
         @RateLimit(target = LimitTarget.IP, key = "limitByIp", limit = 3, period = 30)
-        public void limitByIp(){
+        public void limitByIp() {
 
         }
     }
@@ -48,14 +47,14 @@ class ControllerRateConstraintCheckerTest {
     TestMethod testMethod;
 
     @BeforeEach
-    void setup(){
+    void setup() {
         testMethod = new TestMethod();
     }
 
     @Test
     @Transactional
     void checkWithMethodLimitByUser() throws Exception {
-        User testUser=new User();
+        User testUser = new User();
         testUser.setUserName("testUser");
         testUser.setRole(Role.NORMAL);
         testUser.setEmail("testUser@email.com");
@@ -66,34 +65,34 @@ class ControllerRateConstraintCheckerTest {
         mockedStatic.when(AuthUtil::isAuthenticated).thenReturn(true);
         mockedStatic.when(AuthUtil::currentUserDetail).thenReturn(new UserDetail(testUser));
         //test for normal request
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
         //test when exceed rate limit
-        assertThrows(ControllerConstraintViolation.class,()->
+        assertThrows(ControllerConstraintViolation.class, () ->
                 rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
         //test token refill
         Thread.sleep(10000);
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByUser")));
         //clear mock login
         mockedStatic.close();
     }
 
     @Test
-    void checkWithMethodLimitByIp() throws Exception{
+    void checkWithMethodLimitByIp() throws Exception {
         //mock ip
         MockedStatic<IPUtils> mockedStatic = Mockito.mockStatic(IPUtils.class);
         mockedStatic.when(IPUtils::getRequestIP).thenReturn("127.0.0.1");
         //test for normal request
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
         //test when exceed rate limit
-        assertThrows(ControllerConstraintViolation.class,()->
+        assertThrows(ControllerConstraintViolation.class, () ->
                 rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
         //test token refill
         Thread.sleep(10000);
-        assertDoesNotThrow(()->rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
+        assertDoesNotThrow(() -> rateConstraintChecker.checkWithMethod(testMethod.getClass().getMethod("limitByIp")));
         //clear mock
         mockedStatic.close();
     }

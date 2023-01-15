@@ -19,21 +19,21 @@ public class UserDetail implements UserDetails {
     private List<GrantedAuthority> authorities;
 
     public UserDetail(User user) {
-        this.id=user.getId().toString();
+        this.id = user.getId().toString();
         this.username = user.getUserName();
         this.password = user.getPassword();
         this.isActive = user.isActive();
         this.role = user.getRole();
-        this.authorities = (List<GrantedAuthority>)mapRolesToAuthorities(Collections.singleton(user.getRole()));
+        this.authorities = (List<GrantedAuthority>) mapRolesToAuthorities(Collections.singleton(user.getRole()));
     }
 
     public UserDetail(String id, String username, boolean isActive, Role role, String currentAccessToken) {
-        this.id=id;
+        this.id = id;
         this.username = username;
         this.isActive = isActive;
         this.currentAccessToken = currentAccessToken;
         this.role = role;
-        this.authorities = (List<GrantedAuthority>)mapRolesToAuthorities(Collections.singleton(role));
+        this.authorities = (List<GrantedAuthority>) mapRolesToAuthorities(Collections.singleton(role));
     }
 
     @Override
@@ -49,19 +49,23 @@ public class UserDetail implements UserDetails {
         return Objects.hash(id, username, isActive, role, authorities);
     }
 
-    public String getId(){
+    public String getId() {
         return this.id;
     }
 
-    public boolean isActive(){ return this.isActive; }
+    public boolean isActive() {
+        return this.isActive;
+    }
 
-    public Role getRole(){ return this.role; }
+    public Role getRole() {
+        return this.role;
+    }
 
-    public String getCurrentAccessToken(){
+    public String getCurrentAccessToken() {
         return currentAccessToken;
     }
 
-    private Collection< ? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles){
+    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles) {
         return roles.stream().map(role -> new SimpleGrantedAuthority(role.toString())).collect(Collectors.toList());
     }
 
