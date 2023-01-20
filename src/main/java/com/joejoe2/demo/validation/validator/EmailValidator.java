@@ -1,10 +1,10 @@
-package com.joejoe2.demo.validation.servicelayer;
+package com.joejoe2.demo.validation.validator;
 
 import com.joejoe2.demo.exception.ValidationError;
 
 import java.util.regex.Pattern;
 
-public class EmailValidator extends Validator<String, String> {
+public class EmailValidator implements Validator<String, String> {
     //ref: https://www.baeldung.com/java-email-validation-regex
     public static final String REGEX = "^[a-zA-Z0-9_!#$%&'*+/=?`{|}~^.-]+@[a-zA-Z0-9.-]+$";
     private static final Pattern pattern = Pattern.compile(REGEX);

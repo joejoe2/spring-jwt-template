@@ -1,6 +1,6 @@
 package com.joejoe2.demo.validation.constraint;
 
-import com.joejoe2.demo.validation.custom.RoleValidator;
+import com.joejoe2.demo.validation.validator.RoleValidator;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

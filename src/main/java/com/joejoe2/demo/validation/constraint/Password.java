@@ -1,6 +1,6 @@
 package com.joejoe2.demo.validation.constraint;
 
-import com.joejoe2.demo.validation.servicelayer.PasswordValidator;
+import com.joejoe2.demo.validation.validator.PasswordValidator;
 
 import javax.validation.Constraint;
 import javax.validation.Payload;

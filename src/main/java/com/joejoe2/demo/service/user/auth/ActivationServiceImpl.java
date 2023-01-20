@@ -8,7 +8,7 @@ import com.joejoe2.demo.repository.jwt.AccessTokenRepository;
 import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.utils.AuthUtil;
-import com.joejoe2.demo.validation.servicelayer.UUIDValidator;
+import com.joejoe2.demo.validation.validator.UUIDValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;

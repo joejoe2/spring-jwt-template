@@ -1,10 +1,10 @@
-package com.joejoe2.demo.validation.servicelayer;
+package com.joejoe2.demo.validation.validator;
 
 import com.joejoe2.demo.exception.ValidationError;
 
 import java.util.UUID;
 
-public class UUIDValidator extends Validator<String, UUID> {
+public class UUIDValidator implements Validator<UUID, String> {
     @Override
     public UUID validate(String data) throws ValidationError {
         if (data == null) throw new ValidationError("uuid can not be null !");

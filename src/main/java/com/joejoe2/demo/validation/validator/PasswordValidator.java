@@ -1,10 +1,10 @@
-package com.joejoe2.demo.validation.servicelayer;
+package com.joejoe2.demo.validation.validator;
 
 import com.joejoe2.demo.exception.ValidationError;
 
 import java.util.regex.Pattern;
 
-public class PasswordValidator extends Validator<String, String> {
+public class PasswordValidator implements Validator<String, String> {
     public static final String REGEX = "[a-zA-Z0-9]+";
     public static final String NOT_MATCH_MSG = "password can only contain a-z, A-Z, and 0-9 !";
 

@@ -1,4 +1,4 @@
-package com.joejoe2.demo.validation.servicelayer;
+package com.joejoe2.demo.validation.validator;
 
 import com.joejoe2.demo.exception.ValidationError;
 import org.junit.jupiter.api.Test;
