@@ -43,4 +43,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/spring-jwt-template:${VERSION}
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/spring-jwt-template:$VERSION
