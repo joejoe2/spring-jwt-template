@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'src/**'
+      - './pom.xml'
+      - './Dockerfile'
 
 jobs:
   build:
