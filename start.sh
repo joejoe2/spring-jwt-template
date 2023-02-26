@@ -1,1 +1,1 @@
-java -jar ./web.jar
+java -jar ./jwt.jar
