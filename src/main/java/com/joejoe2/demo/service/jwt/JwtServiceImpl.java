@@ -16,6 +16,8 @@ import com.joejoe2.demo.service.redis.RedisService;
 import com.joejoe2.demo.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
 import org.jobrunr.jobs.annotations.Job;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +38,7 @@ public class JwtServiceImpl implements JwtService {
     private RefreshTokenRepository refreshTokenRepository;
     @Autowired
     private RedisService redisService;
+    private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
     private AccessToken createAccessToken(User user) {
         AccessToken accessToken = new AccessToken(jwtConfig, user);
@@ -138,6 +141,8 @@ public class JwtServiceImpl implements JwtService {
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredTokens() {
+        logger.info("delete expired tokens");
+        //access token will be cascade delete
         refreshTokenRepository.deleteByExpireAtLessThan(Instant.now());
     }
 }

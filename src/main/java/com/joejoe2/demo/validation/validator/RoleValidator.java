@@ -22,7 +22,7 @@ public class RoleValidator implements ConstraintValidator<Role, String>, Validat
         try {
             return com.joejoe2.demo.model.auth.Role.valueOf(data);
         } catch (IllegalArgumentException e) {
-            throw new ValidationError("role "+data+" is not exist !");
+            throw new ValidationError("role " + data + " is not exist !");
         }
     }
 }
