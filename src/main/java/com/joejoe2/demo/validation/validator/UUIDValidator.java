@@ -15,4 +15,13 @@ public class UUIDValidator implements Validator<UUID, String> {
             throw new ValidationError(e.getMessage());
         }
     }
+
+    private static final UUIDValidator instance = new UUIDValidator();
+
+    public static UUIDValidator getInstance() {
+        return instance;
+    }
+
+    private UUIDValidator() {
+    }
 }

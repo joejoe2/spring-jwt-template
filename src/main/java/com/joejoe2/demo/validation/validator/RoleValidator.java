@@ -25,4 +25,13 @@ public class RoleValidator implements ConstraintValidator<Role, String>, Validat
             throw new ValidationError("role " + data + " is not exist !");
         }
     }
+
+    private static final RoleValidator instance = new RoleValidator();
+
+    public static RoleValidator getInstance() {
+        return instance;
+    }
+
+    private RoleValidator() {
+    }
 }

@@ -22,4 +22,13 @@ public class UserNameValidator implements Validator<String, String> {
 
         return username;
     }
+
+    private static final UserNameValidator instance = new UserNameValidator();
+
+    public static UserNameValidator getInstance() {
+        return instance;
+    }
+
+    private UserNameValidator() {
+    }
 }

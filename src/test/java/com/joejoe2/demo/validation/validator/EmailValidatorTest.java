@@ -10,7 +10,7 @@ class EmailValidatorTest {
 
     @Test
     void validate() {
-        EmailValidator emailValidator = new EmailValidator();
+        EmailValidator emailValidator = EmailValidator.getInstance();
 
         assertThrows(ValidationError.class, () -> emailValidator.validate(null));
         assertThrows(ValidationError.class, () -> emailValidator.validate(""));

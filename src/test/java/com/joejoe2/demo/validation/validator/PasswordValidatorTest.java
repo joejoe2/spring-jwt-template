@@ -10,7 +10,7 @@ class PasswordValidatorTest {
 
     @Test
     void validate() {
-        PasswordValidator passwordValidator = new PasswordValidator();
+        PasswordValidator passwordValidator = PasswordValidator.getInstance();
 
         assertThrows(ValidationError.class, () -> passwordValidator.validate(null));
         assertThrows(ValidationError.class, () -> passwordValidator.validate(""));

@@ -23,4 +23,13 @@ public class PasswordValidator implements Validator<String, String> {
 
         return password;
     }
+
+    private static final PasswordValidator instance = new PasswordValidator();
+
+    public static PasswordValidator getInstance() {
+        return instance;
+    }
+
+    private PasswordValidator() {
+    }
 }

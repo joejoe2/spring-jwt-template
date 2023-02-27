@@ -26,7 +26,7 @@ public class ActivationServiceImpl implements ActivationService {
     JwtService jwtService;
     @Autowired
     AccessTokenRepository accessTokenRepository;
-    UUIDValidator uuidValidator = new UUIDValidator();
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Override

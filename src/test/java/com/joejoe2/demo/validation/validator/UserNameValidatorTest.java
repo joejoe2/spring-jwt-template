@@ -10,7 +10,7 @@ class UserNameValidatorTest {
 
     @Test
     void validate() {
-        UserNameValidator userNameValidator = new UserNameValidator();
+        UserNameValidator userNameValidator = UserNameValidator.getInstance();
 
         assertThrows(ValidationError.class, () -> userNameValidator.validate(null));
         assertThrows(ValidationError.class, () -> userNameValidator.validate(""));

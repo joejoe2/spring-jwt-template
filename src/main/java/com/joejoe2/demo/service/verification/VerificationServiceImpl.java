@@ -28,8 +28,8 @@ public class VerificationServiceImpl implements VerificationService {
     VerifyTokenRepository verifyTokenRepository;
     @Autowired
     EmailService emailService;
-    EmailValidator emailValidator = new EmailValidator();
-    UUIDValidator uuidValidator = new UUIDValidator();
+    EmailValidator emailValidator = EmailValidator.getInstance();
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
     private static final Logger logger = LoggerFactory.getLogger(VerificationService.class);
 
     @Override

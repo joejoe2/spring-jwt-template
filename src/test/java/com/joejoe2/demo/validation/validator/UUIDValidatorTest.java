@@ -12,7 +12,7 @@ class UUIDValidatorTest {
 
     @Test
     void validate() {
-        UUIDValidator uuidValidator = new UUIDValidator();
+        UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
         assertThrows(ValidationError.class, () -> uuidValidator.validate(null));
         assertThrows(ValidationError.class, () -> uuidValidator.validate(""));

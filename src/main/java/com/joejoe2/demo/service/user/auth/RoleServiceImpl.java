@@ -26,7 +26,7 @@ public class RoleServiceImpl implements RoleService {
     JwtService jwtService;
     @Autowired
     AccessTokenRepository accessTokenRepository;
-    UUIDValidator uuidValidator = new UUIDValidator();
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)

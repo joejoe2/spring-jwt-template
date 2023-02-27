@@ -38,9 +38,9 @@ public class PasswordServiceImpl implements PasswordService {
     AccessTokenRepository accessTokenRepository;
     @Autowired
     VerifyTokenRepository verifyTokenRepository;
-    EmailValidator emailValidator = new EmailValidator();
-    PasswordValidator passwordValidator = new PasswordValidator();
-    UUIDValidator uuidValidator = new UUIDValidator();
+    EmailValidator emailValidator = EmailValidator.getInstance();
+    PasswordValidator passwordValidator = PasswordValidator.getInstance();
+    UUIDValidator uuidValidator = UUIDValidator.getInstance();
 
     @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
     @Transactional(rollbackFor = Exception.class)

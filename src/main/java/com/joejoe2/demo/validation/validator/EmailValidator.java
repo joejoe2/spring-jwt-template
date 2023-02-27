@@ -22,4 +22,13 @@ public class EmailValidator implements Validator<String, String> {
 
         return email;
     }
+
+    private static final EmailValidator instance = new EmailValidator();
+
+    public static EmailValidator getInstance() {
+        return instance;
+    }
+
+    private EmailValidator() {
+    }
 }

@@ -23,9 +23,9 @@ public class RegistrationServiceImpl implements RegistrationService {
     PasswordEncoder passwordEncoder;
     @Autowired
     VerificationService verificationService;
-    EmailValidator emailValidator = new EmailValidator();
-    PasswordValidator passwordValidator = new PasswordValidator();
-    UserNameValidator userNameValidator = new UserNameValidator();
+    EmailValidator emailValidator = EmailValidator.getInstance();
+    PasswordValidator passwordValidator = PasswordValidator.getInstance();
+    UserNameValidator userNameValidator = UserNameValidator.getInstance();
 
     @Override
     public User createUser(String username, String password, String email, Role role) throws AlreadyExist {
