@@ -15,7 +15,6 @@ import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.redis.RedisService;
 import com.joejoe2.demo.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
-import org.jobrunr.jobs.annotations.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,7 +136,6 @@ public class JwtServiceImpl implements JwtService {
         return redisService.has("revoked_access_token:{" + accessPlainToken + "}");
     }
 
-    @Job(name = "delete all expired refresh tokens and related access tokens")
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredTokens() {

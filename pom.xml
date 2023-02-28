@@ -158,6 +158,7 @@
 						<exclude>**/init/**/*</exclude>
 						<exclude>**/constraint/**/*</exclude>
 						<exclude>**/interceptor/**/*</exclude>
+						<exclude>**/job/**/*</exclude>
 						<exclude>**/doc/**/*</exclude>
 					</excludes>
 				</configuration>

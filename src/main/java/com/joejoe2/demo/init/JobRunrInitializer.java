@@ -1,8 +1,9 @@
 package com.joejoe2.demo.init;
 
-import com.joejoe2.demo.service.jwt.JwtService;
-import com.joejoe2.demo.service.verification.VerificationService;
-import org.jobrunr.scheduling.JobScheduler;
+import com.joejoe2.demo.job.request.CleanUpJWTTokensJob;
+import com.joejoe2.demo.job.request.CleanUpVerificationsJob;
+import org.jobrunr.scheduling.BackgroundJobRequest;
+import org.jobrunr.storage.StorageProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.env.Environment;
@@ -15,11 +16,7 @@ public class JobRunrInitializer implements CommandLineRunner {
     @Autowired
     private Environment env;
     @Autowired
-    private JobScheduler jobScheduler;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private VerificationService verificationService;
+    StorageProvider storageProvider;
 
     @Override
     public void run(String... args) throws Exception {
@@ -27,9 +24,11 @@ public class JobRunrInitializer implements CommandLineRunner {
     }
 
     private void createRecurrentJob(Environment env) {
-        if (!env.getProperty("init.recurrent-job", Boolean.class, true)) return;
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> jwtService.deleteExpiredTokens());
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> verificationService.deleteExpiredVerificationCodes());
-        jobScheduler.scheduleRecurrently(Duration.ofMinutes(30), () -> verificationService.deleteExpiredVerifyTokens());
+        if (!env.getProperty("init.recurrent-job", Boolean.class, true)) {
+            storageProvider.getRecurringJobs().forEach((recurringJob -> BackgroundJobRequest.delete(recurringJob.getId())));
+            return;
+        }
+        BackgroundJobRequest.scheduleRecurrently("CleanUpJWTTokens", Duration.ofSeconds(1800), new CleanUpJWTTokensJob());
+        BackgroundJobRequest.scheduleRecurrently("CleanUpVerifications", Duration.ofSeconds(1800), new CleanUpVerificationsJob());
     }
 }

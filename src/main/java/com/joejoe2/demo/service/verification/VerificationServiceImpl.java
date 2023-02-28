@@ -9,7 +9,6 @@ import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
 import com.joejoe2.demo.service.email.EmailService;
 import com.joejoe2.demo.validation.validator.EmailValidator;
 import com.joejoe2.demo.validation.validator.UUIDValidator;
-import org.jobrunr.jobs.annotations.Job;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,6 @@ public class VerificationServiceImpl implements VerificationService {
         }
     }
 
-    @Job(name = "delete all expired verification codes")
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredVerificationCodes() {
@@ -66,7 +64,6 @@ public class VerificationServiceImpl implements VerificationService {
         verificationRepository.deleteByExpireAtLessThan(Instant.now());
     }
 
-    @Job(name = "delete all expired verify tokens")
     @Transactional // jobrunr error
     @Override
     public void deleteExpiredVerifyTokens() {
