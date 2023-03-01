@@ -12,8 +12,8 @@ import javax.validation.constraints.NotEmpty;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshRequest {
-    @Schema(description = "refresh token")
-    @NotEmpty(message = "refresh token cannot be empty !")
+public class IntrospectionRequest {
+    @Schema(description = "access token")
+    @NotEmpty(message = "access token cannot be empty !")
     private String token;
 }

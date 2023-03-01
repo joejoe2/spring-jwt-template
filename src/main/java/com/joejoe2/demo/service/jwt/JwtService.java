@@ -2,6 +2,7 @@ package com.joejoe2.demo.service.jwt;
 
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.data.auth.request.AccessTokenSpec;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -39,6 +40,15 @@ public interface JwtService {
      * @throws InvalidTokenException if the access token is invalid
      */
     UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException;
+
+    /**
+     * decode and check access token
+     *
+     * @param token access token in plaintext
+     * @return decoded access token
+     * @throws InvalidTokenException if the access token is invalid
+     */
+    AccessTokenSpec introspect(String token) throws InvalidTokenException;
 
     /**
      * delete access token in db then add it to the redis blacklist

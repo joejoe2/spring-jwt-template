@@ -158,7 +158,7 @@ public class AuthController {
     @RequestMapping(path = "/api/auth/refresh", method = RequestMethod.POST)
     public ResponseEntity refresh(@Valid @RequestBody RefreshRequest request) {
         try {
-            TokenPair tokenPair = jwtService.refreshTokens(request.getRefresh_token());
+            TokenPair tokenPair = jwtService.refreshTokens(request.getToken());
             return ResponseEntity.ok(new TokenResponse(tokenPair));
         } catch (InvalidTokenException | InvalidOperation e) {
             return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()),
@@ -211,7 +211,6 @@ public class AuthController {
     })
     @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
     public ResponseEntity logout() {
-        Map<String, String> response = new HashMap<>();
         try {
             jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessToken());
             return ResponseEntity.ok().build();
@@ -220,7 +219,29 @@ public class AuthController {
             //this will happen if the access token is deleted/revoked by another request,
             //or even the access token go expired between JwtAuthenticationFilter and jwtService,
             //so we just return 401 to represent that the access token is invalid
-            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @Operation(summary = "decode and check access token",
+            description = "this is allowed to anyone")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "400",
+                    description = "invalid access token",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessageResponse.class))),
+            @ApiResponse(
+                    responseCode = "200", description = "decoded access token",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = AccessTokenSpec.class)))
+    })
+    @RequestMapping(path = "/api/auth/introspect", method = RequestMethod.POST)
+    public ResponseEntity introspect(@Valid @RequestBody IntrospectionRequest request) {
+        try {
+            return new ResponseEntity<>(jwtService.introspect(request.getToken()), HttpStatus.OK);
+        } catch (InvalidTokenException e) {
+            return new ResponseEntity<>(new ErrorMessageResponse(e.getMessage()),
+                    HttpStatus.BAD_REQUEST);
         }
     }
 

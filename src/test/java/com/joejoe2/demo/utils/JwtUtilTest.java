@@ -78,7 +78,12 @@ class JwtUtilTest {
         claims.setExpiration(exp.getTime());
         token = Jwts.builder().setClaims(claims).signWith(jwtConfig.getPrivateKey()).compact();
         String finalToken1 = token;
-        assertDoesNotThrow(() -> JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken1));
+        assertDoesNotThrow(() -> {
+            Map<String, Object> parsed = JwtUtil.parseToken(jwtConfig.getPublicKey(), finalToken1);
+            assertEquals(claims.get("content"), parsed.get("content"));
+            assertEquals(claims.getExpiration().toInstant().getEpochSecond(), ((Number) parsed.get("exp")).longValue());
+            assertEquals(claims.getIssuer(), parsed.get("iss"));
+        });
 
         //invalid token
         assertThrows(JwtException.class, () -> JwtUtil.parseToken(jwtConfig.getPublicKey(), "invalid_token"));

@@ -4,6 +4,7 @@ import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.data.auth.request.AccessTokenSpec;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -172,5 +173,21 @@ class JwtServiceTest {
             jwtService.revokeAccessToken(accessToken.getToken());
             assertTrue(jwtService.isAccessTokenInBlackList(accessToken.getToken()));
         });
+    }
+
+    @Test
+    void introspect() throws Exception {
+        TokenPair tokenPair = jwtService.issueTokens(new UserDetail(user));
+        AccessToken accessToken = tokenPair.getAccessToken();
+        AccessTokenSpec spec = jwtService.introspect(accessToken.getToken());
+
+        assertEquals(spec.getId(), user.getId().toString());
+        assertEquals(spec.getUsername(), user.getUserName());
+        assertEquals(spec.getIss(), jwtConfig.getIssuer());
+        assertEquals(spec.getJti(), accessToken.getId().toString());
+        assertEquals(spec.getType(), "access_token");
+        assertEquals(spec.getExp(), accessToken.getExpireAt().getEpochSecond());
+        assertEquals(Role.valueOf(spec.getRole()), user.getRole());
+        assertEquals(spec.getIsActive(), user.isActive());
     }
 }

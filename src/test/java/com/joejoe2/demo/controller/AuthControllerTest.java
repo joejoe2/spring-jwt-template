@@ -33,10 +33,12 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.Cookie;
+import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.UUID;
@@ -195,7 +197,7 @@ class AuthControllerTest {
     @Transactional
     void refresh() throws Exception {
         //test success
-        RefreshRequest request = RefreshRequest.builder().refresh_token("refresh_token").build();
+        RefreshRequest request = RefreshRequest.builder().token("refresh_token").build();
         Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken())).when(jwtService).refreshTokens("refresh_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -209,15 +211,15 @@ class AuthControllerTest {
     @Test
     void refreshWithError() throws Exception {
         //test validation
-        RefreshRequest request = RefreshRequest.builder().refresh_token("").build();
+        RefreshRequest request = RefreshRequest.builder().token("").build();
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request))
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.errors.refresh_token").exists())
+                .andExpect(jsonPath("$.errors.token").exists())
                 .andExpect(status().isBadRequest());
         //test InvalidTokenException
-        request = RefreshRequest.builder().refresh_token("invalid_token").build();
+        request = RefreshRequest.builder().token("invalid_token").build();
         Mockito.doThrow(new InvalidTokenException("")).when(jwtService).refreshTokens("invalid_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -226,7 +228,7 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(status().isForbidden());
         //test InvalidOperation
-        request = RefreshRequest.builder().refresh_token("inactive_token").build();
+        request = RefreshRequest.builder().token("inactive_token").build();
         Mockito.doThrow(new InvalidOperation("")).when(jwtService).refreshTokens("inactive_token");
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -280,6 +282,31 @@ class AuthControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/logout")
                         .header(HttpHeaders.AUTHORIZATION, "invalid token"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void introspect() throws Exception {
+        IntrospectionRequest request = IntrospectionRequest.builder().token("access_token").build();
+        Mockito.doReturn(new AccessTokenSpec()).when(jwtService).introspect(request.getToken());
+        //test success
+        ResultActions res = mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/introspect")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+        for (Field field : AccessTokenSpec.class.getDeclaredFields()) {
+            res.andExpect(jsonPath("$." + field.getName()).hasJsonPath());
+        }
+    }
+
+    @Test
+    void introspectInvalidToken() throws Exception {
+        IntrospectionRequest request = IntrospectionRequest.builder().token("invalid token").build();
+        Mockito.doThrow(new InvalidTokenException("")).when(jwtService).introspect("invalid token");
+        //test success
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/introspect")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

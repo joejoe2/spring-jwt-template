@@ -3,6 +3,7 @@ package com.joejoe2.demo.service.jwt;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.data.auth.request.AccessTokenSpec;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -21,9 +22,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class JwtServiceImpl implements JwtService {
@@ -101,6 +104,24 @@ public class JwtServiceImpl implements JwtService {
     @Override
     public UserDetail getUserDetailFromAccessToken(String token) throws InvalidTokenException {
         return JwtUtil.extractUserDetailFromAccessToken(jwtConfig.getPublicKey(), token);
+    }
+
+    @Override
+    public AccessTokenSpec introspect(String token) throws InvalidTokenException {
+        if (isAccessTokenInBlackList(token))
+            throw new InvalidTokenException("invalid token !");
+
+        Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), token);
+        AccessTokenSpec spec = new AccessTokenSpec();
+        for (Field field : AccessTokenSpec.class.getDeclaredFields()) {
+            try {
+                field.setAccessible(true);
+                field.set(spec, data.get(field.getName()));
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return spec;
     }
 
     @Override

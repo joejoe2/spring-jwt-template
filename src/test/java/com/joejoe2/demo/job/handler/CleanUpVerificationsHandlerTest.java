@@ -12,13 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.time.Duration;
+import java.util.UUID;
 
 @SpringBootTest
 @ActiveProfiles("test")
 @ExtendWith(TestContext.class)
 class CleanUpVerificationsHandlerTest {
-    String id = "CleanUpVerificationsHandlerTest";
+    UUID id = UUID.randomUUID();
     @SpyBean
     VerificationService verificationService;
     @SpyBean
@@ -31,7 +31,7 @@ class CleanUpVerificationsHandlerTest {
 
     @Test
     void run() throws Exception {
-        BackgroundJobRequest.scheduleRecurrently(id, Duration.ofSeconds(5), new CleanUpVerificationsJob());
+        BackgroundJobRequest.enqueue(id, new CleanUpVerificationsJob());
         Thread.sleep(20000);
         Mockito.verify(handler, Mockito.atLeastOnce()).run(Mockito.any());
         Mockito.verify(verificationService, Mockito.atLeastOnce()).deleteExpiredVerificationCodes();
