@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID> {
-    void deleteByExpireAtLessThan(Instant dateTime);
+    void deleteAllByExpireAtLessThan(Instant dateTime);
 
     Optional<RefreshToken> getByTokenAndExpireAtGreaterThan(String token, Instant dateTime);
 }

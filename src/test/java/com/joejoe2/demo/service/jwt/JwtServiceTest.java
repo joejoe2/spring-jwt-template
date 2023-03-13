@@ -190,4 +190,19 @@ class JwtServiceTest {
         assertEquals(Role.valueOf(spec.getRole()), user.getRole());
         assertEquals(spec.getIsActive(), user.isActive());
     }
+
+    @Test
+    void deleteExpiredTokens() {
+        AccessToken accessToken = new AccessToken();
+        accessToken.setToken("token");
+        accessToken.setUser(user);
+        accessToken.setExpireAt(Instant.now());
+        RefreshToken refreshToken = new RefreshToken(jwtConfig, accessToken);
+        refreshToken.setExpireAt(Instant.now());
+        refreshTokenRepository.save(refreshToken);
+        //test delete
+        jwtService.deleteExpiredTokens();
+        assertFalse(refreshTokenRepository.findById(refreshToken.getId()).isPresent());
+        assertFalse(accessTokenRepository.findById(accessToken.getId()).isPresent());
+    }
 }

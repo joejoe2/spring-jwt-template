@@ -2,6 +2,7 @@ package com.joejoe2.demo.service.user.auth;
 
 import com.joejoe2.demo.config.LoginConfig;
 import com.joejoe2.demo.data.auth.UserDetail;
+import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.LoginAttempt;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
@@ -35,18 +36,19 @@ public class LoginServiceImpl implements LoginService {
                 .orElseThrow(() -> new UsernameNotFoundException("Username is not exist !"));
 
         LoginAttempt loginAttempt = user.getLoginAttempt();
-        if (!loginAttempt.canAttempt(loginConfig))
-            throw new AuthenticationServiceException("You have try too many times, please try again later");
-
         try {
-            UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
-            loginAttempt.attemptSuccess(loginConfig);
-            userRepository.save(user);
-            return userDetail;
-        } catch (BadCredentialsException e) {
-            loginAttempt.attemptFail(loginConfig);
-            userRepository.save(user);
-            throw e;
+            try {
+                UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
+                loginAttempt.attempt(loginConfig, true);
+                userRepository.save(user);
+                return userDetail;
+            } catch (BadCredentialsException e) {
+                loginAttempt.attempt(loginConfig, false);
+                userRepository.save(user);
+                throw e;
+            }
+        } catch (InvalidOperation ex) {
+            throw new AuthenticationServiceException("You have try too many times, please try again later");
         }
     }
 }

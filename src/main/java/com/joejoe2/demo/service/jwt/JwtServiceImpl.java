@@ -157,11 +157,11 @@ public class JwtServiceImpl implements JwtService {
         return redisService.has("revoked_access_token:{" + accessPlainToken + "}");
     }
 
-    @Transactional // jobrunr error
+    @Transactional
     @Override
     public void deleteExpiredTokens() {
         logger.info("delete expired tokens");
         //access token will be cascade delete
-        refreshTokenRepository.deleteByExpireAtLessThan(Instant.now());
+        refreshTokenRepository.deleteAllByExpireAtLessThan(Instant.now());
     }
 }

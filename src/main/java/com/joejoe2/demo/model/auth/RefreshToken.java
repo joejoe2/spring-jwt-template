@@ -30,8 +30,8 @@ public class RefreshToken {
     @Column(updatable = false, nullable = false)
     private Instant expireAt;
 
-    @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY, optional = false)
-    //if delete this => also delete accessToken
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    // cascade type will not applied in native/jpql query !!!
     @OnDelete(action = OnDeleteAction.CASCADE) //if delete accessToken => also delete this
     private AccessToken accessToken;
 
