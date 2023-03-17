@@ -42,16 +42,19 @@ public class JwtServiceImpl implements JwtService {
     private RedisService redisService;
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
 
-    private AccessToken createAccessToken(User user) {
-        AccessToken accessToken = new AccessToken(jwtConfig, user);
-        accessTokenRepository.save(accessToken);
-        return accessToken;
+    private AccessToken generateAccessToken(User user) {
+        return new AccessToken(jwtConfig, user);
     }
 
-    private RefreshToken createRefreshToken(AccessToken accessToken) {
+    private RefreshToken generateRefreshToken(AccessToken accessToken) {
+        return new RefreshToken(jwtConfig, accessToken);
+    }
+
+    private TokenPair createTokens(User user) {
+        AccessToken accessToken = new AccessToken(jwtConfig, user);
         RefreshToken refreshToken = new RefreshToken(jwtConfig, accessToken);
         refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        return new TokenPair(accessToken, accessToken.getRefreshToken());
     }
 
 
@@ -60,14 +63,14 @@ public class JwtServiceImpl implements JwtService {
     public TokenPair issueTokens(UserDetail userDetail) throws UserDoesNotExist {
         User user = userRepository.getByUserName(userDetail.getUsername())
                 .orElseThrow(() -> new UserDoesNotExist("user is not exist !"));
-        AccessToken accessToken = createAccessToken(user);
-        RefreshToken refreshToken = createRefreshToken(accessToken);
+
+        TokenPair tokenPair = createTokens(user);
 
         //prevent concurrent user role/password/active change
         user.setAuthAt(Instant.now());
         userRepository.save(user);
 
-        return new TokenPair(accessToken, refreshToken);
+        return tokenPair;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -91,8 +94,8 @@ public class JwtServiceImpl implements JwtService {
         revokeAccessToken(refreshToken.getAccessToken());
 
         //issue new tokens
-        AccessToken accessToken = createAccessToken(user);
-        RefreshToken newRefreshToken = createRefreshToken(accessToken);
+        AccessToken accessToken = generateAccessToken(user);
+        RefreshToken newRefreshToken = generateRefreshToken(accessToken);
 
         //prevent concurrent user role/password/active change
         user.setAuthAt(Instant.now());

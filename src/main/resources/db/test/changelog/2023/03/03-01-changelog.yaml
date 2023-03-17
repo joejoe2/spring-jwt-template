@@ -1,0 +1,60 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1679020702810-1
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addColumn:
+            columns:
+              - column:
+                  name: refresh_token_id
+                  type: UUID
+            tableName: access_token
+  - changeSet:
+      id: 1679020702810-2
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - sql:
+            dbms: postgresql
+            endDelimiter: ';'
+            splitStatements: true
+            sql: |
+              UPDATE access_token SET refresh_token_id = refresh_token.id FROM refresh_token WHERE refresh_token.access_token_id = access_token_id;
+  - changeSet:
+      id: 1679020702810-3
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addNotNullConstraint:
+            columnName: refresh_token_id
+            tableName: access_token
+  - changeSet:
+      id: 1679020702810-4
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - addForeignKeyConstraint:
+            baseColumnNames: refresh_token_id
+            baseTableName: access_token
+            constraintName: FK_ACCESSTOKEN_ON_REFRESHTOKEN
+            onDelete: CASCADE
+            referencedColumnNames: id
+            referencedTableName: refresh_token
+  - changeSet:
+      id: 1679020702810-5
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: refresh_token
+            constraintName: fk_refreshtoken_on_accesstoken
+  - changeSet:
+      id: 1679020702810-6
+      author: joejoe2 (generated)
+      objectQuotingStrategy: QUOTE_ONLY_RESERVED_WORDS
+      changes:
+        - dropColumn:
+            columnName: access_token_id
+            tableName: refresh_token
+

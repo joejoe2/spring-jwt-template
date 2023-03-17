@@ -168,7 +168,9 @@ class JwtServiceTest {
         accessToken.setToken("test_token");
         accessToken.setUser(user);
         accessToken.setExpireAt(Instant.now().plusSeconds(900));
-        accessTokenRepository.save(accessToken);
+        RefreshToken refreshToken = new RefreshToken(jwtConfig, accessToken);
+        refreshToken.setExpireAt(Instant.now());
+        refreshTokenRepository.save(refreshToken);
         assertDoesNotThrow(() -> {
             jwtService.revokeAccessToken(accessToken.getToken());
             assertTrue(jwtService.isAccessTokenInBlackList(accessToken.getToken()));

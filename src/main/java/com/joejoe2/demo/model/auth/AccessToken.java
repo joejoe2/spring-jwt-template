@@ -8,12 +8,10 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.*;
 import java.time.Instant;
 import java.util.Calendar;
+import java.util.Objects;
 import java.util.UUID;
 
 @Data
@@ -33,6 +31,10 @@ public class AccessToken {
     @Column(updatable = false, nullable = false)
     private Instant expireAt;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = false)
+    @OnDelete(action = OnDeleteAction.CASCADE) //if delete refreshToken => also delete this
+    RefreshToken refreshToken;
+
     @ManyToOne(optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
@@ -43,5 +45,18 @@ public class AccessToken {
         this.token = JwtUtil.generateAccessToken(jwtConfig.getPrivateKey(), getId().toString(), jwtConfig.getIssuer(), user, exp);
         this.expireAt = exp.toInstant();
         this.user = user;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AccessToken that = (AccessToken) o;
+        return id.equals(that.id) && token.equals(that.token) && expireAt.equals(that.expireAt);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, token, expireAt);
     }
 }
