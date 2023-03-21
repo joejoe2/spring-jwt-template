@@ -17,39 +17,40 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    PasswordEncoder passwordEncoder;
-    @Autowired
-    VerificationService verificationService;
-    EmailValidator emailValidator = EmailValidator.getInstance();
-    PasswordValidator passwordValidator = PasswordValidator.getInstance();
-    UserNameValidator userNameValidator = UserNameValidator.getInstance();
+  @Autowired UserRepository userRepository;
+  @Autowired PasswordEncoder passwordEncoder;
+  @Autowired VerificationService verificationService;
+  EmailValidator emailValidator = EmailValidator.getInstance();
+  PasswordValidator passwordValidator = PasswordValidator.getInstance();
+  UserNameValidator userNameValidator = UserNameValidator.getInstance();
 
-    @Override
-    public User createUser(String username, String password, String email, Role role) throws AlreadyExist {
-        username = userNameValidator.validate(username);
-        password = passwordValidator.validate(password);
-        email = emailValidator.validate(email);
+  @Override
+  public User createUser(String username, String password, String email, Role role)
+      throws AlreadyExist {
+    username = userNameValidator.validate(username);
+    password = passwordValidator.validate(password);
+    email = emailValidator.validate(email);
 
-        if (userRepository.getByUserName(username).isPresent() || userRepository.getByEmail(email).isPresent())
-            throw new AlreadyExist("username or email is already taken !");
+    if (userRepository.getByUserName(username).isPresent()
+        || userRepository.getByEmail(email).isPresent())
+      throw new AlreadyExist("username or email is already taken !");
 
-        User user = new User();
-        user.setUserName(username);
-        user.setPassword(passwordEncoder.encode(password));
-        user.setEmail(email);
-        user.setRole(role);
-        userRepository.save(user);
+    User user = new User();
+    user.setUserName(username);
+    user.setPassword(passwordEncoder.encode(password));
+    user.setEmail(email);
+    user.setRole(role);
+    userRepository.save(user);
 
-        return user;
-    }
+    return user;
+  }
 
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public User registerUser(String username, String password, String email, VerificationPair verificationPair) throws AlreadyExist, InvalidOperation {
-        verificationService.verify(verificationPair.getKey(), email, verificationPair.getCode());
-        return createUser(username, password, email, Role.NORMAL);
-    }
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public User registerUser(
+      String username, String password, String email, VerificationPair verificationPair)
+      throws AlreadyExist, InvalidOperation {
+    verificationService.verify(verificationPair.getKey(), email, verificationPair.getCode());
+    return createUser(username, password, email, Role.NORMAL);
+  }
 }

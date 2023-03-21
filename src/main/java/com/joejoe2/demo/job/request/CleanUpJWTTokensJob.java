@@ -6,8 +6,8 @@ import org.jobrunr.jobs.lambdas.JobRequest;
 
 @Data
 public class CleanUpJWTTokensJob implements JobRequest {
-    @Override
-    public Class<CleanUpJWTTokensHandler> getJobRequestHandler() {
-        return CleanUpJWTTokensHandler.class;
-    }
+  @Override
+  public Class<CleanUpJWTTokensHandler> getJobRequestHandler() {
+    return CleanUpJWTTokensHandler.class;
+  }
 }

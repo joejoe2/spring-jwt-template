@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ForgetPasswordRequest {
-    @Schema(description = "email of the user")
-    @Email
-    private String email;
+  @Schema(description = "email of the user")
+  @Email
+  private String email;
 }

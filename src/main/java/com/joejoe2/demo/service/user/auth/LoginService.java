@@ -4,5 +4,5 @@ import com.joejoe2.demo.data.auth.UserDetail;
 import org.springframework.security.core.AuthenticationException;
 
 public interface LoginService {
-    UserDetail login(String username, String password) throws AuthenticationException;
+  UserDetail login(String username, String password) throws AuthenticationException;
 }

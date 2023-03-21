@@ -1,5 +1,7 @@
 package com.joejoe2.demo.utils;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.model.auth.Role;
 import com.joejoe2.demo.model.auth.User;
@@ -16,52 +18,54 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @SpringBootTest
 @ActiveProfiles("test")
 @ExtendWith(TestContext.class)
 class AuthUtilTest {
-    @Autowired
-    AuthenticationManager authenticationManager;
+  @Autowired AuthenticationManager authenticationManager;
 
-    @Autowired
-    UserRepository userRepository;
+  @Autowired UserRepository userRepository;
 
-    User user;
+  User user;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        user = new User();
-        user.setUserName("test");
-        user.setPassword(new BCryptPasswordEncoder().encode("pa55ward"));
-        user.setEmail("test@email.com");
-        user.setRole(Role.NORMAL);
-        userRepository.save(user);
-    }
+  @BeforeEach
+  void setUp() throws Exception {
+    user = new User();
+    user.setUserName("test");
+    user.setPassword(new BCryptPasswordEncoder().encode("pa55ward"));
+    user.setEmail("test@email.com");
+    user.setRole(Role.NORMAL);
+    userRepository.save(user);
+  }
 
-    @AfterEach
-    void tearDown() {
-        userRepository.deleteById(user.getId());
-    }
+  @AfterEach
+  void tearDown() {
+    userRepository.deleteById(user.getId());
+  }
 
-    @Test
-    @Transactional
-    void authenticate() {
-        //test a not exist username
-        assertThrows(AuthenticationException.class, () -> AuthUtil.authenticate(authenticationManager, "not exist", "pa55ward"));
-        assertFalse(() -> AuthUtil.isAuthenticated());
-        assertThrows(AuthenticationException.class, () -> AuthUtil.currentUserDetail());
-        //test with incorrect password
-        assertThrows(AuthenticationException.class, () -> AuthUtil.authenticate(authenticationManager, "not exist", "12345678"));
-        assertFalse(() -> AuthUtil.isAuthenticated());
-        assertThrows(AuthenticationException.class, () -> AuthUtil.currentUserDetail());
-        //test with correct username and password
-        AuthUtil.authenticate(authenticationManager, "test", "pa55ward");
-        assertTrue(() -> AuthUtil.isAuthenticated());
-        assertDoesNotThrow(() -> AuthUtil.currentUserDetail());
-        //test with inactive user
-        user.setActive(false);
-        assertThrows(AuthenticationException.class, () -> AuthUtil.authenticate(authenticationManager, "test", "pa55ward"));
-    }
+  @Test
+  @Transactional
+  void authenticate() {
+    // test a not exist username
+    assertThrows(
+        AuthenticationException.class,
+        () -> AuthUtil.authenticate(authenticationManager, "not exist", "pa55ward"));
+    assertFalse(() -> AuthUtil.isAuthenticated());
+    assertThrows(AuthenticationException.class, () -> AuthUtil.currentUserDetail());
+    // test with incorrect password
+    assertThrows(
+        AuthenticationException.class,
+        () -> AuthUtil.authenticate(authenticationManager, "not exist", "12345678"));
+    assertFalse(() -> AuthUtil.isAuthenticated());
+    assertThrows(AuthenticationException.class, () -> AuthUtil.currentUserDetail());
+    // test with correct username and password
+    AuthUtil.authenticate(authenticationManager, "test", "pa55ward");
+    assertTrue(() -> AuthUtil.isAuthenticated());
+    assertDoesNotThrow(() -> AuthUtil.currentUserDetail());
+    // test with inactive user
+    user.setActive(false);
+    assertThrows(
+        AuthenticationException.class,
+        () -> AuthUtil.authenticate(authenticationManager, "test", "pa55ward"));
+  }
 }

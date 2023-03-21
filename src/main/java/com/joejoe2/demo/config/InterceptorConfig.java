@@ -10,11 +10,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebMvc
 public class InterceptorConfig implements WebMvcConfigurer {
-    @Autowired
-    ControllerConstraintInterceptor controllerConstraintInterceptor;
+  @Autowired ControllerConstraintInterceptor controllerConstraintInterceptor;
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(controllerConstraintInterceptor).addPathPatterns("/**");
-    }
+  @Override
+  public void addInterceptors(InterceptorRegistry registry) {
+    registry.addInterceptor(controllerConstraintInterceptor).addPathPatterns("/**");
+  }
 }

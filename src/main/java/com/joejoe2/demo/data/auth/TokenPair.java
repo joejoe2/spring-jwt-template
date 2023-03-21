@@ -6,11 +6,11 @@ import lombok.Data;
 
 @Data
 public class TokenPair {
-    private AccessToken accessToken;
-    private RefreshToken refreshToken;
+  private AccessToken accessToken;
+  private RefreshToken refreshToken;
 
-    public TokenPair(AccessToken accessToken, RefreshToken refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-    }
+  public TokenPair(AccessToken accessToken, RefreshToken refreshToken) {
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+  }
 }

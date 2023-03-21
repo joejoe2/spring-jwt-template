@@ -6,8 +6,8 @@ import org.jobrunr.jobs.lambdas.JobRequest;
 
 @Data
 public class CleanUpVerificationsJob implements JobRequest {
-    @Override
-    public Class<CleanUpVerificationsHandler> getJobRequestHandler() {
-        return CleanUpVerificationsHandler.class;
-    }
+  @Override
+  public Class<CleanUpVerificationsHandler> getJobRequestHandler() {
+    return CleanUpVerificationsHandler.class;
+  }
 }

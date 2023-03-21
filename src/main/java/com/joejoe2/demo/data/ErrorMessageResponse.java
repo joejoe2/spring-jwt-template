@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 public class ErrorMessageResponse {
-    @Schema(description = "error message")
-    String message;
+  @Schema(description = "error message")
+  String message;
 
-    public ErrorMessageResponse(String message) {
-        this.message = message;
-    }
+  public ErrorMessageResponse(String message) {
+    this.message = message;
+  }
 }

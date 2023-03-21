@@ -6,8 +6,8 @@ import org.springframework.retry.annotation.RetryConfiguration;
 
 @Configuration
 public class RetryConfig extends RetryConfiguration {
-    @Override
-    public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
-    }
+  @Override
+  public int getOrder() {
+    return Ordered.HIGHEST_PRECEDENCE;
+  }
 }

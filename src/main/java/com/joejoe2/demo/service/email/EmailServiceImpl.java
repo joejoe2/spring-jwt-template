@@ -9,20 +9,19 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class EmailServiceImpl implements EmailService {
-    @Autowired
-    private JavaMailSender emailSender;
+  @Autowired private JavaMailSender emailSender;
 
-    @Async
-    @Override
-    public void sendSimpleEmail(String to, String subject, String text) {
-        if (to == null || subject == null || text == null)
-            throw new ValidationError("to, subject, or text cannot be null !");
+  @Async
+  @Override
+  public void sendSimpleEmail(String to, String subject, String text) {
+    if (to == null || subject == null || text == null)
+      throw new ValidationError("to, subject, or text cannot be null !");
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom("noreply@joejoe2.com");
-        message.setTo(to);
-        message.setSubject(subject);
-        message.setText(text);
-        emailSender.send(message);
-    }
+    SimpleMailMessage message = new SimpleMailMessage();
+    message.setFrom("noreply@joejoe2.com");
+    message.setTo(to);
+    message.setSubject(subject);
+    message.setText(text);
+    emailSender.send(message);
+  }
 }

@@ -21,34 +21,34 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LoginServiceImpl implements LoginService {
-    @Autowired
-    AuthenticationManager authenticationManager;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    LoginConfig loginConfig;
+  @Autowired AuthenticationManager authenticationManager;
+  @Autowired UserRepository userRepository;
+  @Autowired LoginConfig loginConfig;
 
-    @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
-    @Transactional(noRollbackFor = AuthenticationException.class)
-    @Override
-    public UserDetail login(String username, String password) throws AuthenticationException {
-        User user = userRepository.getByUserName(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Username is not exist !"));
+  @Retryable(value = OptimisticLockingFailureException.class, backoff = @Backoff(delay = 100))
+  @Transactional(noRollbackFor = AuthenticationException.class)
+  @Override
+  public UserDetail login(String username, String password) throws AuthenticationException {
+    User user =
+        userRepository
+            .getByUserName(username)
+            .orElseThrow(() -> new UsernameNotFoundException("Username is not exist !"));
 
-        LoginAttempt loginAttempt = user.getLoginAttempt();
-        try {
-            try {
-                UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
-                loginAttempt.attempt(loginConfig, true);
-                userRepository.save(user);
-                return userDetail;
-            } catch (BadCredentialsException e) {
-                loginAttempt.attempt(loginConfig, false);
-                userRepository.save(user);
-                throw e;
-            }
-        } catch (InvalidOperation ex) {
-            throw new AuthenticationServiceException("You have try too many times, please try again later");
-        }
+    LoginAttempt loginAttempt = user.getLoginAttempt();
+    try {
+      try {
+        UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
+        loginAttempt.attempt(loginConfig, true);
+        userRepository.save(user);
+        return userDetail;
+      } catch (BadCredentialsException e) {
+        loginAttempt.attempt(loginConfig, false);
+        userRepository.save(user);
+        throw e;
+      }
+    } catch (InvalidOperation ex) {
+      throw new AuthenticationServiceException(
+          "You have try too many times, please try again later");
     }
+  }
 }

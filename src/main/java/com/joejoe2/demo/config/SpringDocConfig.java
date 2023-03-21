@@ -9,11 +9,10 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(info = @Info(title = "Spring JWT Template API", version = "v0.0.1"))
 @SecurityScheme(
-        name = "jwt",
-        scheme = "bearer",
-        bearerFormat = "jwt",
-        type = SecuritySchemeType.HTTP,
-        in = SecuritySchemeIn.HEADER)
+    name = "jwt",
+    scheme = "bearer",
+    bearerFormat = "jwt",
+    type = SecuritySchemeType.HTTP,
+    in = SecuritySchemeIn.HEADER)
 @Configuration
-public class SpringDocConfig {
-}
+public class SpringDocConfig {}

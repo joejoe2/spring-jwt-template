@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 public class VerificationKey {
-    @Schema(description = "used along with verification code to pass the verification")
-    String key;
+  @Schema(description = "used along with verification code to pass the verification")
+  String key;
 
-    public VerificationKey(String key) {
-        this.key = key;
-    }
+  public VerificationKey(String key) {
+    this.key = key;
+  }
 }

@@ -7,6 +7,6 @@ import org.springframework.context.annotation.Configuration;
 @Data
 @Configuration
 public class CorsConfig {
-    @Value("${allow.host}")
-    private String allowOrigin;
+  @Value("${allow.host}")
+  private String allowOrigin;
 }

@@ -9,12 +9,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CleanUpJWTTokensHandler implements JobRequestHandler<CleanUpJWTTokensJob> {
-    @Autowired
-    private JwtService jwtService;
+  @Autowired private JwtService jwtService;
 
-    @Job(name = "delete all expired refresh tokens and related access tokens")
-    @Override
-    public void run(CleanUpJWTTokensJob job) throws Exception {
-        jwtService.deleteExpiredTokens();
-    }
+  @Job(name = "delete all expired refresh tokens and related access tokens")
+  @Override
+  public void run(CleanUpJWTTokensJob job) throws Exception {
+    jwtService.deleteExpiredTokens();
+  }
 }

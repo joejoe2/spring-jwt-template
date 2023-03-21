@@ -10,21 +10,25 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 public class AuthUtil {
-    public static UserDetail authenticate(AuthenticationManager authenticationManager, String username, String password) throws AuthenticationException {
-        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-                username, password));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        return ((UserDetail) authentication.getPrincipal());
-    }
+  public static UserDetail authenticate(
+      AuthenticationManager authenticationManager, String username, String password)
+      throws AuthenticationException {
+    Authentication authentication =
+        authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(username, password));
+    SecurityContextHolder.getContext().setAuthentication(authentication);
+    return ((UserDetail) authentication.getPrincipal());
+  }
 
-    public static boolean isAuthenticated() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication != null && !(authentication instanceof AnonymousAuthenticationToken);
-    }
+  public static boolean isAuthenticated() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return authentication != null && !(authentication instanceof AnonymousAuthenticationToken);
+  }
 
-    public static UserDetail currentUserDetail() throws AuthenticationException {
-        if (!isAuthenticated()) throw new InternalAuthenticationServiceException("has not been authenticated !");
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return (UserDetail) authentication.getPrincipal();
-    }
+  public static UserDetail currentUserDetail() throws AuthenticationException {
+    if (!isAuthenticated())
+      throw new InternalAuthenticationServiceException("has not been authenticated !");
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    return (UserDetail) authentication.getPrincipal();
+  }
 }

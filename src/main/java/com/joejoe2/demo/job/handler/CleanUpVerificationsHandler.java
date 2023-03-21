@@ -9,13 +9,12 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CleanUpVerificationsHandler implements JobRequestHandler<CleanUpVerificationsJob> {
-    @Autowired
-    VerificationService verificationService;
+  @Autowired VerificationService verificationService;
 
-    @Job(name = "delete all expired verification codes and tokens")
-    @Override
-    public void run(CleanUpVerificationsJob job) throws Exception {
-        verificationService.deleteExpiredVerificationCodes();
-        verificationService.deleteExpiredVerifyTokens();
-    }
+  @Job(name = "delete all expired verification codes and tokens")
+  @Override
+  public void run(CleanUpVerificationsJob job) throws Exception {
+    verificationService.deleteExpiredVerificationCodes();
+    verificationService.deleteExpiredVerifyTokens();
+  }
 }

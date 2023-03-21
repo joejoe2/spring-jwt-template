@@ -6,27 +6,27 @@ import lombok.Data;
 
 @Data
 public class AccessTokenSpec {
-    @Schema(description = "user id")
-    String id;
+  @Schema(description = "user id")
+  String id;
 
-    @Schema(description = "username")
-    String username;
+  @Schema(description = "username")
+  String username;
 
-    @Schema(description = "role of user", implementation = Role.class)
-    String role;
+  @Schema(description = "role of user", implementation = Role.class)
+  String role;
 
-    @Schema(description = "state of user")
-    Boolean isActive;
+  @Schema(description = "state of user")
+  Boolean isActive;
 
-    @Schema(description = "expiration date in number of seconds since Epoch")
-    long exp;
+  @Schema(description = "expiration date in number of seconds since Epoch")
+  long exp;
 
-    @Schema(description = "issuer")
-    String iss;
+  @Schema(description = "issuer")
+  String iss;
 
-    @Schema(description = "access token id")
-    String jti;
+  @Schema(description = "access token id")
+  String jti;
 
-    @Schema(description = "token type", example = "access_token")
-    String type;
+  @Schema(description = "token type", example = "access_token")
+  String type;
 }

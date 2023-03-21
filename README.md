@@ -163,6 +163,19 @@ this application as an AuthService).
 
 run `mvn test` or `./mvnw test`
 
+## Lint
+
+run 
+```
+mvn spotless:check
+mvn spotless:apply
+``` 
+or 
+```
+./mvnw spotless:check
+./mvnw spotless:apply
+``` 
+
 ## Deploy
 
 1. install docker and docker-compose

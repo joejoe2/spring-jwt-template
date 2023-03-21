@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IssueVerificationCodeRequest {
-    @Email
-    private String email;
+  @Email private String email;
 }
