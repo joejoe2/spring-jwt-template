@@ -2,12 +2,8 @@ package com.joejoe2.demo.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
-import org.springframework.retry.annotation.RetryConfiguration;
+import org.springframework.retry.annotation.EnableRetry;
 
 @Configuration
-public class RetryConfig extends RetryConfiguration {
-  @Override
-  public int getOrder() {
-    return Ordered.HIGHEST_PRECEDENCE;
-  }
-}
+@EnableRetry(order = Ordered.HIGHEST_PRECEDENCE)
+public class RetryConfig {}
