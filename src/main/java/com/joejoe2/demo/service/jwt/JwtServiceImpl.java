@@ -1,9 +1,9 @@
 package com.joejoe2.demo.service.jwt;
 
 import com.joejoe2.demo.config.JwtConfig;
+import com.joejoe2.demo.data.auth.AccessTokenSpec;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
-import com.joejoe2.demo.data.auth.request.AccessTokenSpec;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -16,11 +16,10 @@ import com.joejoe2.demo.repository.user.UserRepository;
 import com.joejoe2.demo.service.redis.RedisService;
 import com.joejoe2.demo.utils.JwtUtil;
 import io.jsonwebtoken.JwtException;
-import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,15 +72,17 @@ public class JwtServiceImpl implements JwtService {
   public TokenPair refreshTokens(String refreshPlainToken)
       throws InvalidTokenException, InvalidOperation {
     // parse refresh token
+    String jti;
     try {
-      JwtUtil.parseToken(jwtConfig.getPublicKey(), refreshPlainToken);
+
+      jti = JwtUtil.parseRefreshToken(jwtConfig.getPublicKey(), refreshPlainToken).getJti();
     } catch (JwtException e) {
       throw new InvalidTokenException("invalid refresh token !");
     }
     // load refresh token
     RefreshToken refreshToken =
         refreshTokenRepository
-            .getByTokenAndExpireAtGreaterThan(refreshPlainToken, Instant.now())
+            .getByIdAndExpireAtGreaterThan(UUID.fromString(jti), Instant.now())
             .orElseThrow(() -> new InvalidTokenException("invalid refresh token !"));
     User user = refreshToken.getUser();
     if (!user.isActive()) throw new InvalidOperation("cannot refresh tokens for inactive user !");
@@ -108,27 +109,16 @@ public class JwtServiceImpl implements JwtService {
   @Override
   public AccessTokenSpec introspect(String token) throws InvalidTokenException {
     if (isAccessTokenInBlackList(token)) throw new InvalidTokenException("invalid token !");
-
-    Map<String, Object> data = JwtUtil.parseToken(jwtConfig.getPublicKey(), token);
-    AccessTokenSpec spec = new AccessTokenSpec();
-    for (Field field : AccessTokenSpec.class.getDeclaredFields()) {
-      try {
-        field.setAccessible(true);
-        field.set(spec, data.get(field.getName()));
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return spec;
+    return JwtUtil.parseAccessToken(jwtConfig.getPublicKey(), token);
   }
 
   @Override
-  public void revokeAccessToken(String accessPlainToken) throws InvalidTokenException {
+  public void revokeAccessToken(String id) {
     AccessToken accessToken =
         accessTokenRepository
-            .getByTokenAndExpireAtGreaterThan(accessPlainToken, Instant.now())
-            .orElseThrow(() -> new InvalidTokenException("invalid token !"));
-
+            .getByIdAndExpireAtGreaterThan(UUID.fromString(id), Instant.now())
+            .orElse(null);
+    if (accessToken == null) return;
     accessTokenRepository.delete(accessToken); // refreshToken will be cascade deleted
     addAccessTokenToBlackList(accessToken);
   }

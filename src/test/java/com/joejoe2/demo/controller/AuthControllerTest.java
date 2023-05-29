@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
+import com.joejoe2.demo.data.auth.AccessTokenSpec;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.data.auth.VerificationPair;
@@ -309,7 +310,6 @@ class AuthControllerTest {
 
   @Test
   void logout() throws Exception {
-    Mockito.doNothing().when(jwtService).revokeAccessToken("access_token");
     // test success
     mockMvc
         .perform(

@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class UserDetail implements UserDetails {
   private String id;
   private String currentAccessToken;
+  private String currentAccessTokenID;
   private String username;
   private String password;
   private boolean isActive;
@@ -28,11 +29,17 @@ public class UserDetail implements UserDetails {
   }
 
   public UserDetail(
-      String id, String username, boolean isActive, Role role, String currentAccessToken) {
+      String id,
+      String username,
+      boolean isActive,
+      Role role,
+      String accessToken,
+      String accessTokenID) {
     this.id = id;
     this.username = username;
     this.isActive = isActive;
-    this.currentAccessToken = currentAccessToken;
+    this.currentAccessToken = accessToken;
+    this.currentAccessTokenID = accessTokenID;
     this.role = role;
     this.authorities = (List<GrantedAuthority>) mapRolesToAuthorities(Collections.singleton(role));
   }
@@ -68,6 +75,10 @@ public class UserDetail implements UserDetails {
 
   public String getCurrentAccessToken() {
     return currentAccessToken;
+  }
+
+  public String getCurrentAccessTokenID() {
+    return currentAccessTokenID;
   }
 
   private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles) {

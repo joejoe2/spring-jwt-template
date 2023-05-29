@@ -9,7 +9,8 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AccessTokenRepository extends JpaRepository<AccessToken, UUID> {
-  Optional<AccessToken> getByTokenAndExpireAtGreaterThan(String token, Instant dateTime);
+
+  Optional<AccessToken> getByIdAndExpireAtGreaterThan(UUID id, Instant dateTime);
 
   List<AccessToken> getByUser(User user);
 }

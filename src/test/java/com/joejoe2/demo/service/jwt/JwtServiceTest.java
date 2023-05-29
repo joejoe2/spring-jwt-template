@@ -4,9 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.joejoe2.demo.TestContext;
 import com.joejoe2.demo.config.JwtConfig;
+import com.joejoe2.demo.data.auth.AccessTokenSpec;
 import com.joejoe2.demo.data.auth.TokenPair;
 import com.joejoe2.demo.data.auth.UserDetail;
-import com.joejoe2.demo.data.auth.request.AccessTokenSpec;
 import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.exception.InvalidTokenException;
 import com.joejoe2.demo.exception.UserDoesNotExist;
@@ -155,12 +155,6 @@ class JwtServiceTest {
   }
 
   @Test
-  void revokeAccessTokenWithInvalidToken() {
-    // test invalid token
-    assertThrows(InvalidTokenException.class, () -> jwtService.revokeAccessToken("invalid_token"));
-  }
-
-  @Test
   void revokeAccessToken() {
     // test valid token
     AccessToken accessToken = new AccessToken();
@@ -172,7 +166,7 @@ class JwtServiceTest {
     refreshTokenRepository.save(refreshToken);
     assertDoesNotThrow(
         () -> {
-          jwtService.revokeAccessToken(accessToken.getToken());
+          jwtService.revokeAccessToken(accessToken.getId().toString());
           assertTrue(jwtService.isAccessTokenInBlackList(accessToken.getToken()));
         });
   }

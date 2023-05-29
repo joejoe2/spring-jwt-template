@@ -1,4 +1,4 @@
-package com.joejoe2.demo.data.auth.request;
+package com.joejoe2.demo.data.auth;
 
 import com.joejoe2.demo.model.auth.Role;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -241,7 +241,7 @@ public class AuthController {
   @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
   public ResponseEntity logout() {
     try {
-      jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessToken());
+      jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessTokenID());
       return ResponseEntity.ok().build();
     } catch (InvalidTokenException e) {
       // because the access token has been checked by JwtAuthenticationFilter,
