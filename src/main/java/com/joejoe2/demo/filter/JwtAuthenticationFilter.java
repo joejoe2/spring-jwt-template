@@ -24,10 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+    String accessToken = null;
 
-    if (authHeader != null) {
-      String accessToken = authHeader.replace("Bearer ", "");
+    // auth by header
+    String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+    if (authHeader != null) accessToken = authHeader.replace("Bearer ", "");
+
+    // try to auth
+    if (accessToken != null) {
       try {
         if (jwtService.isAccessTokenInBlackList(accessToken))
           throw new InvalidTokenException("invalid token !");

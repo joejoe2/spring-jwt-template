@@ -31,4 +31,8 @@ public class AuthUtil {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     return (UserDetail) authentication.getPrincipal();
   }
+
+  public static void removeAuthentication() {
+    SecurityContextHolder.getContext().setAuthentication(null);
+  }
 }

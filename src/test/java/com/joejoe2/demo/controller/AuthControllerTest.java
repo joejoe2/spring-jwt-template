@@ -1,7 +1,6 @@
 package com.joejoe2.demo.controller;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,6 +43,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -166,7 +166,7 @@ class AuthControllerTest {
     Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken()))
         .when(jwtService)
         .issueTokens(new UserDetail(user));
-    Cookie cookie =
+    MvcResult result =
         mockMvc
             .perform(
                 MockMvcRequestBuilders.post("/web/api/auth/login")
@@ -175,11 +175,10 @@ class AuthControllerTest {
                     .accept(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.access_token").hasJsonPath())
             .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getCookie("refresh_token");
-    assertNotNull(cookie);
-    assertTrue(cookie.isHttpOnly());
+            .andReturn();
+    Cookie refreshToken = result.getResponse().getCookie("refresh_token");
+    assertNotNull(refreshToken);
+    assertTrue(refreshToken.isHttpOnly());
     mockedStatic.close();
   }
 
@@ -275,17 +274,17 @@ class AuthControllerTest {
     Mockito.doReturn(new TokenPair(new AccessToken(), new RefreshToken()))
         .when(jwtService)
         .refreshTokens("refresh_token");
-    Cookie cookie =
+    MvcResult result =
         mockMvc
             .perform(
                 MockMvcRequestBuilders.post("/web/api/auth/refresh")
                     .cookie(new Cookie("refresh_token", "refresh_token")))
             .andExpect(jsonPath("$.access_token").hasJsonPath())
             .andExpect(status().isOk())
-            .andReturn()
-            .getResponse()
-            .getCookie("refresh_token");
-    assertNotNull(cookie);
+            .andReturn();
+    Cookie refreshToken = result.getResponse().getCookie("refresh_token");
+    assertNotNull(refreshToken);
+    assertTrue(refreshToken.isHttpOnly());
   }
 
   @Test

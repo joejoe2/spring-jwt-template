@@ -22,6 +22,7 @@ import com.joejoe2.demo.service.user.auth.PasswordService;
 import com.joejoe2.demo.service.user.auth.RegistrationService;
 import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
+import com.joejoe2.demo.utils.CookieUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,7 +33,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +102,7 @@ public class AuthController {
   }
 
   @Operation(
-      summary = "login and get the jwt access tokens and set refresh token in http-only cookie",
+      summary = "login and get the access token and set refresh token in http-only cookie",
       description = "this is allowed to everyone")
   @ApiResponses(
       value = {
@@ -121,8 +121,7 @@ public class AuthController {
                     schema = @Schema(implementation = ErrorMessageResponse.class))),
         @ApiResponse(
             responseCode = "200",
-            description =
-                "login and get the jwt access tokens and set refresh in http-only" + " cookie",
+            description = "get access token and set refresh tokens in http-only cookie",
             content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
             headers = {
               @Header(name = "refresh_token", description = "refresh token in http-only cookie")
@@ -134,12 +133,13 @@ public class AuthController {
     try {
       UserDetail userDetail = loginService.login(request.getUsername(), request.getPassword());
       TokenPair tokenPair = jwtService.issueTokens(userDetail);
-      // place refresh_token in http only cookie
-      Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());
-      cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
-      cookie.setHttpOnly(true);
-      response.addCookie(cookie);
-
+      // place refresh token in http only cookie
+      response.addCookie(
+          CookieUtils.create(
+              "refresh_token",
+              tokenPair.getRefreshToken().getToken(),
+              jwtConfig.getRefreshTokenLifetimeSec(),
+              true));
       return new ResponseEntity<>(
           Collections.singletonMap("access_token", tokenPair.getAccessToken().getToken()),
           HttpStatus.OK);
@@ -187,8 +187,8 @@ public class AuthController {
 
   @Operation(
       summary =
-          "use refresh token(in your http-only cookie) to exchange new access token and"
-              + " set new refresh in http-only cookie",
+          "use refresh token(in your http-only cookie) to exchange new access token and set new"
+              + " refresh token in http-only cookie",
       description =
           "this is allowed to everyone but protected by the <code>allow.host</code> cors"
               + " setting")
@@ -203,7 +203,7 @@ public class AuthController {
                     schema = @Schema(implementation = ErrorMessageResponse.class))),
         @ApiResponse(
             responseCode = "200",
-            description = "exchange new access and refresh tokens",
+            description = "exchange new access/refresh tokens",
             content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
             headers = {
               @Header(name = "refresh_token", description = "refresh token in http-only cookie")
@@ -217,11 +217,13 @@ public class AuthController {
     try {
       TokenPair tokenPair = jwtService.refreshTokens(refreshToken);
       responseBody.put("access_token", tokenPair.getAccessToken().getToken());
-      // place refresh_token in http only cookie
-      Cookie cookie = new Cookie("refresh_token", tokenPair.getRefreshToken().getToken());
-      cookie.setMaxAge(jwtConfig.getRefreshTokenLifetimeSec());
-      cookie.setHttpOnly(true);
-      response.addCookie(cookie);
+      // place tokens in http only cookie
+      response.addCookie(
+          CookieUtils.create(
+              "refresh_token",
+              tokenPair.getRefreshToken().getToken(),
+              jwtConfig.getRefreshTokenLifetimeSec(),
+              true));
       return new ResponseEntity<>(responseBody, HttpStatus.OK);
     } catch (InvalidTokenException | InvalidOperation e) {
       responseBody.put("message", e.getMessage());

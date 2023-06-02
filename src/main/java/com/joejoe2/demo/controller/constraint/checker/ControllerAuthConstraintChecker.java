@@ -20,10 +20,12 @@ public class ControllerAuthConstraintChecker {
 
   private static void checkAuthenticatedApiConstraint(Method method)
       throws ControllerConstraintViolation {
+    boolean requireAuthentication = false;
     // why AnnotatedElementUtils not work at here ?
     AuthenticatedApi constraint = method.getAnnotation(AuthenticatedApi.class);
     // direct check
     if (constraint != null) {
+      requireAuthentication = true;
       if (!AuthUtil.isAuthenticated())
         throw new ControllerConstraintViolation(
             constraint.rejectStatus(), constraint.rejectMessage());
@@ -32,12 +34,14 @@ public class ControllerAuthConstraintChecker {
     for (Annotation annotation : method.getAnnotations()) {
       constraint = annotation.annotationType().getAnnotation(AuthenticatedApi.class);
       if (constraint != null) {
+        requireAuthentication = true;
         if (!AuthUtil.isAuthenticated())
           throw new ControllerConstraintViolation(
               constraint.rejectStatus(), constraint.rejectMessage());
         else break;
       }
     }
+    if (!requireAuthentication) AuthUtil.removeAuthentication();
   }
 
   private static void checkRoleConstraints(Method method) throws ControllerConstraintViolation {

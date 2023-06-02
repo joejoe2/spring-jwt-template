@@ -120,12 +120,14 @@ work with this project.
    # set reset password url
    reset.password.url=http://localhost:8888/resetPassword?token=
    ```
-    - `set allow host`(this is used for web login/refresh api
-      , because we will set refresh token in http only cookie,
-      you should set this to the hostname of your frontend)
+    - `set allow host`(cors for your frontend)
    ```
-   # set allow host (frontend)
-   allow.host=http://localhost:8888
+   # for frontend applications at any port of the localhost
+   allow.host=http://localhost:[*]
+   # for the frontend application at frontend.example.com
+   allow.host=https://frontend.example.com
+   # for frontend applications belong to subdomains of .example.com
+   allow.host=https://*.example.com
    ```
     - `login related settings` (ex. block user to login for
       900 seconds after 5 consecutive unsuccessful attempts

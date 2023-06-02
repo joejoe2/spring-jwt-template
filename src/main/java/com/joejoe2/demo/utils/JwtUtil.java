@@ -27,7 +27,6 @@ public class JwtUtil {
     claims.setExpiration(exp.getTime());
     claims.setIssuer(issuer);
     claims.setId(jti);
-
     return Jwts.builder().setClaims(claims).signWith(key).compact();
   }
 
@@ -57,7 +56,6 @@ public class JwtUtil {
     claims.setExpiration(exp.getTime());
     claims.setIssuer(issuer);
     claims.setId(jti);
-
     return Jwts.builder().setClaims(claims).signWith(key).compact();
   }
 
@@ -81,7 +79,6 @@ public class JwtUtil {
           throw new RuntimeException(e);
         }
       }
-
       return accessTokenSpec;
     } catch (Exception e) {
       throw new JwtException(e.getMessage());
@@ -108,7 +105,6 @@ public class JwtUtil {
           throw new RuntimeException(e);
         }
       }
-
       return refreshTokenSpec;
     } catch (Exception e) {
       throw new JwtException(e.getMessage());
