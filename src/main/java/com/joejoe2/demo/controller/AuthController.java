@@ -30,6 +30,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,7 +103,7 @@ public class AuthController {
   }
 
   @Operation(
-      summary = "login and get the access token and set refresh token in http-only cookie",
+      summary = "login and get the access/refresh tokens in http-only cookie",
       description = "this is allowed to everyone")
   @ApiResponses(
       value = {
@@ -121,9 +122,10 @@ public class AuthController {
                     schema = @Schema(implementation = ErrorMessageResponse.class))),
         @ApiResponse(
             responseCode = "200",
-            description = "get access token and set refresh tokens in http-only cookie",
+            description = "get access/refresh tokens in http-only cookie",
             content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
             headers = {
+              @Header(name = "access_token", description = "access token in http-only cookie"),
               @Header(name = "refresh_token", description = "refresh token in http-only cookie")
             })
       })
@@ -138,7 +140,15 @@ public class AuthController {
           CookieUtils.create(
               "refresh_token",
               tokenPair.getRefreshToken().getToken(),
+              jwtConfig.getCookieDomain(),
               jwtConfig.getRefreshTokenLifetimeSec(),
+              true));
+      response.addCookie(
+          CookieUtils.create(
+              "access_token",
+              tokenPair.getAccessToken().getToken(),
+              jwtConfig.getCookieDomain(),
+              jwtConfig.getAccessTokenLifetimeSec(),
               true));
       return new ResponseEntity<>(
           Collections.singletonMap("access_token", tokenPair.getAccessToken().getToken()),
@@ -187,8 +197,8 @@ public class AuthController {
 
   @Operation(
       summary =
-          "use refresh token(in your http-only cookie) to exchange new access token and set new"
-              + " refresh token in http-only cookie",
+          "use refresh token(in your http-only cookie) to exchange new access/refresh tokens in"
+              + " http-only cookie",
       description =
           "this is allowed to everyone but protected by the <code>allow.host</code> cors"
               + " setting")
@@ -206,6 +216,7 @@ public class AuthController {
             description = "exchange new access/refresh tokens",
             content = @Content(mediaType = "application/json", schema = @Schema(hidden = true)),
             headers = {
+              @Header(name = "access_token", description = "access token in http-only cookie"),
               @Header(name = "refresh_token", description = "refresh token in http-only cookie")
             })
       })
@@ -222,7 +233,15 @@ public class AuthController {
           CookieUtils.create(
               "refresh_token",
               tokenPair.getRefreshToken().getToken(),
+              jwtConfig.getCookieDomain(),
               jwtConfig.getRefreshTokenLifetimeSec(),
+              true));
+      response.addCookie(
+          CookieUtils.create(
+              "access_token",
+              tokenPair.getAccessToken().getToken(),
+              jwtConfig.getCookieDomain(),
+              jwtConfig.getAccessTokenLifetimeSec(),
               true));
       return new ResponseEntity<>(responseBody, HttpStatus.OK);
     } catch (InvalidTokenException | InvalidOperation e) {
@@ -235,15 +254,21 @@ public class AuthController {
       summary = "use access token to logout related user",
       description = "this is allowed to any authenticated user")
   @AuthenticatedApi
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "logout", content = @Content),
       })
   @RequestMapping(path = "/api/auth/logout", method = RequestMethod.POST)
-  public ResponseEntity logout() {
+  public ResponseEntity logout(HttpServletResponse response) {
     try {
       jwtService.revokeAccessToken(AuthUtil.currentUserDetail().getCurrentAccessTokenID());
+      // clear tokens in cookie
+      response.addCookie(CookieUtils.removed("access_token", jwtConfig.getCookieDomain(), true));
+      response.addCookie(CookieUtils.removed("refresh_token", jwtConfig.getCookieDomain(), true));
       return ResponseEntity.ok().build();
     } catch (InvalidTokenException e) {
       // because the access token has been checked by JwtAuthenticationFilter,
@@ -346,7 +371,10 @@ public class AuthController {
               + "and having a rate limit(10 times / 3600 sec) for each user")
   @AuthenticatedApi
   @RateLimit(target = LimitTarget.USER, key = "/api/auth/changePassword", limit = 10, period = 3600)
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(

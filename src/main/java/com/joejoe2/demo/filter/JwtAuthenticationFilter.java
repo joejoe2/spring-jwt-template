@@ -6,6 +6,7 @@ import com.joejoe2.demo.service.jwt.JwtService;
 import java.io.IOException;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -29,6 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // auth by header
     String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
     if (authHeader != null) accessToken = authHeader.replace("Bearer ", "");
+
+    // auth by cookie
+    if (accessToken == null) {
+      Cookie cookie = WebUtils.getCookie(request, "access_token");
+      if (cookie != null && cookie.getValue() != null) accessToken = cookie.getValue();
+    }
 
     // try to auth
     if (accessToken != null) {
