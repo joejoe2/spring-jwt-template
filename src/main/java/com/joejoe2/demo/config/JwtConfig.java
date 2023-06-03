@@ -23,4 +23,7 @@ public class JwtConfig {
 
   @Value("${jwt.issuer:issuer}")
   private String issuer;
+
+  @Value("${jwt.cookie.domain:.${jwt.issuer}}")
+  private String cookieDomain;
 }

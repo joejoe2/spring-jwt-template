@@ -1,6 +1,7 @@
 package com.joejoe2.demo.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -20,6 +21,7 @@ import com.joejoe2.demo.repository.verification.VerifyTokenRepository;
 import com.joejoe2.demo.service.jwt.JwtService;
 import com.joejoe2.demo.service.verification.VerificationService;
 import com.joejoe2.demo.utils.AuthUtil;
+import com.joejoe2.demo.utils.CookieUtils;
 import com.joejoe2.demo.utils.JwtUtil;
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -179,6 +181,11 @@ class AuthControllerTest {
     Cookie refreshToken = result.getResponse().getCookie("refresh_token");
     assertNotNull(refreshToken);
     assertTrue(refreshToken.isHttpOnly());
+    assertEquals(jwtConfig.getCookieDomain(), refreshToken.getDomain());
+    Cookie accessToken = result.getResponse().getCookie("access_token");
+    assertNotNull(accessToken);
+    assertTrue(accessToken.isHttpOnly());
+    assertEquals(jwtConfig.getCookieDomain(), accessToken.getDomain());
     mockedStatic.close();
   }
 
@@ -285,6 +292,11 @@ class AuthControllerTest {
     Cookie refreshToken = result.getResponse().getCookie("refresh_token");
     assertNotNull(refreshToken);
     assertTrue(refreshToken.isHttpOnly());
+    assertEquals(jwtConfig.getCookieDomain(), refreshToken.getDomain());
+    Cookie accessToken = result.getResponse().getCookie("access_token");
+    assertNotNull(accessToken);
+    assertTrue(accessToken.isHttpOnly());
+    assertEquals(jwtConfig.getCookieDomain(), accessToken.getDomain());
   }
 
   @Test
@@ -308,13 +320,40 @@ class AuthControllerTest {
   }
 
   @Test
-  void logout() throws Exception {
+  void logoutWithHeader() throws Exception {
     // test success
     mockMvc
         .perform(
             MockMvcRequestBuilders.post("/api/auth/logout")
                 .header(HttpHeaders.AUTHORIZATION, userAccessToken))
         .andExpect(status().isOk());
+  }
+
+  @Test
+  void logoutWithCookie() throws Exception {
+    // test success
+    Cookie cookie =
+        CookieUtils.create(
+            "access_token",
+            userAccessToken,
+            jwtConfig.getCookieDomain(),
+            jwtConfig.getAccessTokenLifetimeSec(),
+            true);
+    MvcResult result =
+        mockMvc
+            .perform(MockMvcRequestBuilders.post("/api/auth/logout").cookie(cookie))
+            .andExpect(status().isOk())
+            .andReturn();
+    Cookie refreshToken = result.getResponse().getCookie("refresh_token");
+    assertNull(refreshToken.getValue());
+    assertTrue(refreshToken.isHttpOnly());
+    assertEquals(0, refreshToken.getMaxAge());
+    assertEquals(jwtConfig.getCookieDomain(), refreshToken.getDomain());
+    Cookie accessToken = result.getResponse().getCookie("access_token");
+    assertNull(accessToken.getValue());
+    assertTrue(accessToken.isHttpOnly());
+    assertEquals(0, accessToken.getMaxAge());
+    assertEquals(jwtConfig.getCookieDomain(), accessToken.getDomain());
   }
 
   @Test

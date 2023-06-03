@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +30,10 @@ public class UserController {
       summary = "get profile of login user",
       description = "this is allowed to any authenticated user")
   @AuthenticatedApi
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(

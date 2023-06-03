@@ -20,6 +20,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import javax.validation.Valid;
 import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,10 @@ public class AdminController {
       summary = "change the role of target user",
       description = "this is only allowed to ADMIN")
   @ApiAllowsTo(roles = Role.ADMIN)
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -86,7 +90,10 @@ public class AdminController {
 
   @Operation(summary = "activate target user", description = "this is only allowed to ADMIN")
   @ApiAllowsTo(roles = Role.ADMIN)
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -130,7 +137,10 @@ public class AdminController {
 
   @Operation(summary = "deactivate target user", description = "this is only allowed to ADMIN")
   @ApiAllowsTo(roles = Role.ADMIN)
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -176,7 +186,10 @@ public class AdminController {
       summary = "get all user profiles with page param",
       description = "this is only allowed to ADMIN")
   @ApiAllowsTo(roles = Role.ADMIN)
-  @SecurityRequirement(name = "jwt")
+  @SecurityRequirements({
+    @SecurityRequirement(name = "jwt"),
+    @SecurityRequirement(name = "jwt-in-cookie")
+  })
   @ApiResponses(
       value = {
         @ApiResponse(
