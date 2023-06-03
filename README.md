@@ -88,8 +88,8 @@ work with this project.
     jwt.issuer=joejoe2.com
    
     # domain for access/refresh tokens in cookie(if you are using web login api)
-    # can be exact domain or .example.com for all subdomains
-    jwt.cookie.domain=.example.com
+    # can be exact domain or example.com for all subdomains
+    jwt.cookie.domain=example.com
 
     # specify lifetime of access and refresh token in seconds
     jwt.access.token.lifetime=900
