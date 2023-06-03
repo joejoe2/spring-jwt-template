@@ -17,7 +17,7 @@ Other applications can use the public key to verify the JWT tokens.
 
 - `basic models` for user, access token, and refresh token
 - `login api` issue access token and refresh token
-- `web login api` issue access token and set refresh token in http only cookie
+- `web login api` issue access/refresh tokens in http only cookie
 - `set max login failure attempts` block login for a while if too many failure attempts
 - `refresh api` exchange new tokens via refresh token
 - `web refresh api` exchange new tokens via the refresh token in http only cookie
