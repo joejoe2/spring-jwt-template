@@ -1,15 +1,14 @@
 package com.joejoe2.demo.model.auth;
 
+import com.joejoe2.demo.model.Base;
 import java.time.Instant;
 import java.util.Objects;
-import java.util.UUID;
 import javax.persistence.*;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Getter
@@ -18,16 +17,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 @RequiredArgsConstructor
 @Entity
 @Table(name = "account_user")
-public class User {
+public class User extends Base {
   @Version
   @Column(nullable = false, columnDefinition = "TIMESTAMP DEFAULT now()")
   private Instant version;
-
-  @Id
-  @GeneratedValue(generator = "UUID")
-  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-  @Column(unique = true, updatable = false, nullable = false)
-  private UUID id;
 
   @Column(unique = true, length = 32, nullable = false)
   private String userName;

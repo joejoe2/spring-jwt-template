@@ -1,5 +1,6 @@
 package com.joejoe2.demo.model.auth;
 
+import com.fasterxml.uuid.Generators;
 import com.joejoe2.demo.config.JwtConfig;
 import com.joejoe2.demo.utils.JwtUtil;
 import java.time.Instant;
@@ -19,10 +20,8 @@ import org.hibernate.annotations.OnDeleteAction;
 @AllArgsConstructor
 public class RefreshToken {
   @Id
-  // @GeneratedValue(generator = "UUID")
-  // @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
   @Column(unique = true, updatable = false, nullable = false)
-  private UUID id = UUID.randomUUID();
+  private UUID id = Generators.timeBasedEpochGenerator().generate();
 
   @Column(unique = true, updatable = false, nullable = false, columnDefinition = "TEXT")
   private String token;

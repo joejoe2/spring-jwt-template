@@ -1,24 +1,15 @@
 package com.joejoe2.demo.model.auth;
 
+import com.joejoe2.demo.model.Base;
 import com.joejoe2.demo.utils.Utils;
 import java.time.Instant;
-import java.util.UUID;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import lombok.Data;
-import org.hibernate.annotations.GenericGenerator;
 
 @Data
 @Entity
-public class VerificationCode {
-  @Id
-  @GeneratedValue(generator = "UUID")
-  @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-  @Column(unique = true, updatable = false, nullable = false)
-  private UUID id;
-
+public class VerificationCode extends Base {
   @Column(length = 128, nullable = false)
   private String email;
 
