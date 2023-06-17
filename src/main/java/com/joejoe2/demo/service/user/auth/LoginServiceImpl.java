@@ -6,14 +6,12 @@ import com.joejoe2.demo.exception.InvalidOperation;
 import com.joejoe2.demo.model.auth.LoginAttempt;
 import com.joejoe2.demo.model.auth.User;
 import com.joejoe2.demo.repository.user.UserRepository;
-import com.joejoe2.demo.utils.AuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -36,16 +34,7 @@ public class LoginServiceImpl implements LoginService {
 
     LoginAttempt loginAttempt = user.getLoginAttempt();
     try {
-      try {
-        UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
-        loginAttempt.attempt(loginConfig, true);
-        userRepository.save(user);
-        return userDetail;
-      } catch (BadCredentialsException e) {
-        loginAttempt.attempt(loginConfig, false);
-        userRepository.save(user);
-        throw e;
-      }
+      return loginAttempt.login(loginConfig, authenticationManager, username, password);
     } catch (InvalidOperation ex) {
       throw new AuthenticationServiceException(
           "You have try too many times, please try again later");

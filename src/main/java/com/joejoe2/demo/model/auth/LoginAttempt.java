@@ -1,13 +1,17 @@
 package com.joejoe2.demo.model.auth;
 
 import com.joejoe2.demo.config.LoginConfig;
+import com.joejoe2.demo.data.auth.UserDetail;
 import com.joejoe2.demo.exception.InvalidOperation;
+import com.joejoe2.demo.utils.AuthUtil;
 import java.time.Instant;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Setter;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 
 @Data
 @Embeddable
@@ -32,9 +36,9 @@ public class LoginAttempt {
     return !isExceedLimit(loginConfig);
   }
 
-  public void attempt(LoginConfig loginConfig, boolean success) throws InvalidOperation {
+  private void attempt(LoginConfig loginConfig, boolean success) throws InvalidOperation {
     // check there is too many recent failure attempts
-    if (!canAttempt(loginConfig)) throw new InvalidOperation("cannot attempt anymore !");
+    if (!canAttempt(loginConfig)) throw new InvalidOperation("cannot login anymore !");
     if (success) {
       // clear after success
       setAttempts(0);
@@ -44,5 +48,21 @@ public class LoginAttempt {
       setAttempts(getAttempts() + 1);
     }
     setLastAttempt(Instant.now());
+  }
+
+  public UserDetail login(
+      LoginConfig loginConfig,
+      AuthenticationManager authenticationManager,
+      String username,
+      String password)
+      throws InvalidOperation {
+    try {
+      UserDetail userDetail = AuthUtil.authenticate(authenticationManager, username, password);
+      attempt(loginConfig, true);
+      return userDetail;
+    } catch (BadCredentialsException e) {
+      attempt(loginConfig, false);
+      throw e;
+    }
   }
 }
