@@ -40,7 +40,7 @@ Other applications can use the public key to verify the JWT tokens.
 
 ## Example frontend
 
-We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/frontend) to
+We provide an example frontend application written in Vue.js [at here](https://github.com/joejoe2/jwt-frontend) to
 work with this project.
 
 ![image](demo_login.png)
