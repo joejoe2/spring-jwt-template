@@ -2,9 +2,9 @@ package com.joejoe2.demo.model.auth;
 
 import com.joejoe2.demo.model.Base;
 import com.joejoe2.demo.utils.Utils;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 import java.time.Instant;
-import javax.persistence.Column;
-import javax.persistence.Entity;
 import lombok.Data;
 
 @Data

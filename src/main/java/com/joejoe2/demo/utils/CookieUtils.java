@@ -1,6 +1,6 @@
 package com.joejoe2.demo.utils;
 
-import javax.servlet.http.Cookie;
+import jakarta.servlet.http.Cookie;
 
 public class CookieUtils {
   public static Cookie create(

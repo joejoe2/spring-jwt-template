@@ -1,8 +1,8 @@
 package com.joejoe2.demo.model.auth;
 
 import com.joejoe2.demo.model.Base;
+import jakarta.persistence.*;
 import java.time.Instant;
-import javax.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;

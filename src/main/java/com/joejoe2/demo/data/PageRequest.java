@@ -1,8 +1,8 @@
 package com.joejoe2.demo.data;
 
 import io.swagger.v3.oas.annotations.Parameter;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

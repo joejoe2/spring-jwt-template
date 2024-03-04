@@ -2,8 +2,8 @@ package com.joejoe2.demo.validation.validator;
 
 import com.joejoe2.demo.exception.ValidationError;
 import com.joejoe2.demo.validation.constraint.Role;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 public class RoleValidator
     implements ConstraintValidator<Role, String>,

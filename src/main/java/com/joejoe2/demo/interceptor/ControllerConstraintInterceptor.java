@@ -4,9 +4,9 @@ import com.joejoe2.demo.controller.constraint.checker.ControllerAuthConstraintCh
 import com.joejoe2.demo.controller.constraint.checker.ControllerRateConstraintChecker;
 import com.joejoe2.demo.exception.ControllerConstraintViolation;
 import com.joejoe2.demo.utils.IPUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
