@@ -1,10 +1,11 @@
 package com.joejoe2.demo.model;
 
+import com.joejoe2.demo.model.generator.UUIDv7Generator;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 import java.util.UUID;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
 import lombok.Data;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -13,7 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 public class Base {
   @Id
   @GeneratedValue(generator = "UUIDv7")
-  @GenericGenerator(name = "UUIDv7", strategy = "com.joejoe2.demo.model.generator.UUIDv7Generator")
+  @GenericGenerator(name = "UUIDv7", type = UUIDv7Generator.class)
   @Column(unique = true, updatable = false, nullable = false)
   protected UUID id;
 }

@@ -46,7 +46,6 @@ class JwtServiceTest {
   @BeforeEach
   void setUp() {
     user = new User();
-    user.setId(UUID.randomUUID());
     user.setUserName("test");
     user.setEmail("test@email.com");
     user.setPassword("pa55ward");

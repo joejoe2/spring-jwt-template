@@ -1,8 +1,8 @@
 package com.joejoe2.demo;
 
+import jakarta.annotation.PostConstruct;
 import java.util.Locale;
 import java.util.TimeZone;
-import javax.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableAsync;

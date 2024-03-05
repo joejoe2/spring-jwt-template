@@ -1,7 +1,7 @@
 package com.joejoe2.demo.data.auth;
 
 import com.joejoe2.demo.validation.constraint.UUID;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

@@ -3,7 +3,7 @@ package com.joejoe2.demo.data.admin.request;
 import com.joejoe2.demo.validation.constraint.Role;
 import com.joejoe2.demo.validation.constraint.UUID;
 import io.swagger.v3.oas.annotations.media.Schema;
-import javax.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
