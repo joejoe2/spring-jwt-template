@@ -59,7 +59,6 @@ public class ControllerRateConstraintChecker {
                 operations.watch(key + "_bucket_for_" + targetIdentifier);
                 Map bucket =
                     operations.opsForHash().entries(key + "_bucket_for_" + targetIdentifier);
-                operations.multi();
 
                 long currentTime = System.currentTimeMillis();
 
@@ -81,6 +80,8 @@ public class ControllerRateConstraintChecker {
                     isExceed[0] = true;
                   }
                 }
+
+                operations.multi();
                 operations.opsForHash().putAll(key + "_bucket_for_" + targetIdentifier, bucket);
                 operations.expire(
                     key + "_bucket_for_" + targetIdentifier, Duration.ofSeconds(window));
