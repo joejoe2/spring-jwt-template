@@ -32,15 +32,11 @@ public class ControllerRateConstraintChecker {
     if (rateLimit == null) return;
     if (rateLimit.target() == LimitTarget.USER && !AuthUtil.isAuthenticated()) return;
 
-    String targetIdentifier;
-    switch (rateLimit.target()) {
-      case USER:
-        targetIdentifier = AuthUtil.currentUserDetail().getId();
-        break;
-      case IP:
-      default:
-        targetIdentifier = IPUtils.getRequestIP();
-    }
+    String targetIdentifier =
+        switch (rateLimit.target()) {
+          case USER -> AuthUtil.currentUserDetail().getId();
+          default -> IPUtils.getRequestIP();
+        };
     checkRateLimitByTokenBucket(
         rateLimit.key(), targetIdentifier, rateLimit.limit(), rateLimit.period());
   }
@@ -48,59 +44,61 @@ public class ControllerRateConstraintChecker {
   private void checkRateLimitByTokenBucket(
       String key, String targetIdentifier, long limit, long window)
       throws ControllerConstraintViolation {
+    final boolean[] isLockFailed = {false};
     final boolean[] isExceed = {false};
 
+    // retry rate limit because we use optimistic lock
     for (int retry = MAX_RETRY; retry > 0; retry--) {
-      try {
-        redisTemplate.execute(
-            new SessionCallback<>() {
-              @Override
-              public List execute(RedisOperations operations) throws DataAccessException {
-                operations.watch(key + "_bucket_for_" + targetIdentifier);
-                Map bucket =
-                    operations.opsForHash().entries(key + "_bucket_for_" + targetIdentifier);
+      redisTemplate.execute(
+          new SessionCallback<>() {
+            @Override
+            public List execute(RedisOperations operations) throws DataAccessException {
+              operations.watch(key + "_bucket_for_" + targetIdentifier);
+              Map bucket = operations.opsForHash().entries(key + "_bucket_for_" + targetIdentifier);
 
-                long currentTime = System.currentTimeMillis();
+              long currentTime = System.currentTimeMillis();
 
-                if (bucket == null || bucket.isEmpty()) {
-                  bucket = new HashMap<>();
-                  bucket.put("token", limit - 1);
+              if (bucket == null || bucket.isEmpty()) {
+                bucket = new HashMap<>();
+                bucket.put("token", limit - 1);
+                bucket.put("access_time", currentTime);
+              } else {
+                long tokens = ((Number) bucket.get("token")).longValue();
+                long refill =
+                    (long)
+                        (((currentTime - (long) bucket.get("access_time")) / 1000)
+                            / (window * 1.0 / limit));
+                tokens = Math.min(tokens + refill, limit);
+                if (tokens > 0) {
+                  bucket.put("token", tokens - 1);
                   bucket.put("access_time", currentTime);
                 } else {
-                  long tokens = ((Number) bucket.get("token")).longValue();
-                  long refill =
-                      (long)
-                          (((currentTime - (long) bucket.get("access_time")) / 1000)
-                              / (window * 1.0 / limit));
-                  tokens = Math.min(tokens + refill, limit);
-                  if (tokens > 0) {
-                    bucket.put("token", tokens - 1);
-                    bucket.put("access_time", currentTime);
-                  } else {
-                    isExceed[0] = true;
-                  }
+                  isExceed[0] = true;
                 }
-
-                operations.multi();
-                operations.opsForHash().putAll(key + "_bucket_for_" + targetIdentifier, bucket);
-                operations.expire(
-                    key + "_bucket_for_" + targetIdentifier, Duration.ofSeconds(window));
-                return operations.exec();
               }
-            });
-      } catch (Exception e) {
-        logger.error(e.getMessage());
-        // retry to get/set rate limit because we use optimistic lock
-        continue;
-      }
-      // exceed rate limit or not
-      if (isExceed[0]) {
-        throw new ControllerConstraintViolation(
-            429, "You have sent too many request, please try again later !");
-      } else return;
+
+              operations.multi();
+              operations.opsForHash().putAll(key + "_bucket_for_" + targetIdentifier, bucket);
+              operations.expire(
+                  key + "_bucket_for_" + targetIdentifier, Duration.ofSeconds(window));
+
+              isLockFailed[0] = operations.exec().isEmpty();
+              return null;
+            }
+          });
+      // optimistic lock success
+      if (!isLockFailed[0]) break;
+
+      // still cannot get/set rate limit in last retry
+      if (retry - 1 <= 0)
+        throw new RuntimeException(
+            "cannot obtain rate limit from redis after retry for " + MAX_RETRY + " times !");
     }
-    // still cannot to get/set rate limit after retry
-    throw new RuntimeException(
-        "cannot obtain rate limit from redis after retry for " + MAX_RETRY + " times !");
+
+    // exceed rate limit or not
+    if (isExceed[0]) {
+      throw new ControllerConstraintViolation(
+          429, "You have sent too many request, please try again later !");
+    }
   }
 }
